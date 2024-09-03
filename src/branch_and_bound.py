@@ -1,10 +1,15 @@
 from pulp import *
 from queue import PriorityQueue
 from typing import List, Tuple
+from anytree import NodeMixin, RenderTree
+from anytree.exporter import DotExporter
+import graphviz
 
-class Node: 
+class Node(NodeMixin): 
 	"""
   Represents a node in the branch-and-bound tree.
+
+  Inherits from anytree.NodeMixin to enable tree structure
     
   Attributes:
   lp_model (pulp.LpProblem): The LP relaxation associated with this node.
@@ -17,6 +22,7 @@ class Node:
 	"""
 	def __init__(self, lp_model: pulp.LpProblem, depth: int = 0, parent: 'Node' = None, 
 								branching_variable: Tuple[int, int] = None, branching_value: int = None):
+		super().__init__()
 		self.lp_model = lp_model
 		self.lower_bound = float('inf')
 		self.depth = depth
@@ -24,6 +30,12 @@ class Node:
 		self.parent = parent
 		self.branching_variable = branching_variable
 		self.branching_value = branching_value
+		self.name = self._generate_name()
+
+	def _generate_name(self):
+		if self.parent is None:
+			return "Root"
+		return f"Node_{self.depth}_{self.branching_variable}_{self.branching_value}"
 
 	def __lt__(self, other: 'Node') -> bool:
 		"""
@@ -161,6 +173,9 @@ class BranchAndBound:
                 if child_node is not None:
                     self.active_nodes.put(child_node)
 
+	# After the solving process, visualize the tree
+	self.visualize_tree()
+	
         return self.best_solution
 
     def _check_integer_feasibility(self, solution: Dict[str, float]) -> Tuple[bool, Optional[Dict[str, int]]]:
@@ -249,3 +264,26 @@ class BranchAndBound:
             child_node.solution = {var.name: var.value() for var in child_model.variables()}
             return child_node
         return None
+
+	def visualize_tree(self):
+        	"""
+        	Visualize the branch-and-bound tree using graphviz.
+        	"""
+        	def node_to_string(node):
+            		return f"{node.name}\nLB: {node.lower_bound:.2f}"
+
+        	def edge_to_string(node):
+            		if node.parent is None:
+                		return ''
+            		return f"{node.branching_variable} = {node.branching_value}"
+
+        	dot_exporter = DotExporter(self.root,
+                                   nodeattrfunc=lambda node: f'label="{node_to_string(node)}"',
+                                   edgeattrfunc=lambda parent, child: f'label="{edge_to_string(child)}"')
+        
+        	dot_data = dot_exporter.to_dotfile("branch_and_bound_tree.dot")
+        
+        	# Use graphviz to render the tree
+        	graph = graphviz.Source.from_file("branch_and_bound_tree.dot")
+        	graph.render("branch_and_bound_tree", format="png", cleanup=True)
+        	print("Branch-and-bound tree visualization saved as 'branch_and_bound_tree.png'")
