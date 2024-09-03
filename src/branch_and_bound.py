@@ -113,10 +113,3 @@ class BranchAndBound:
 					model += y[(i, j)] <= (self.n - 1) * x[(i, j)]
 
 		return model
-	
-	def solve(self):
-		"""
-		Main loop of the Branch-and-Bound algorithm
-		"""
-		# TODO: Implement the main branch-and-bound loop
-		pass
