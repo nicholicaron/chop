@@ -94,13 +94,12 @@ To get a local copy up and running follow these simple example steps.
 ### Dependencies
 
 1. Python version 3 or greater
-2. Pip requirements (all are listed in requirements.txt)
-  - PuLP
-  - networkx
-  - matplotlib
-  - numpy
-  - anytree
-  - graphviz
+2. PuLP
+3. networkx
+4. matplotlib
+5. numpy
+6. anytree
+7. graphviz
 
 ### Installation
 
