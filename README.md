@@ -54,7 +54,7 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in 
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#dependencies">Dependencies</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
@@ -91,9 +91,10 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in 
 
 To get a local copy up and running follow these simple example steps.
 
-### Prerequisites
+### Dependencies
 
-Python version 3 or greater.
+1. Python version 3 or greater
+2. PuLP
 
 ### Installation
 
@@ -135,7 +136,7 @@ Coming Soon
   - [ ] Add safeguards against cycling
   - [ ] Incorporate techniques for improving numerical precision
 ### 4. Extend Solver Functionality:
-  - [ ] Implement support for integer programming (branch and bound)
+  - [x] Implement support for integer programming (branch and bound)
   - [ ] Add functionality for mixed integer linear programming
 ### 5. Advanced Features and Research:
   - [ ] Explore and implement cutting-edge LP solving techniques

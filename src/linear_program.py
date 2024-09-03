@@ -7,7 +7,6 @@ class LinearProgram:
 		self.constraints: List[Tuple[List[str], List[float], List[ArithmeticOp], ComparisonOp, float]] = [] # List[(variables, coefs, arithmetic_ops, comparison_operator, rhs value)]
 		self.variables = set()
 		self.type = ObjectiveType.MAXIMIZE # Standard LP: Max
-		self.iteration_counter = 0 # This will come in handy later when generating the ML dataset
 
 	def add_obj_fn(self, expression):
 		obj_fn = parse_objective_function(expression)
