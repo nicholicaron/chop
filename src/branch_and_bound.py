@@ -22,7 +22,7 @@ class Node(NodeMixin):
 	"""
 	def __init__(self, lp_model: pulp.LpProblem, depth: int = 0, parent: 'Node' = None, 
 								branching_variable: Tuple[int, int] = None, branching_value: int = None):
-		super().__init__()
+		super().__init__() # Initialize NodeMixin
 		self.lp_model = lp_model
 		self.lower_bound = float('inf')
 		self.depth = depth
@@ -268,11 +268,14 @@ class BranchAndBound:
 	def visualize_tree(self):
         	"""
         	Visualize the branch-and-bound tree using graphviz.
+	 	Generates a PNG image of the search tree.
         	"""
         	def node_to_string(node):
+			"""Generate the label string for a node in the tree"""
             		return f"{node.name}\nLB: {node.lower_bound:.2f}"
 
         	def edge_to_string(node):
+			"""Generate the label string for an edge in the tree"""
             		if node.parent is None:
                 		return ''
             		return f"{node.branching_variable} = {node.branching_value}"
