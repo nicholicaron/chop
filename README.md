@@ -120,11 +120,11 @@ Coming Soon
   - [x] Implement data ingestion methods (add_obj_fn, add_cons)
   - [x] Develop expression parsing functionality
   - [ ] Implement core Simplex algorithm components:
-    + [ ] Initialize solution
-    + [ ] Choose entering variable
-    + [ ] Choose leaving variable
+    + [x] Initialize solution
+    + [x] Choose entering variable
+    + [x] Choose leaving variable
     + [ ] Perform pivot operation
-    + [ ] Implement solution extraction and result reporting
+    + [x] Implement solution extraction and result reporting
 ### 2. Enhance Solver Capabilities:
   - [ ] Add support for minimization problems
   - [ ] Implement two-phase Simplex method
