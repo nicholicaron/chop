@@ -102,6 +102,10 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    git clone https://github.com/nicholicaron/chop.git
    ```
+2. Install the dependencies
+  ```sh
+  pip install requirements.txt
+  ```
    <!-- USAGE EXAMPLES -->
 ## Usage
 
@@ -137,6 +141,8 @@ Coming Soon
   - [ ] Incorporate techniques for improving numerical precision
 ### 4. Extend Solver Functionality:
   - [x] Implement support for integer programming (branch and bound)
+    + [ ] Implement more sophisticated branching variable selection strategies.
+    + [ ] Add cutting plane techniques to tighten the LP relaxations.
   - [ ] Add functionality for mixed integer linear programming
 ### 5. Advanced Features and Research:
   - [ ] Explore and implement cutting-edge LP solving techniques
