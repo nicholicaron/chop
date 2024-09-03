@@ -113,3 +113,139 @@ class BranchAndBound:
 					model += y[(i, j)] <= (self.n - 1) * x[(i, j)]
 
 		return model
+
+	def solve(self, time_limit: float = 3600) -> Dict[str, float]:
+        """
+        Main loop of the branch-and-bound algorithm.
+
+        Args:
+            time_limit (float): Maximum running time in seconds. Default is 1 hour.
+
+        Returns:
+            Dict[str, float]: The best feasible solution found, or None if no feasible solution was found.
+        """
+        start_time = time.time()
+
+        while not self.active_nodes.empty():
+            # Check if time limit is exceeded
+            if time.time() - start_time > time_limit:
+                print("Time limit exceeded.")
+                break
+
+            # Get the next node to process
+            current_node = self.active_nodes.get()
+
+            # Check if the node can be pruned
+            if current_node.lower_bound >= self.best_upper_bound:
+                continue  # Prune the node
+
+            # Check if the solution is integer feasible
+            is_integer, integer_solution = self._check_integer_feasibility(current_node.solution)
+
+            if is_integer:
+                # Update the best solution if necessary
+                objective_value = self._calculate_objective_value(integer_solution)
+                if objective_value < self.best_upper_bound:
+                    self.best_upper_bound = objective_value
+                    self.best_solution = integer_solution
+                continue  # No need to branch further
+
+            # Branch on a fractional variable
+            branching_variable = self._select_branching_variable(current_node.solution)
+            if branching_variable is None:
+                continue  # No suitable branching variable found
+
+            # Create and add child nodes
+            for branch_value in [0, 1]:
+                child_node = self._create_child_node(current_node, branching_variable, branch_value)
+                if child_node is not None:
+                    self.active_nodes.put(child_node)
+
+        return self.best_solution
+
+    def _check_integer_feasibility(self, solution: Dict[str, float]) -> Tuple[bool, Optional[Dict[str, int]]]:
+        """
+        Check if the given solution is integer feasible.
+
+        Args:
+            solution (Dict[str, float]): The solution to check.
+
+        Returns:
+            Tuple[bool, Optional[Dict[str, int]]]: 
+                - Boolean indicating if the solution is integer feasible.
+                - The integer solution if feasible, None otherwise.
+        """
+        integer_solution = {}
+        for var_name, value in solution.items():
+            if var_name.startswith('x_'):
+                if abs(value - round(value)) > 1e-6:
+                    return False, None
+                integer_solution[var_name] = round(value)
+        return True, integer_solution
+
+    def _calculate_objective_value(self, solution: Dict[str, int]) -> float:
+        """
+        Calculate the objective value for a given solution.
+
+        Args:
+            solution (Dict[str, int]): The solution to evaluate.
+
+        Returns:
+            float: The objective value of the solution.
+        """
+        objective_value = 0
+        for var_name, value in solution.items():
+            if var_name.startswith('x_'):
+                i, j = map(int, var_name.split('_')[1:])
+                objective_value += self.adj_matrix[i][j] * value
+        return objective_value
+
+    def _select_branching_variable(self, solution: Dict[str, float]) -> Optional[str]:
+        """
+        Select a variable to branch on based on the current solution.
+
+        Args:
+            solution (Dict[str, float]): The current solution.
+
+        Returns:
+            Optional[str]: The name of the variable to branch on, or None if no suitable variable is found.
+        """
+        for var_name, value in solution.items():
+            if var_name.startswith('x_'):
+                if 0.01 < value < 0.99:
+                    return var_name
+        return None
+
+    def _create_child_node(self, parent: Node, branching_variable: str, branch_value: int) -> Optional[Node]:
+        """
+        Create a child node by adding a new constraint to the parent's LP model.
+
+        Args:
+            parent (Node): The parent node.
+            branching_variable (str): The name of the variable to branch on.
+            branch_value (int): The value to fix the branching variable to (0 or 1).
+
+        Returns:
+            Optional[Node]: The new child node, or None if the resulting LP is infeasible.
+        """
+        child_model = parent.lp_model.copy()
+        child_model += pulp.LpConstraint(
+            pulp.LpAffineExpression([(child_model.variables()[branching_variable], 1)]),
+            pulp.LpConstraintEQ,
+            f"{branching_variable}_{branch_value}",
+            branch_value
+        )
+
+        status = child_model.solve()
+        if status == pulp.LpStatusOptimal:
+            child_node = Node(
+                child_model, 
+                parent.depth + 1, 
+                parent, 
+                branching_variable, 
+                branch_value
+            )
+            child_node.lower_bound = child_model.objective.value()
+            child_node.solution = {var.name: var.value() for var in child_model.variables()}
+            return child_node
+        return None
