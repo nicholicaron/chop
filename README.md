@@ -109,7 +109,7 @@ To get a local copy up and running follow these simple example steps.
    ```
 2. Install the dependencies
   ```sh
-  pip install requirements.txt
+  pip install -r requirements.txt
   ```
    <!-- USAGE EXAMPLES -->
 ## Usage

@@ -4,102 +4,110 @@ from typing import List, Tuple
 from anytree import NodeMixin, RenderTree
 from anytree.exporter import DotExporter
 import graphviz
+import time
 
 class Node(NodeMixin): 
-	"""
+    """
   Represents a node in the branch-and-bound tree.
 
   Inherits from anytree.NodeMixin to enable tree structure
-    
+
   Attributes:
-  lp_model (pulp.LpProblem): The LP relaxation associated with this node.
+  lp_model (LpProblem): The LP relaxation associated with this node.
   lower_bound (float): The lower bound (objective value) for this node.
   depth (int): The depth of this node in the branch-and-bound tree.
   solution (dict): The solution values for the decision variables.
   parent (Node): The parent node in the branch-and-bound tree.
   branching_variable (Tuple[int, int]): The variable branched on to create this node.
   branching_value (int): The value assigned to the branching variable (0 or 1).
-	"""
-	def __init__(self, lp_model: pulp.LpProblem, depth: int = 0, parent: 'Node' = None, 
-								branching_variable: Tuple[int, int] = None, branching_value: int = None):
-		super().__init__() # Initialize NodeMixin
-		self.lp_model = lp_model
-		self.lower_bound = float('inf')
-		self.depth = depth
-		self.solution = {}
-		self.parent = parent
-		self.branching_variable = branching_variable
-		self.branching_value = branching_value
-		self.name = self._generate_name()
+    """
+    def __init__(self, lp_model: LpProblem, depth: int = 0, parent: 'Node' = None, branching_variable: Tuple[int, int] = None, branching_value: int = None):
+        super().__init__() # Initialize NodeMixin
+        self.lp_model = lp_model
+        self.lower_bound = float('inf')
+        self.depth = depth
+        self.solution = {}
+        self.parent = parent
+        self.branching_variable = branching_variable
+        self.branching_value = branching_value
+        self.name = self._generate_name()
 
-	def _generate_name(self):
-		if self.parent is None:
-			return "Root"
-		return f"Node_{self.depth}_{self.branching_variable}_{self.branching_value}"
+    def _generate_name(self):
+        if self.parent is None:
+            return "Root"
+        return f"Node_{self.depth}_{self.branching_variable}_{self.branching_value}"
 
-	def __lt__(self, other: 'Node') -> bool:
-		"""
-		Comparison method for priority queue ordering.
-		Nodes with lower bounds are given higher priority.
-		"""
-		return self.lower_bound < other.lower_bound
-	
+    def __lt__(self, other: 'Node') -> bool:
+        """
+        Comparison method for priority queue ordering.
+        Nodes with lower bounds are given higher priority.
+        """
+        return self.lower_bound < other.lower_bound
+        
+    @property
+    def depth(self):
+        return self._depth
+
+    @depth.setter
+    def depth(self, value):
+        self._depth = value
+
 class BranchAndBound: 
-	"""
-	Implements the Branch-and-Bound algorithm for solving the Traveling Salesman Problem.
+    """
+    Implements the Branch-and-Bound algorithm for solving the Traveling Salesman Problem.
 
-	Attributes:
-		adj_matrix (List[List[float]]): The adjacency matrix representing the TSP instance
-		n (int): The number of cities in the TSP
-		root (Node): The root node of the branch-and-bound tree.
-		best_upper_bound (float): The best known upper bound (incumbent solution value)
-		best_solution (dict): The best known feasible solution
-		active_nodes (PriorityQueue): Priority queue to store active nodes
-	"""
+    Attributes:
+        adj_matrix (List[List[float]]): The adjacency matrix representing the TSP instance
+        n (int): The number of cities in the TSP
+        root (Node): The root node of the branch-and-bound tree.
+        best_upper_bound (float): The best known upper bound (incumbent solution value)
+        best_solution (dict): The best known feasible solution
+        active_nodes (PriorityQueue): Priority queue to store active nodes
+    """
 
-	def __init__(self, adj_matrix: List[List[float]]):
-		"""
-		Constructor for the BranchAndBound class
+    def __init__(self, adj_matrix: List[List[float]]):
+        """
+        Constructor for the BranchAndBound class
 
-		Args:
-			adj_matrix (List[List[float]]): The adjacency matrix representing the TSP instance
-		"""
-		self.adj_matrix = adj_matrix
-		self.n = len(adj_matrix)
-		self.root = None
-		self.best_upper_bound = float('inf')
-		self.best_solution = None
-		self.active_nodes = PriorityQueue()
-        self.integer_program = None
+        Args:
+            adj_matrix (List[List[float]]): The adjacency matrix representing the TSP instance
+        """
+        self.adj_matrix = adj_matrix
+        self.n = len(adj_matrix)
+        self.root = None
+        self.best_upper_bound = float('inf')
+        self.best_solution = None
+        self.active_nodes = PriorityQueue()
+        self.linear_program = None
 
-	def setup_root_node(self):
-		"""
-		Performs additional, more complex initialization steps. 
-		Initialize the Branch-and-Bound algorithm tree:
-		1. Create the root node with the LP relaxation
-		2. Set the initial best upper bound to infinity
-		3. Add the root node to the priority queue of active nodes
-		"""
-		# Create the root node with LP relaxation
-		tsp_ip = self._create_lp_formulation_TSP()
-        tsp_lp = self._create_lp_relaxation(tsp_ip)
-		self.root = Node(adj_matrix, tsp_ip)
+    def setup_root_node(self):
+        """
+        Performs additional, more complex initialization steps. 
+        Initialize the Branch-and-Bound algorithm tree:
+        1. Create the root node with the LP relaxation
+        2. Set the initial best upper bound to infinity
+        3. Add the root node to the priority queue of active nodes
+        """
+        # Create the root node with LP relaxation
+        self.linear_program = self._create_lp_formulation_TSP()
+        self._create_lp_relaxation()
+        self.root = Node(self.adj_matrix)
 
-		# Solve the root node's LP relaxation
-		status = self.root.lp_model.solve()
-		if status == pulp.LpStatusOptimal:
-			self.root.lower_bound = self.root.lp_model.objective.value()
-			self.root.solution = {var.name: var.value() for var in self.root.lp_model.variables()}
+        # Solve the root node's LP relaxation
+        # status = self.root.linear_program.solve()
+        # if status == LpStatusOptimal:
+        #    self.root.lower_bound = self.root.linear_program.objective.value()
+        #    self.root.solution = {var.name: var.value() for var in self.root.linear_program.variables()}
 
-		# Initialize the best upper bound to infinity
-		self.best_upper_bound = float('inf')
+        # Initialize the best upper bound to infinity
+        self.best_upper_bound = float('inf')
 
-		# Add the root node to the priority queue
-		self.active_nodes.put(self.root)
+        # Add the root node to the priority queue
+        self.active_nodes.put(self.root)
 
-    def _create_lp_formulation_TSP(self) -> pulp.LpProblem:
-		"""
-		Create the LP relaxation of the TSP instance.
+    def _create_lp_formulation_TSP(self) -> LpProblem:
+        """
+        Create the LP relaxation of the TSP instance.
 
         This method formulates the TSP as a linear programming problem, relaxing the integrality 
         constraints on the decision variables. It uses a flow-based formulation for subtour elimination.
@@ -108,34 +116,34 @@ class BranchAndBound:
             1. Decision variables x[i,j] representing whether the path goes from city i to city j
             2. Flow variables y[i,j] used for subtour elimination
 
-		Returns:
-		 	pulp.LpProblem: The LP Formulation of the TSP
-		"""
-		model = pulp.LpProblem("TSP_Formulation", pulp.LpMinimize)
+        Returns:
+            LpProblem: The LP Formulation of the TSP
+        """
+        model = LpProblem("TSP_Formulation", LpMinimize)
 
-		# Create continuous variables
-		x = pulp.LpVariable.dicts("x", ((i, j) for i in range(self.n) for j in range(self.n) if i != j), lowBound=0, upBound=1, cat='Continuous')
-		
-		# Objective function
-		model += pulp.lpSum(self.adj_matrix[i][j] * x[(i,j)] for i in range(self.n) for j in range(self.n) if i != j)
+        # Create continuous variables
+        x = LpVariable.dicts("x", ((i, j) for i in range(self.n) for j in range(self.n) if i != j), lowBound=0, upBound=1, cat='Continuous')
 
-		# Constraints
-		for i in range(self.n):
-			model += pulp.lpSum(x[(i, j)] for j in range(self.n) if i != j) == 1 # Leave each city once
-			model += pulp.lpSum(x[(j, i)] for j in range(self.n) if i != j) == 1 # Enter each city once
+        # Objective function
+        model += lpSum(self.adj_matrix[i][j] * x[(i,j)] for i in range(self.n) for j in range(self.n) if i != j)
 
-		# Subtour elimination constraints (using a flow-based formulation)
-		y = pulp.LpVariable.dicts("y", ((i, j) for i in range(1, self.n) for j in range(1, self.n) if i != j), lowBound=0, cat='Continuous')
+        # Constraints
+        for i in range(self.n):
+            model += lpSum(x[(i, j)] for j in range(self.n) if i != j) == 1 # Leave each city once
+            model += lpSum(x[(j, i)] for j in range(self.n) if i != j) == 1 # Enter each city once
 
-		for i in range(1, self.n):
-			model += pulp.lpSum(y[i, j] for j in range(1, self.n) if i != j) - pulp.lpSum(y[(j, i)] for j in range(1, self.n) if i != j) == 1
-			for j in range(1, self.n):
-				if i != j:
-					model += y[(i, j)] <= (self.n - 1) * x[(i, j)]
+        # Subtour elimination constraints (using a flow-based formulation)
+        y = LpVariable.dicts("y", ((i, j) for i in range(1, self.n) for j in range(1, self.n) if i != j), lowBound=0, cat='Continuous')
 
-		return model
+        for i in range(1, self.n):
+            model += lpSum(y[i, j] for j in range(1, self.n) if i != j) - lpSum(y[(j, i)] for j in range(1, self.n) if i != j) == 1
+            for j in range(1, self.n):
+                if i != j:
+                    model += y[(i, j)] <= (self.n - 1) * x[(i, j)]
 
-    def _create_lp_relaxation(self) -> pulp.LpProblem:
+        return model
+
+    def _create_lp_relaxation(self) -> LpProblem:
         """
         Create the LP relaxation of a given integer program
 
@@ -143,19 +151,19 @@ class BranchAndBound:
         integrality constraints on all variables.
 
         Returns:
-            pulp.LpProblem: The LP relaxation of the integer program 
+            LpProblem: The LP relaxation of the integer program 
         """
         # Create a deep copy of the original problem
-        lp_relaxation = self.integer_program.copy()
+        lp_relaxation = self.linear_program.copy()
 
         # Relax the integrality constraints
         for var in lp_relaxation.variables():
-            if var.cat == pulp.LpInteger:
-                var.cat = pulp.LpContinuous
+            if var.cat == LpInteger:
+                var.cat = LpContinuous
 
         return lp_relaxation
 
-	def solve(self, time_limit: float = 3600) -> Dict[str, float]:
+    def solve(self, time_limit: float = 3600) -> Dict[str, float]:
         """
         Main loop of the branch-and-bound algorithm.
 
@@ -204,9 +212,9 @@ class BranchAndBound:
                 if child_node is not None:
                     self.active_nodes.put(child_node)
 
-	    # After the solving process, visualize the tree
-	    self.visualize_tree()
-	
+        # After the solving process, visualize the tree
+        # self.visualize_tree()
+
         return self.best_solution
 
     def _check_integer_feasibility(self, solution: Dict[str, float]) -> Tuple[bool, Optional[Dict[str, int]]]:
@@ -283,23 +291,23 @@ class BranchAndBound:
 
         if is_upper_branch:
             branch_value = math.ceil(current_value)
-            child_model += pulp.LpConstraint(
-                pulp.LpAffineExpression([(var, 1)]),
-                pulp.LpConstraintGE,
+            child_model += LpConstraint(
+                LpAffineExpression([(var, 1)]),
+                LpConstraintGE,
                 f"{branching_variable}_lower_bound",
                 branch_value
             )
         else:
             branch_value = math.floor(current_value)
-            child_model += pulp.LpConstraint(
-                pulp.LpAffineExpression([(var, 1)]), 
-                pulp.LpConstraintLE, 
+            child_model += LpConstraint(
+                LpAffineExpression([(var, 1)]), 
+                LpConstraintLE, 
                 f"{branching_variable}_upper_bound",
                 branch_value
             )
 
         status = child_model.solve()
-        if status == pulp.LpStatusOptimal:
+        if status == LpStatusOptimal:
             child_node = Node(
                 child_model, 
                 parent.depth + 1, 
@@ -312,28 +320,29 @@ class BranchAndBound:
             return child_node
         return None
 
-	def visualize_tree(self):
-        	"""
-        	Visualize the branch-and-bound tree using graphviz.
-	 	Generates a PNG image of the search tree.
-        	"""
-        	def node_to_string(node):
-			"""Generate the label string for a node in the tree"""
-            		return f"{node.name}\nLB: {node.lower_bound:.2f}"
+    def node_to_string(node):
+        """Generate the label string for a node in the tree"""
+        return f"{node.name}\nLB: {node.lower_bound:.2f}"
 
-        	def edge_to_string(node):
-			"""Generate the label string for an edge in the tree"""
-            		if node.parent is None:
-                		return ''
-            		return f"{node.branching_variable} = {node.branching_value}"
+    def edge_to_string(node):
+        """Generate the label string for an edge in the tree"""
+        if node.parent is None:
+            return ''
+        return f"{node.branching_variable} = {node.branching_value}"
 
-        	dot_exporter = DotExporter(self.root,
-                                   nodeattrfunc=lambda node: f'label="{node_to_string(node)}"',
-                                   edgeattrfunc=lambda parent, child: f'label="{edge_to_string(child)}"')
-        
-        	dot_data = dot_exporter.to_dotfile("branch_and_bound_tree.dot")
-        
-        	# Use graphviz to render the tree
-        	graph = graphviz.Source.from_file("branch_and_bound_tree.dot")
-        	graph.render("branch_and_bound_tree", format="png", cleanup=True)
-        	print("Branch-and-bound tree visualization saved as 'branch_and_bound_tree.png'")
+    def visualize_tree(self):
+            """
+            Visualize the branch-and-bound tree using graphviz.
+        Generates a PNG image of the search tree.
+            """
+            dot_exporter = DotExporter(self.root,
+                                       nodeattrfunc=lambda node: f'label="{node_to_string(node)}"',
+                                       edgeattrfunc=lambda parent, child: f'label="{edge_to_string(child)}"')
+
+            dot_data = dot_exporter.to_dotfile("branch_and_bound_tree.dot")
+
+            # Use graphviz to render the tree
+            graph = graphviz.Source.from_file("branch_and_bound_tree.dot")
+            graph.render("branch_and_bound_tree", format="png", cleanup=True)
+            print("Branch-and-bound tree visualization saved as 'branch_and_bound_tree.png'")
+
