@@ -70,6 +70,7 @@ class BranchAndBound:
 		self.best_upper_bound = float('inf')
 		self.best_solution = None
 		self.active_nodes = PriorityQueue()
+        self.integer_program = None
 
 	def setup_root_node(self):
 		"""
@@ -80,14 +81,15 @@ class BranchAndBound:
 		3. Add the root node to the priority queue of active nodes
 		"""
 		# Create the root node with LP relaxation
-		lp_relaxation = self._create_lp_relaxation()
-		self.root = Node(lp_relaxation)
+		tsp_ip = self._create_lp_formulation_TSP()
+        tsp_lp = self._create_lp_relaxation(tsp_ip)
+		self.root = Node(adj_matrix, tsp_ip)
 
 		# Solve the root node's LP relaxation
 		status = self.root.lp_model.solve()
 		if status == pulp.LpStatusOptimal:
 			self.root.lower_bound = self.root.lp_model.objective.value()
-			self.root.solution = {var.name: var.value() for var in self.root.lp_model.varibales()}
+			self.root.solution = {var.name: var.value() for var in self.root.lp_model.variables()}
 
 		# Initialize the best upper bound to infinity
 		self.best_upper_bound = float('inf')
@@ -95,14 +97,21 @@ class BranchAndBound:
 		# Add the root node to the priority queue
 		self.active_nodes.put(self.root)
 
-	def _create_lp_relaxation(self) -> pulp.LpProblem:
+    def _create_lp_formulation_TSP(self) -> pulp.LpProblem:
 		"""
 		Create the LP relaxation of the TSP instance.
 
+        This method formulates the TSP as a linear programming problem, relaxing the integrality 
+        constraints on the decision variables. It uses a flow-based formulation for subtour elimination.
+
+        The formulation includes:
+            1. Decision variables x[i,j] representing whether the path goes from city i to city j
+            2. Flow variables y[i,j] used for subtour elimination
+
 		Returns:
-			pulp.LpProblem: The LP relaxation of the TSP
+		 	pulp.LpProblem: The LP Formulation of the TSP
 		"""
-		model = pulp.LpProblem("TSP_Relaxation", pulp.LpMinimize)
+		model = pulp.LpProblem("TSP_Formulation", pulp.LpMinimize)
 
 		# Create continuous variables
 		x = pulp.LpVariable.dicts("x", ((i, j) for i in range(self.n) for j in range(self.n) if i != j), lowBound=0, upBound=1, cat='Continuous')
@@ -125,6 +134,26 @@ class BranchAndBound:
 					model += y[(i, j)] <= (self.n - 1) * x[(i, j)]
 
 		return model
+
+    def _create_lp_relaxation(self) -> pulp.LpProblem:
+        """
+        Create the LP relaxation of a given integer program
+
+        This function creates a copy of the original integer program and relaxes the
+        integrality constraints on all variables.
+
+        Returns:
+            pulp.LpProblem: The LP relaxation of the integer program 
+        """
+        # Create a deep copy of the original problem
+        lp_relaxation = self.integer_program.copy()
+
+        # Relax the integrality constraints
+        for var in lp_relaxation.variables():
+            if var.cat == pulp.LpInteger:
+                var.cat = pulp.LpContinuous
+
+        return lp_relaxation
 
 	def solve(self, time_limit: float = 3600) -> Dict[str, float]:
         """
@@ -167,14 +196,16 @@ class BranchAndBound:
             if branching_variable is None:
                 continue  # No suitable branching variable found
 
+            branching_variable, current_value = branching_result
+
             # Create and add child nodes
-            for branch_value in [0, 1]:
-                child_node = self._create_child_node(current_node, branching_variable, branch_value)
+            for is_upper_branch in [False, True]:
+                child_node = self._create_child_node(current_node, branching_variable, current_value, is_upper_branch)
                 if child_node is not None:
                     self.active_nodes.put(child_node)
 
-	# After the solving process, visualize the tree
-	self.visualize_tree()
+	    # After the solving process, visualize the tree
+	    self.visualize_tree()
 	
         return self.best_solution
 
@@ -219,6 +250,9 @@ class BranchAndBound:
         """
         Select a variable to branch on based on the current solution.
 
+        Note: This is a very dumb implementation, and intentionally so. This is where the magic deep-learning 
+        sauce will come in.  
+
         Args:
             solution (Dict[str, float]): The current solution.
 
@@ -227,29 +261,42 @@ class BranchAndBound:
         """
         for var_name, value in solution.items():
             if var_name.startswith('x_'):
-                if 0.01 < value < 0.99:
+                if not math.isclose(value, round(value), abs_tol=1e-6):
                     return var_name
         return None
 
-    def _create_child_node(self, parent: Node, branching_variable: str, branch_value: int) -> Optional[Node]:
+    def _create_child_node(self, parent: Node, branching_variable: str, current_value: float, is_upper_branch: bool) -> Optional[Node]:
         """
         Create a child node by adding a new constraint to the parent's LP model.
 
         Args:
             parent (Node): The parent node.
             branching_variable (str): The name of the variable to branch on.
-            branch_value (int): The value to fix the branching variable to (0 or 1).
+            current_value (float): The current value of the branching variable.
+            is_upper_branch (bool): True if this is the upper branch (>=), False for lower branch (<=)
 
         Returns:
             Optional[Node]: The new child node, or None if the resulting LP is infeasible.
         """
         child_model = parent.lp_model.copy()
-        child_model += pulp.LpConstraint(
-            pulp.LpAffineExpression([(child_model.variables()[branching_variable], 1)]),
-            pulp.LpConstraintEQ,
-            f"{branching_variable}_{branch_value}",
-            branch_value
-        )
+        var = child_model.variables()[branching_variable]
+
+        if is_upper_branch:
+            branch_value = math.ceil(current_value)
+            child_model += pulp.LpConstraint(
+                pulp.LpAffineExpression([(var, 1)]),
+                pulp.LpConstraintGE,
+                f"{branching_variable}_lower_bound",
+                branch_value
+            )
+        else:
+            branch_value = math.floor(current_value)
+            child_model += pulp.LpConstraint(
+                pulp.LpAffineExpression([(var, 1)]), 
+                pulp.LpConstraintLE, 
+                f"{branching_variable}_upper_bound",
+                branch_value
+            )
 
         status = child_model.solve()
         if status == pulp.LpStatusOptimal:
