@@ -215,7 +215,7 @@ class BranchAndBound:
 
             if is_integer:
                 # Update the best solution if necessary
-                objective_value = self._calculate_objective_value(integer_solution)
+                objective_value = current_node.lp_model.objective.value()
                 print(f"Integer solution found. Objective value: {objective_value}")
                 if objective_value < self.best_upper_bound:
                     self.best_upper_bound = objective_value
@@ -287,23 +287,6 @@ class BranchAndBound:
                     return False, None
                 integer_solution[var_name] = round(value)
         return True, integer_solution
-
-    def _calculate_objective_value(self, solution: Dict[str, int]) -> float:
-        """
-        Calculate the objective value for a given TSP solution.
-
-        Args:
-            solution (Dict[str, int]): The solution to evaluate.
-
-        Returns:
-            float: The objective value of the solution.
-        """
-        objective_value = 0
-        for var_name, value in solution.items():
-            if var_name.startswith('x_'):
-                i, j = map(int, var_name.split('_')[1:])
-                objective_value += self.adj_matrix[i][j] * value
-        return objective_value
 
     def _select_branching_variable(self, solution: Dict[str, float]) -> Optional[str]:
         """
