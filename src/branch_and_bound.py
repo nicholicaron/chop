@@ -52,6 +52,16 @@ class Node(NodeMixin):
     def depth(self, value):
         self._depth = value
 
+    def node_to_string(self):
+        """Generate the label string for a node in the tree"""
+        return f"{self.name}\nLB: {self.lower_bound:.2f}"
+
+    def edge_to_string(self):
+        """Generate the label string for an edge in the tree"""
+        if node.parent is None:
+            return ''
+        return f"{self.branching_variable} = {self.branching_value}"
+
 class BranchAndBound: 
     """
     Implements the Branch-and-Bound algorithm for solving the Traveling Salesman Problem.
@@ -151,13 +161,27 @@ class BranchAndBound:
         Returns:
             LpProblem: The LP relaxation of the integer program 
         """
+        print("\nCreating LP Relaxation:")
+        print("Original IP model variables:")
+        for var in ilp.variables():
+            print(f" {var.name}: Category: {var.cat}, lowBound = {var.lowBound}, upBound = {var.upBound}")
+
         # Create a deep copy of the original problem
         lp_relaxation = ilp.copy()
 
-        # Relax the integrality constraints
+        print("\nRelaxing integrality constraints:")
+        relaxed_count = 0
         for var in lp_relaxation.variables():
-            if var.cat == LpInteger:
-                var.cat = LpContinuous
+            if var.cat == 'Integer' or var.cat == 'Binary':
+                old_cat = var.cat
+                var.cat = 'Continuous'
+                relaxed_count += 1
+                print(f"  Relaxed {var.name}: {old_cat} -> {var.cat}")
+
+        print(f"\nTotal variables relaxed: {relaxed_count}")
+        print("Final LP Relaxation variables:")
+        for var in lp_relaxation.variables():
+            print(f"   {var.name}: Category: {var.cat}, lowBound = {var.lowBound}, upBound = {var.upBound}")
 
         return lp_relaxation
 
@@ -261,6 +285,8 @@ class BranchAndBound:
         Returns:
             bool: True if the node is feasible, False otherwise.
         """
+        relaxation = self._create_lp_relaxation(node.lp_model)
+        node.lp_model = relaxation
         status = node.lp_model.solve()
         if status == LpStatusOptimal:
             node.lower_bound = node.lp_model.objective.value()
@@ -332,7 +358,7 @@ class BranchAndBound:
             child_model += LpConstraint(
                 LpAffineExpression([(var, 1)]),
                 LpConstraintGE,
-                f"{branching_variable}_lower_bound",                                ### Why is this here? 
+                f"{branching_variable}_lower_bound", 
                 branch_value
             )
         else:
@@ -340,7 +366,7 @@ class BranchAndBound:
             child_model += LpConstraint(
                 LpAffineExpression([(var, 1)]), 
                 LpConstraintLE, 
-                f"{branching_variable}_upper_bound",                                ### Why is this here? 
+                f"{branching_variable}_upper_bound", 
                 branch_value
             )
 
@@ -354,15 +380,7 @@ class BranchAndBound:
     
         return child_node
 
-    def node_to_string(node):
-        """Generate the label string for a node in the tree"""
-        return f"{node.name}\nLB: {node.lower_bound:.2f}"
-
-    def edge_to_string(node):
-        """Generate the label string for an edge in the tree"""
-        if node.parent is None:
-            return ''
-        return f"{node.branching_variable} = {node.branching_value}"
+    
 
     def visualize_tree(self):
             """
@@ -370,8 +388,8 @@ class BranchAndBound:
         Generates a PNG image of the search tree.
             """
             dot_exporter = DotExporter(self.root,
-                                       nodeattrfunc=lambda node: f'label="{node_to_string(node)}"',
-                                       edgeattrfunc=lambda parent, child: f'label="{edge_to_string(child)}"')
+                                       nodeattrfunc=lambda node: f'label="{node.node_to_string()}"',
+                                       edgeattrfunc=lambda parent, child: f'label="{child.edge_to_string()}"')
 
             dot_data = dot_exporter.to_dotfile("branch_and_bound_tree.dot")
 
