@@ -82,68 +82,66 @@ class BranchAndBound:
 
     def setup_root_node(self):
         """
-        Performs additional, more complex initialization steps. 
-        Initialize the Branch-and-Bound algorithm tree:
-        1. Create the root node with the LP relaxation
+        Performs initialization steps for the Branch-and-Bound algorithm:
+        1. Create the root node with the IP formulation
         2. Set the initial best upper bound to infinity
-        3. Add the root node to the priority queue of active nodes
+        3. Initialize other necessary attributes
         """
-        # Create the root node with LP relaxation
-        self.linear_program = self._create_lp_formulation_TSP()
-        self._create_lp_relaxation()
-        self.root = Node(self.adj_matrix)
-
-        # Solve the root node's LP relaxation
-        # status = self.root.linear_program.solve()
-        # if status == LpStatusOptimal:
-        #    self.root.lower_bound = self.root.linear_program.objective.value()
-        #    self.root.solution = {var.name: var.value() for var in self.root.linear_program.variables()}
-
+        # Create the IP formulation
+        ip_model = self._create_lp_formulation_TSP()
+        
+        # Create the root node
+        self.root = Node(
+            lp_model=ip_model,
+            depth=0,
+            parent=None,
+            branching_variable=None,
+            branching_value=None
+        )
+        
+        # Initialize root node attributes
+        self.root.lower_bound = float('-inf')  # Will be updated when the node is processed
+        self.root.solution = {}  # Will be populated when the node is processed
+        
         # Initialize the best upper bound to infinity
         self.best_upper_bound = float('inf')
-
-        # Add the root node to the priority queue
-        self.active_nodes.put(self.root)
+        
+        # Clear any existing nodes in the priority queue
+        self.active_nodes = PriorityQueue()
+        
+        print("Root node initialized. Ready to start branch-and-bound process.")
 
     def _create_lp_formulation_TSP(self) -> LpProblem:
         """
-        Create the LP relaxation of the TSP instance.
+        Create the IP formulation of the TSP instance using DFJ constraints.
 
-        This method formulates the TSP as a linear programming problem, relaxing the integrality 
-        constraints on the decision variables. It uses a flow-based formulation for subtour elimination.
-
-        The formulation includes:
-            1. Decision variables x[i,j] representing whether the path goes from city i to city j
-            2. Flow variables y[i,j] used for subtour elimination
+        This method formulates the TSP as an integer programming problem using the 
+        Dantzig-Fulkerson-Johnson formulation with subtour elimination constraints.
 
         Returns:
-            LpProblem: The LP Formulation of the TSP
+            LpProblem: The IP Formulation of the TSP
         """
         model = LpProblem("TSP_Formulation", LpMinimize)
 
-        # Create continuous variables
-        x = LpVariable.dicts("x", ((i, j) for i in range(self.n) for j in range(self.n) if i != j), lowBound=0, upBound=1, cat='Continuous')
+        # Create binary variables
+        x = LpVariable.dicts("x", ((i, j) for i in range(self.n) for j in range(self.n) if i != j), cat='Binary')
 
         # Objective function
         model += lpSum(self.adj_matrix[i][j] * x[(i,j)] for i in range(self.n) for j in range(self.n) if i != j)
 
         # Constraints
         for i in range(self.n):
-            model += lpSum(x[(i, j)] for j in range(self.n) if i != j) == 1 # Leave each city once
-            model += lpSum(x[(j, i)] for j in range(self.n) if i != j) == 1 # Enter each city once
+            model += lpSum(x[(i, j)] for j in range(self.n) if i != j) == 1  # Leave each city once
+            model += lpSum(x[(j, i)] for j in range(self.n) if i != j) == 1  # Enter each city once
 
-        # Subtour elimination constraints (using a flow-based formulation)
-        y = LpVariable.dicts("y", ((i, j) for i in range(1, self.n) for j in range(1, self.n) if i != j), lowBound=0, cat='Continuous')
-
-        for i in range(1, self.n):
-            model += lpSum(y[i, j] for j in range(1, self.n) if i != j) - lpSum(y[(j, i)] for j in range(1, self.n) if i != j) == 1
-            for j in range(1, self.n):
-                if i != j:
-                    model += y[(i, j)] <= (self.n - 1) * x[(i, j)]
+        # Subtour elimination constraints (DFJ constraints)
+        for k in range(2, self.n):
+            for subset in itertools.combinations(range(self.n), k):
+                model += lpSum(x[(i, j)] for i in subset for j in subset if i != j) <= len(subset) - 1
 
         return model
 
-    def _create_lp_relaxation(self) -> LpProblem:
+    def _create_lp_relaxation(self, ilp: LpProblem) -> LpProblem:
         """
         Create the LP relaxation of a given integer program
 
@@ -154,7 +152,7 @@ class BranchAndBound:
             LpProblem: The LP relaxation of the integer program 
         """
         # Create a deep copy of the original problem
-        lp_relaxation = self.linear_program.copy()
+        lp_relaxation = ilp.copy()
 
         # Relax the integrality constraints
         for var in lp_relaxation.variables():
@@ -174,8 +172,22 @@ class BranchAndBound:
             Dict[str, float]: The best feasible solution found, or None if no feasible solution was found.
         """
         start_time = time.time()
+        iteration = 0
+
+        print(f"Starting Branch and Bound algorithm with time limit: {time_limit} seconds")
+        print(f"Initial best upper bound: {self.best_upper_bound}")
+
+        # Process the root node
+        if not self._process_node(self.root):
+            print("Root node is infeasible. Problem has no solution.")
+            return None
+
+        self.active_nodes.put(self.root)
 
         while not self.active_nodes.empty():
+            iteration += 1
+            print(f"\nIteration {iteration}:")
+
             # Check if time limit is exceeded
             if time.time() - start_time > time_limit:
                 print("Time limit exceeded.")
@@ -183,39 +195,78 @@ class BranchAndBound:
 
             # Get the next node to process
             current_node = self.active_nodes.get()
+            print(f"Processing node: {current_node.name}")
+
+            # Process the node (solve its LP relaxation)
+            if not self._process_node(current_node):
+                print("Node is infeasible. Skipping.")
+                continue
+
+            print(f"Current node lower bound: {current_node.lower_bound}")
 
             # Check if the node can be pruned
             if current_node.lower_bound >= self.best_upper_bound:
+                print("Node pruned: Lower bound >= Best upper bound")
                 continue  # Prune the node
 
             # Check if the solution is integer feasible
             is_integer, integer_solution = self._check_integer_feasibility(current_node.solution)
+            print(f"Is solution integer feasible? {is_integer}")
 
             if is_integer:
                 # Update the best solution if necessary
                 objective_value = self._calculate_objective_value(integer_solution)
+                print(f"Integer solution found. Objective value: {objective_value}")
                 if objective_value < self.best_upper_bound:
                     self.best_upper_bound = objective_value
                     self.best_solution = integer_solution
+                    print(f"New best solution found! Upper bound updated to: {self.best_upper_bound}")
+                else:
+                    print("Integer solution not better than current best.")
                 continue  # No need to branch further
 
             # Branch on a fractional variable
             branching_variable = self._select_branching_variable(current_node.solution)
             if branching_variable is None:
+                print("No suitable branching variable found. Skipping node.")
                 continue  # No suitable branching variable found
 
-            branching_variable, current_value = branching_result
+            print(f"Branching on variable: {branching_variable}")
+            current_value = current_node.solution[branching_variable]
+            print(f"Current value of branching variable: {current_value}")
 
             # Create and add child nodes
             for is_upper_branch in [False, True]:
                 child_node = self._create_child_node(current_node, branching_variable, current_value, is_upper_branch)
-                if child_node is not None:
-                    self.active_nodes.put(child_node)
+                print(f"Created {'upper' if is_upper_branch else 'lower'} child node: {child_node.name}")
+                self.active_nodes.put(child_node)
+
+        print("\nBranch and Bound algorithm completed.")
+        print(f"Best upper bound: {self.best_upper_bound}")
+        print(f"Best solution found: {self.best_solution}")
 
         # After the solving process, visualize the tree
         # self.visualize_tree()
 
         return self.best_solution
+
+
+    def _process_node(self, node: Node) -> bool:
+        """
+        Process a node by solving its LP relaxation.
+
+        Args:
+            node (Node): The node to process.
+
+        Returns:
+            bool: True if the node is feasible, False otherwise.
+        """
+        status = node.lp_model.solve()
+        if status == LpStatusOptimal:
+            node.lower_bound = node.lp_model.objective.value()
+            node.solution = {var.name: var.value() for var in node.lp_model.variables()}
+            return True
+        return False
 
     def _check_integer_feasibility(self, solution: Dict[str, float]) -> Tuple[bool, Optional[Dict[str, int]]]:
         """
@@ -239,7 +290,7 @@ class BranchAndBound:
 
     def _calculate_objective_value(self, solution: Dict[str, int]) -> float:
         """
-        Calculate the objective value for a given solution.
+        Calculate the objective value for a given TSP solution.
 
         Args:
             solution (Dict[str, int]): The solution to evaluate.
@@ -257,9 +308,7 @@ class BranchAndBound:
     def _select_branching_variable(self, solution: Dict[str, float]) -> Optional[str]:
         """
         Select a variable to branch on based on the current solution.
-
-        Note: This is a very dumb implementation, and intentionally so. This is where the magic deep-learning 
-        sauce will come in.  
+        Uses the "most fractional" branching strategy.
 
         Args:
             solution (Dict[str, float]): The current solution.
@@ -267,11 +316,17 @@ class BranchAndBound:
         Returns:
             Optional[str]: The name of the variable to branch on, or None if no suitable variable is found.
         """
+        most_fractional_var = None
+        max_fractionality = 0
+
         for var_name, value in solution.items():
             if var_name.startswith('x_'):
-                if not math.isclose(value, round(value), abs_tol=1e-6):
-                    return var_name
-        return None
+                fractionality = abs(value - round(value))
+                if fractionality > 1e-6 and fractionality > max_fractionality:
+                    most_fractional_var = var_name
+                    max_fractionality = fractionality
+
+        return most_fractional_var
 
     def _create_child_node(self, parent: Node, branching_variable: str, current_value: float, is_upper_branch: bool) -> Optional[Node]:
         """
@@ -284,7 +339,7 @@ class BranchAndBound:
             is_upper_branch (bool): True if this is the upper branch (>=), False for lower branch (<=)
 
         Returns:
-            Optional[Node]: The new child node, or None if the resulting LP is infeasible.
+            Node: The new child node.
         """
         child_model = parent.lp_model.copy()
         var = child_model.variables()[branching_variable]
@@ -294,7 +349,7 @@ class BranchAndBound:
             child_model += LpConstraint(
                 LpAffineExpression([(var, 1)]),
                 LpConstraintGE,
-                f"{branching_variable}_lower_bound",
+                f"{branching_variable}_lower_bound",                                ### Why is this here? 
                 branch_value
             )
         else:
@@ -302,23 +357,19 @@ class BranchAndBound:
             child_model += LpConstraint(
                 LpAffineExpression([(var, 1)]), 
                 LpConstraintLE, 
-                f"{branching_variable}_upper_bound",
+                f"{branching_variable}_upper_bound",                                ### Why is this here? 
                 branch_value
             )
 
-        status = child_model.solve()
-        if status == LpStatusOptimal:
-            child_node = Node(
-                child_model, 
-                parent.depth + 1, 
-                parent, 
-                branching_variable, 
-                branch_value
-            )
-            child_node.lower_bound = child_model.objective.value()
-            child_node.solution = {var.name: var.value() for var in child_model.variables()}
-            return child_node
-        return None
+        child_node = Node(
+            child_model, 
+            parent.depth + 1, 
+            parent, 
+            branching_variable, 
+            branch_value
+        )
+    
+        return child_node
 
     def node_to_string(node):
         """Generate the label string for a node in the tree"""
