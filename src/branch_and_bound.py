@@ -1,400 +1,378 @@
-from pulp import *
-from queue import PriorityQueue
-from typing import List, Tuple
-from anytree import NodeMixin, RenderTree
-from anytree.exporter import DotExporter
-import graphviz
-import time
+import numpy as np
+from scipy.optimize import linprog
+#from quantecon.optimize import linprog_simplex
+import networkx as nx
+import matplotlib.pyplot as plt
+import heapq
 
-class Node(NodeMixin): 
-    """
-  Represents a node in the branch-and-bound tree.
-
-  Inherits from anytree.NodeMixin to enable tree structure
-
-  Attributes:
-  lp_model (LpProblem): The LP relaxation associated with this node.
-  lower_bound (float): The lower bound (objective value) for this node.
-  depth (int): The depth of this node in the branch-and-bound tree.
-  solution (dict): The solution values for the decision variables.
-  parent (Node): The parent node in the branch-and-bound tree.
-  branching_variable (Tuple[int, int]): The variable branched on to create this node.
-  branching_value (int): The value assigned to the branching variable (0 or 1).
-    """
-    def __init__(self, lp_model: LpProblem, depth: int = 0, parent: 'Node' = None, branching_variable: Tuple[int, int] = None, branching_value: int = None):
-        super().__init__() # Initialize NodeMixin
-        self.lp_model = lp_model
-        self.lower_bound = float('inf')
-        self.depth = depth
-        self.solution = {}
+class Node:
+    def __init__(self, bounds, parent=None, branch_var=None, branch_val=None, branch_direction=None):
+        self.bounds = bounds
         self.parent = parent
-        self.branching_variable = branching_variable
-        self.branching_value = branching_value
-        self.name = self._generate_name()
+        self.branch_var = branch_var
+        self.branch_val = branch_val
+        self.branch_direction = branch_direction
+        self.solution = None
+        self.value = None
+        self.estimate = parent.value if parent else 0
+        self.id = None
+        self.depth = parent.depth + 1 if parent else 0
+        self.local_lower_bound = -np.inf
+        self.local_upper_bound = np.inf
+        self.relaxed_soln = None
+        self.relaxed_obj_value = None
+        self.num_int = 0
+        self.num_frac = 0
+        self.indices_frac = []
+        self.active_constraints = []
+        self.slack_values = []
+        self.optimality_gap = np.inf
+        self.reduced_costs = []
+        self.parent_objective = parent.value if parent else None
+        self.children_pruned = 0
+        self.prune_reason = None
 
-    def _generate_name(self):
-        if self.parent is None:
-            return "Root"
-        return f"Node_{self.depth}_{self.branching_variable}_{self.branching_value}"
+    def __lt__(self, other):
+        return -self.estimate < -other.estimate
 
-    def __lt__(self, other: 'Node') -> bool:
-        """
-        Comparison method for priority queue ordering.
-        Nodes with lower bounds are given higher priority.
-        """
-        return self.lower_bound < other.lower_bound
-        
-    @property
-    def depth(self):
-        return self._depth
+class ILPSolver:
+    def __init__(self):
+        self.optimal_obj_value = -np.inf
+        self.optimal_solution = None
+        self.enumeration_tree = nx.DiGraph()
+        self.node_counter = 0
+        self.optimal_node = None
+        self.global_lower_bound = -np.inf
+        self.global_upper_bound = np.inf
+        self.problem_counter = 0
+        self.root_relaxation_value = None
 
-    @depth.setter
-    def depth(self, value):
-        self._depth = value
+    def solve(self, c, A_ub, b_ub, visualize=False):
+        self._reset()
+        self._set_global_attributes(c, A_ub, b_ub)
 
-    def node_to_string(self):
-        """Generate the label string for a node in the tree"""
-        return f"{self.name}\nLB: {self.lower_bound:.2f}"
+        root_bounds = [(0, None) for _ in range(len(c))]
+        root_node = Node(root_bounds)
+        root_node.id = self._get_next_node_id()
+        self._add_node_to_tree(root_node, c, A_ub, b_ub)
+        self._update_node_attributes(root_node, {'color': 'blue'})
 
-    def edge_to_string(self):
-        """Generate the label string for an edge in the tree"""
-        if node.parent is None:
-            return ''
-        return f"{self.branching_variable} = {self.branching_value}"
+        priority_queue = [(0, root_node)]
 
-class BranchAndBound: 
-    """
-    Implements the Branch-and-Bound algorithm for solving the Traveling Salesman Problem.
+        while priority_queue:
+            _, current_node = heapq.heappop(priority_queue)
 
-    Attributes:
-        adj_matrix (List[List[float]]): The adjacency matrix representing the TSP instance
-        n (int): The number of cities in the TSP
-        root (Node): The root node of the branch-and-bound tree.
-        best_upper_bound (float): The best known upper bound (incumbent solution value)
-        best_solution (dict): The best known feasible solution
-        active_nodes (PriorityQueue): Priority queue to store active nodes
-    """
+            result = self._solve_lp_relaxation(c, A_ub, b_ub, current_node.bounds)
 
-    def __init__(self, adj_matrix: List[List[float]]):
-        """
-        Constructor for the BranchAndBound class
-
-        Args:
-            adj_matrix (List[List[float]]): The adjacency matrix representing the TSP instance
-        """
-        self.adj_matrix = adj_matrix
-        self.n = len(adj_matrix)
-        self.root = None
-        self.best_upper_bound = float('inf')
-        self.best_solution = None
-        self.active_nodes = PriorityQueue()
-        self.linear_program = None
-
-    def setup_root_node(self):
-        """
-        Performs initialization steps for the Branch-and-Bound algorithm:
-        1. Create the root node with the IP formulation
-        2. Set the initial best upper bound to infinity
-        3. Initialize other necessary attributes
-        """
-        # Create the IP formulation
-        ip_model = self._create_lp_formulation_TSP()
-        
-        # Create the root node
-        self.root = Node(
-            lp_model=ip_model,
-            depth=0,
-            parent=None,
-            branching_variable=None,
-            branching_value=None
-        )
-        
-        # Initialize root node attributes
-        self.root.lower_bound = float('-inf')  # Will be updated when the node is processed
-        self.root.solution = {}  # Will be populated when the node is processed
-        
-        # Initialize the best upper bound to infinity
-        self.best_upper_bound = float('inf')
-        
-        # Clear any existing nodes in the priority queue
-        self.active_nodes = PriorityQueue()
-        
-        print("Root node initialized. Ready to start branch-and-bound process.")
-
-    def _create_lp_formulation_TSP(self) -> LpProblem:
-        """
-        Create the IP formulation of the TSP instance using DFJ constraints.
-
-        This method formulates the TSP as an integer programming problem using the 
-        Dantzig-Fulkerson-Johnson formulation with subtour elimination constraints.
-
-        Returns:
-            LpProblem: The IP Formulation of the TSP
-        """
-        model = LpProblem("TSP_Formulation", LpMinimize)
-
-        # Create binary variables
-        x = LpVariable.dicts("x", ((i, j) for i in range(self.n) for j in range(self.n) if i != j), cat='Binary')
-
-        # Objective function
-        model += lpSum(self.adj_matrix[i][j] * x[(i,j)] for i in range(self.n) for j in range(self.n) if i != j)
-
-        # Constraints
-        for i in range(self.n):
-            model += lpSum(x[(i, j)] for j in range(self.n) if i != j) == 1  # Leave each city once
-            model += lpSum(x[(j, i)] for j in range(self.n) if i != j) == 1  # Enter each city once
-
-        # Subtour elimination constraints (DFJ constraints)
-        for k in range(2, self.n):
-            for subset in itertools.combinations(range(self.n), k):
-                model += lpSum(x[(i, j)] for i in subset for j in subset if i != j) <= len(subset) - 1
-
-        return model
-
-    def _create_lp_relaxation(self, ilp: LpProblem) -> LpProblem:
-        """
-        Create the LP relaxation of a given integer program
-
-        This function creates a copy of the original integer program and relaxes the
-        integrality constraints on all variables.
-
-        Returns:
-            LpProblem: The LP relaxation of the integer program 
-        """
-        print("\nCreating LP Relaxation:")
-        print("Original IP model variables:")
-        for var in ilp.variables():
-            print(f" {var.name}: Category: {var.cat}, lowBound = {var.lowBound}, upBound = {var.upBound}")
-
-        # Create a deep copy of the original problem
-        lp_relaxation = ilp.copy()
-
-        print("\nRelaxing integrality constraints:")
-        relaxed_count = 0
-        for var in lp_relaxation.variables():
-            if var.cat == 'Integer' or var.cat == 'Binary':
-                old_cat = var.cat
-                var.cat = 'Continuous'
-                relaxed_count += 1
-                print(f"  Relaxed {var.name}: {old_cat} -> {var.cat}")
-
-        print(f"\nTotal variables relaxed: {relaxed_count}")
-        print("Final LP Relaxation variables:")
-        for var in lp_relaxation.variables():
-            print(f"   {var.name}: Category: {var.cat}, lowBound = {var.lowBound}, upBound = {var.upBound}")
-
-        return lp_relaxation
-
-    def solve(self, time_limit: float = 3600) -> Dict[str, float]:
-        """
-        Main loop of the branch-and-bound algorithm.
-
-        Args:
-            time_limit (float): Maximum running time in seconds. Default is 1 hour.
-
-        Returns:
-            Dict[str, float]: The best feasible solution found, or None if no feasible solution was found.
-        """
-        start_time = time.time()
-        iteration = 0
-
-        print(f"Starting Branch and Bound algorithm with time limit: {time_limit} seconds")
-        print(f"Initial best upper bound: {self.best_upper_bound}")
-
-        # Process the root node
-        if not self._process_node(self.root):
-            print("Root node is infeasible. Problem has no solution.")
-            return None
-
-        self.active_nodes.put(self.root)
-
-        while not self.active_nodes.empty():
-            iteration += 1
-            print(f"\nIteration {iteration}:")
-
-            # Check if time limit is exceeded
-            if time.time() - start_time > time_limit:
-                print("Time limit exceeded.")
-                break
-
-            # Get the next node to process
-            current_node = self.active_nodes.get()
-            print(f"Processing node: {current_node.name}")
-
-            # Process the node (solve its LP relaxation)
-            if not self._process_node(current_node):
-                print("Node is infeasible. Skipping.")
+            if not result.success:
+                current_node.prune_reason = 'infeasible'
+                self._update_node_attributes(current_node, {'color': 'red', 'prune_reason': 'infeasible'})
+                if current_node.parent:
+                    current_node.parent.children_pruned += 1
                 continue
 
-            print(f"Current node lower bound: {current_node.lower_bound}")
+            current_node.relaxed_soln = result.x
+            current_node.relaxed_obj_value = -result.fun  # Note the negation due to maximization
+            current_node.value = current_node.relaxed_obj_value
+            current_node.estimate = current_node.value
 
-            # Check if the node can be pruned
-            if current_node.lower_bound >= self.best_upper_bound:
-                print("Node pruned: Lower bound >= Best upper bound")
-                continue  # Prune the node
+            if self.root_relaxation_value is None:
+                self.root_relaxation_value = current_node.value
+                self.global_upper_bound = self.root_relaxation_value
 
-            # Check if the solution is integer feasible
-            is_integer, integer_solution = self._check_integer_feasibility(current_node.solution)
-            print(f"Is solution integer feasible? {is_integer}")
+            self._calculate_node_attributes(current_node, c, A_ub, b_ub, result)
 
-            if is_integer:
-                # Update the best solution if necessary
-                objective_value = current_node.lp_model.objective.value()
-                print(f"Integer solution found. Objective value: {objective_value}")
-                if objective_value < self.best_upper_bound:
-                    self.best_upper_bound = objective_value
-                    self.best_solution = integer_solution
-                    print(f"New best solution found! Upper bound updated to: {self.best_upper_bound}")
-                else:
-                    print("Integer solution not better than current best.")
-                continue  # No need to branch further
+            if current_node.value <= self.global_lower_bound:
+                current_node.prune_reason = 'suboptimal'
+                self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
+                if current_node.parent:
+                    current_node.parent.children_pruned += 1
+                continue
 
-            # Branch on a fractional variable
-            branching_variable = self._select_branching_variable(current_node.solution)
-            if branching_variable is None:
-                print("No suitable branching variable found. Skipping node.")
-                continue  # No suitable branching variable found
+            non_integer_vars = current_node.indices_frac
 
-            print(f"Branching on variable: {branching_variable}")
-            current_value = current_node.solution[branching_variable]
-            print(f"Current value of branching variable: {current_value}")
+            if not non_integer_vars:
+                self._update_node_attributes(current_node, {'color': 'green'})
+                if current_node.value > self.global_lower_bound:
+                    self.global_lower_bound = current_node.value
+                    self.optimal_obj_value = current_node.value
+                    self.optimal_solution = result.x
+                    self.optimal_node = current_node.id
+            else:
+                branch_var = non_integer_vars[0]
+                branch_val = result.x[branch_var]
 
-            # Create and add child nodes
-            for is_upper_branch in [False, True]:
-                child_node = self._create_child_node(current_node, branching_variable, current_value, is_upper_branch)
-                print(f"Created {'upper' if is_upper_branch else 'lower'} child node: {child_node.name}")
-                self.active_nodes.put(child_node)
+                for direction in ['floor', 'ceil']:
+                    new_bounds = current_node.bounds.copy()
+                    if direction == 'floor':
+                        new_bounds[branch_var] = (new_bounds[branch_var][0], np.floor(branch_val))
+                        new_val = np.floor(branch_val)
+                    else:
+                        new_bounds[branch_var] = (np.ceil(branch_val), new_bounds[branch_var][1])
+                        new_val = np.ceil(branch_val)
 
-        print("\nBranch and Bound algorithm completed.")
-        print(f"Best upper bound: {self.best_upper_bound}")
-        print(f"Best solution found: {self.best_solution}")
+                    new_node = Node(new_bounds, current_node, branch_var, new_val, direction)
+                    new_node.id = self._get_next_node_id()
 
-        # After the solving process, visualize the tree
-        # self.visualize_tree()
+                    new_A_ub, new_b_ub = self._update_constraints(A_ub, b_ub, branch_var, new_val, direction)
 
-        return self.best_solution
+                    self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
+                    heapq.heappush(priority_queue, (-new_node.estimate, new_node))
+
+        self._calculate_integrality_gap()
+        if visualize:
+          self._visualize_tree()
+        self._save_graph_to_disk()
+        return self.optimal_solution, self.optimal_obj_value
+
+    def _reset(self):
+        self.optimal_obj_value = -np.inf
+        self.optimal_solution = None
+        self.enumeration_tree = nx.DiGraph()
+        self.node_counter = 0
+        self.optimal_node = None
+        self.global_lower_bound = -np.inf
+        self.global_upper_bound = np.inf
+        self.root_relaxation_value = None
+
+    def _add_node_to_tree(self, node, c, A_ub, b_ub):
+        attributes = self._get_default_node_attributes()
+        attributes.update({
+            'depth': node.depth,
+            'branch_variable': node.branch_var,
+            'branch_value': node.branch_val,
+            'branch_direction': node.branch_direction,
+            'local_lower_bound': node.local_lower_bound,
+            'local_upper_bound': node.local_upper_bound,
+            'current_constraints': A_ub.tolist(),
+            'current_rhs': b_ub.tolist(),
+            'active_constraints': [],
+            'slack_values': [],
+            'optimality_gap': np.inf,
+            'reduced_costs': [],
+            'parent_objective': node.parent_objective,
+            'children_pruned': 0,
+            'prune_reason': None,
+        })
+        self.enumeration_tree.add_node(node.id, **attributes)
+
+        if node.parent:
+            self.enumeration_tree.add_edge(node.parent.id, node.id)
+
+    def _calculate_node_attributes(self, node, c, A_ub, b_ub, result):
+        # Calculate active constraints
+        node.active_constraints = np.where(np.isclose(A_ub @ result.x, b_ub))[0].tolist()
+
+        # Calculate slack values
+        node.slack_values = (b_ub - A_ub @ result.x).tolist()
+
+        # Calculate optimality gap
+        if self.global_lower_bound > -np.inf:
+            node.optimality_gap = (node.value - self.global_lower_bound) / abs(self.global_lower_bound)
+
+        # Update number of integer and fractional variables
+        node.num_int = sum(1 for x in result.x if abs(x - round(x)) < 1e-6)
+        node.num_frac = len(c) - node.num_int
+        node.indices_frac = [i for i, x in enumerate(current_node.x) if abs(x - round(x)) > 1e-6]
+
+        self._update_node_attributes(node, {
+            'relaxed_soln': node.relaxed_soln.tolist(),
+            'relaxed_obj_value': node.relaxed_obj_value,
+            'value': node.value,
+            'active_constraints': node.active_constraints,
+            'slack_values': node.slack_values,
+            'optimality_gap': node.optimality_gap,
+            'num_int': node.num_int,
+            'num_frac': node.num_frac,
+            'indices_frac': node.indices_frac,
+            'parent_objective': node.parent_objective,
+            'children_pruned': node.children_pruned
+        })
+
+    def _calculate_integrality_gap(self):
+        if self.optimal_obj_value > -np.inf and self.root_relaxation_value is not None:
+            integrality_gap = (self.root_relaxation_value - self.optimal_obj_value) / abs(self.optimal_obj_value)
+            self.enumeration_tree.graph['integrality_gap'] = integrality_gap
+
+    def _get_default_node_attributes(self):
+        return {
+            'depth': 0,
+            'branch_variable': None,
+            'branch_value': None,
+            'branch_direction': None,
+            'fractionality': None,
+            'local_lower_bound': -np.inf,
+            'local_upper_bound': np.inf,
+            'global_lower_bound': -np.inf,
+            'global_upper_bound': np.inf,
+            'current_constraints': None,
+            'current_rhs': None,
+            'relaxed_soln': None,
+            'relaxed_obj_value': None,
+            'num_int': 0,
+            'num_frac': 0,
+            'indices_frac': [],
+            'active_constraints': [],
+            'slack_values': [],
+            'optimality_gap': np.inf,
+            'parent_objective': None,
+            'children_pruned': 0,
+            'color': 'lightgray'
+        }
+
+    def _update_node_attributes(self, node, attributes):
+        # Ensure we're only updating existing attributes
+        current_attributes = self.enumeration_tree.nodes[node.id]
+        for key, value in attributes.items():
+            if key in current_attributes:
+                if isinstance(value, np.ndarray):
+                    value = value.tolist()
+                current_attributes[key] = value
+
+    def _update_constraints(self, A_ub, b_ub, branch_var, branch_val, direction):
+        new_row = np.zeros(A_ub.shape[1])
+        new_row[branch_var] = 1 if direction == 'floor' else -1
+        new_A_ub = np.vstack([A_ub, new_row])
+        new_b_ub = np.append(b_ub, branch_val if direction == 'floor' else -branch_val)
+        return new_A_ub, new_b_ub
+
+    def _get_next_node_id(self):
+        self.node_counter += 1
+        return f"Node {self.node_counter}"
+
+    def _solve_lp_relaxation(self, c, A_ub, b_ub, bounds):
+        return linprog(-c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method='highs')
+
+    def _set_global_attributes(self, c, A_ub, b_ub):
+        self.enumeration_tree.graph['og_obj_coefs'] = c.tolist() # Convert numpy array to list
+        self.enumeration_tree.graph['og_constraints'] = A_ub.tolist() # Convert numpy array to list
+        self.enumeration_tree.graph['og_rhs'] = b_ub.tolist() # Convert numpy array to list
+
+    def _visualize_tree(self):
+        fig, ax = plt.subplots(figsize=(24, 24))
+
+        colors = []
+        for node in self.enumeration_tree.nodes:
+            node_data = self.enumeration_tree.nodes[node]
+            if node_data.get('color') == 'blue':  # Root node
+                colors.append('blue')
+            elif node_data['prune_reason'] == 'infeasible':
+                colors.append('red')
+            elif node_data['prune_reason'] == 'suboptimal':
+                colors.append('orange')
+            elif node_data.get('color') == 'green': # Optimal node
+                colors.append('green')
+            else:
+                colors.append('lightgray')
+        labels = {}
+        for node in self.enumeration_tree.nodes:
+            node_data = self.enumeration_tree.nodes[node]
+            label = f"{node}\n"
+            label += f"Value: {node_data.get('relaxed_obj_value', 'N/A'):.2f}\n"
+
+            if node_data.get('color') == 'blue':
+                label += "Root Node"
+            elif node_data['branch_variable'] is not None:
+                label += f"Branch Var: X{node_data['branch_variable']}\n"
+                label += f"Branch Val: {node_data['branch_value']:.2f}\n"
+                label += f"Direction: {node_data['branch_direction']}"
+
+            labels[node] = label
+
+        pos = nx.spring_layout(self.enumeration_tree)
+        nx.draw(self.enumeration_tree, pos, with_labels=True, labels=labels,
+                node_color=colors, node_size=5000, font_size=8, ax=ax)
+
+        legend_elements = [
+            plt.Rectangle((0,0),1,1,fc="blue", edgecolor='none', label='Root'),
+            plt.Rectangle((0,0),1,1,fc="red", edgecolor='none', label='Pruned (Infeasible)'),
+            plt.Rectangle((0,0),1,1,fc="orange", edgecolor='none', label='Pruned (Suboptimal)'),
+            plt.Rectangle((0,0),1,1,fc="green", edgecolor='none', label='Integer Solution'),
+            plt.Rectangle((0,0),1,1,fc="lightgray", edgecolor='none', label='Non-integral')
+        ]
+        ax.legend(handles=legend_elements, loc='best')
+
+        plt.title("ILP Branch and Bound Enumeration Tree (Best-First Search)")
+        plt.tight_layout()
+        plt.show()
+
+    def _save_graph_to_disk(self):
+        # Ensure all node attributes are lists or basic Python types
+        for node, data in self.enumeration_tree.nodes(data=True):
+            for key, value in data.items():
+                if isinstance(value, np.ndarray):
+                    data[key] = value.tolist()
+                elif isinstance(value, np.integer):
+                    data[key] = int(value)
+                elif isinstance(value, np.floating):
+                    data[key] = float(value)
+
+        # Convert NetworkX graph to PyG Data
+        data = from_networkx(self.enumeration_tree)
+
+        # Create a unique name for the graph
+        timestamp = int(time.time() * 1000)
+        graph_name = f"graph_{self.problem_counter}_{timestamp}"
+        self.problem_counter += 1
+
+        # Ensure the 'saved_graphs' directory exists
+        os.makedirs('saved_graphs', exist_ok=True)
+
+        # Save the graph
+        torch.save(data, f'saved_graphs/{graph_name}.pt')
+        print(f"Graph saved as {graph_name}.pt")
 
 
-    def _process_node(self, node: Node) -> bool:
-        """
-        Process a node by solving its LP relaxation.
 
-        Args:
-            node (Node): The node to process.
+def solve_and_print_results(solver, c, A_ub, b_ub, name, visualize=False):
+    print(f"\nSolving {name}:")
+    solution, value = solver.solve(c, A_ub, b_ub, visualize)
+    print(f"{name} Results:")
+    print("Optimal Solution:", solution)
+    print("Optimal Value:", value)
 
-        Returns:
-            bool: True if the node is feasible, False otherwise.
-        """
-        relaxation = self._create_lp_relaxation(node.lp_model)
-        node.lp_model = relaxation
-        status = node.lp_model.solve()
-        if status == LpStatusOptimal:
-            node.lower_bound = node.lp_model.objective.value()
-            node.solution = {var.name: var.value() for var in node.lp_model.variables()}
-            return True
-        return False
+def main():
+    solver = ILPSolver()
 
-    def _check_integer_feasibility(self, solution: Dict[str, float]) -> Tuple[bool, Optional[Dict[str, int]]]:
-        """
-        Check if the given solution is integer feasible.
+    # Example 1: 2 variables, 2 constraints
+    c1 = np.array([1, 1])
+    A_ub1 = np.array([[-1, 1], [8, 2]])
+    b_ub1 = np.array([2, 19])
+    solve_and_print_results(solver, c1, A_ub1, b_ub1, "Example 1 (2 variables, 2 constraints)", visualize=True)
 
-        Args:
-            solution (Dict[str, float]): The solution to check.
+    # Example 2: 5 variables, 3 constraints
+    c2 = np.array([3, 2, 5, 4, 1])
+    A_ub2 = np.array([
+        [2, 1, 3, 2, 1],
+        [1, 2, 1, 1, 3],
+        [1, 1, 2, 3, 1]
+    ])
+    b_ub2 = np.array([10, 8, 15])
+    solve_and_print_results(solver, c2, A_ub2, b_ub2, "Example 2 (5 variables, 3 constraints)", visualize=True)
 
-        Returns:
-            Tuple[bool, Optional[Dict[str, int]]]: 
-                - Boolean indicating if the solution is integer feasible.
-                - The integer solution if feasible, None otherwise.
-        """
-        integer_solution = {}
-        for var_name, value in solution.items():
-            if var_name.startswith('x_'):
-                if abs(value - round(value)) > 1e-6:
-                    return False, None
-                integer_solution[var_name] = round(value)
-        return True, integer_solution
+    # Example 3: 8 variables, 5 constraints
+    c3 = np.array([5, 7, 3, 2, 6, 4, 8, 1])
+    A_ub3 = np.array([
+        [3, 2, 1, 4, 2, 5, 1, 3],
+        [1, 3, 2, 1, 4, 3, 2, 1],
+        [2, 1, 4, 3, 1, 2, 3, 2],
+        [4, 3, 2, 1, 3, 1, 2, 4],
+        [1, 2, 3, 4, 2, 1, 3, 2]
+    ])
+    b_ub3 = np.array([20, 25, 30, 22, 18])
+    solve_and_print_results(solver, c3, A_ub3, b_ub3, "Example 3 (8 variables, 5 constraints)", visualize=True)
 
-    def _select_branching_variable(self, solution: Dict[str, float]) -> Optional[str]:
-        """
-        Select a variable to branch on based on the current solution.
-        Uses the "most fractional" branching strategy.
-
-        Args:
-            solution (Dict[str, float]): The current solution.
-
-        Returns:
-            Optional[str]: The name of the variable to branch on, or None if no suitable variable is found.
-        """
-        most_fractional_var = None
-        max_fractionality = 0
-
-        for var_name, value in solution.items():
-            if var_name.startswith('x_'):
-                fractionality = abs(value - round(value))
-                if fractionality > 1e-6 and fractionality > max_fractionality:
-                    most_fractional_var = var_name
-                    max_fractionality = fractionality
-
-        return most_fractional_var
-
-    def _create_child_node(self, parent: Node, branching_variable: str, current_value: float, is_upper_branch: bool) -> Optional[Node]:
-        """
-        Create a child node by adding a new constraint to the parent's LP model.
-
-        Args:
-            parent (Node): The parent node.
-            branching_variable (str): The name of the variable to branch on.
-            current_value (float): The current value of the branching variable.
-            is_upper_branch (bool): True if this is the upper branch (>=), False for lower branch (<=)
-
-        Returns:
-            Node: The new child node.
-        """
-        child_model = parent.lp_model.copy()
-        var = child_model.variables()[branching_variable]
-
-        if is_upper_branch:
-            branch_value = math.ceil(current_value)
-            child_model += LpConstraint(
-                LpAffineExpression([(var, 1)]),
-                LpConstraintGE,
-                f"{branching_variable}_lower_bound", 
-                branch_value
-            )
-        else:
-            branch_value = math.floor(current_value)
-            child_model += LpConstraint(
-                LpAffineExpression([(var, 1)]), 
-                LpConstraintLE, 
-                f"{branching_variable}_upper_bound", 
-                branch_value
-            )
-
-        child_node = Node(
-            child_model, 
-            parent.depth + 1, 
-            parent, 
-            branching_variable, 
-            branch_value
-        )
-    
-        return child_node
-
-    
-
-    def visualize_tree(self):
-            """
-            Visualize the branch-and-bound tree using graphviz.
-        Generates a PNG image of the search tree.
-            """
-            dot_exporter = DotExporter(self.root,
-                                       nodeattrfunc=lambda node: f'label="{node.node_to_string()}"',
-                                       edgeattrfunc=lambda parent, child: f'label="{child.edge_to_string()}"')
-
-            dot_data = dot_exporter.to_dotfile("branch_and_bound_tree.dot")
-
-            # Use graphviz to render the tree
-            graph = graphviz.Source.from_file("branch_and_bound_tree.dot")
-            graph.render("branch_and_bound_tree", format="png", cleanup=True)
-            print("Branch-and-bound tree visualization saved as 'branch_and_bound_tree.png'")
+    # Example 4: 10 variables, 7 constraints
+    c4 = np.array([4, 6, 2, 3, 7, 5, 8, 1, 9, 3])
+    A_ub4 = np.array([
+        [2, 3, 1, 4, 2, 5, 1, 3, 2, 1],
+        [1, 2, 3, 1, 4, 2, 3, 1, 2, 4],
+        [3, 1, 2, 4, 1, 3, 2, 5, 1, 2],
+        [4, 2, 3, 1, 5, 2, 1, 3, 4, 2],
+        [1, 3, 2, 5, 1, 4, 3, 2, 1, 3],
+        [2, 4, 1, 3, 2, 1, 5, 4, 3, 1],
+        [3, 2, 4, 1, 3, 5, 2, 1, 4, 2]
+    ])
+    b_ub4 = np.array([30, 25, 35, 40, 20, 28, 32])
+    solve_and_print_results(solver, c4, A_ub4, b_ub4, "Example 4 (10 variables, 7 constraints)", visualize=True)
 
