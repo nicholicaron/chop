@@ -6,14 +6,13 @@ Method.
 from collections import namedtuple
 import numpy as np
 from numba import jit
-from .pivoting import _pivoting, _lex_min_ratio_test
+from pivoting import _pivoting, _lex_min_ratio_test
 
 
 SimplexResult = namedtuple(
-    'SimplexResult', ['x', 'lambd', 'fun', 'success', 'status', 'num_iter']
+    'SimplexResult', ['x', 'lambd', 'fun', 'success', 'status', 'num_iter', 'tableau']
 )
-SimplexResult.__doc__ = \
-    'namedtuple containing the result from `linprog_simplex`.'
+
 
 FEA_TOL = 1e-6
 TOL_PIV = 1e-7
@@ -23,7 +22,7 @@ PivOptions = namedtuple(
     'PivOptions', ['fea_tol', 'tol_piv', 'tol_ratio_diff']
 )
 PivOptions.__new__.__defaults__ = (FEA_TOL, TOL_PIV, TOL_RATIO_DIFF)
-PivOptions.__doc__ = 'namedtuple to hold tolerance values for pivoting.'
+
 
 
 # Delete useless docstring for fields of namedtuple
@@ -36,7 +35,6 @@ for _nt in [SimplexResult, PivOptions]:
     _del_field_docstring(_nt)
 
 
-[docs]
 @jit(nopython=True, cache=True)
 def linprog_simplex(c, A_ub=np.empty((0, 0)), b_ub=np.empty((0,)),
                     A_eq=np.empty((0, 0)), b_eq=np.empty((0,)),
@@ -74,7 +72,7 @@ def linprog_simplex(c, A_ub=np.empty((0, 0)), b_ub=np.empty((0,)),
         ndarray of shape (k,).
 
     max_iter : int, optional(default=10**6)
-        Maximum number of iteration to perform.
+            Maximum number of iteration to perform.
 
     piv_options : PivOptions, optional
         PivOptions namedtuple to set the following tolerance values:
@@ -133,6 +131,9 @@ def linprog_simplex(c, A_ub=np.empty((0, 0)), b_ub=np.empty((0,)),
             num_iter : int
                 The number of iterations performed.
 
+            tableau : ndarray(float, ndim=2)
+                The final tableau after optimization.
+
     References
     ----------
     * K. C. Border, "The Gauss–Jordan and Simplex Algorithms" 2004.
@@ -167,7 +168,7 @@ def linprog_simplex(c, A_ub=np.empty((0, 0)), b_ub=np.empty((0,)),
         solve_phase_1(tableau, basis, max_iter, piv_options=piv_options)
     num_iter += num_iter_1
     if not success:
-        return SimplexResult(x, lambd, fun, success, status, num_iter)
+        return SimplexResult(x, lambd, fun, success, status, num_iter, tableau)
 
     # Modify the criterion row for Phase 2
     _set_criterion_row(c, basis, tableau)
@@ -179,13 +180,13 @@ def linprog_simplex(c, A_ub=np.empty((0, 0)), b_ub=np.empty((0,)),
     num_iter += num_iter_2
     fun = get_solution(tableau, basis, x, lambd, b_signs)
 
-    return SimplexResult(x, lambd, fun, success, status, num_iter)
+    return SimplexResult(x, lambd, fun, success, status, num_iter, tableau)
 
 
 
-linprog_simplex.__doc__ = linprog_simplex.__doc__.format(
-    FEA_TOL=FEA_TOL, TOL_PIV=TOL_PIV, TOL_RATIO_DIFF=TOL_RATIO_DIFF
-)
+#linprog_simplex.__doc__ = linprog_simplex.__doc__.format(
+#    FEA_TOL=FEA_TOL, TOL_PIV=TOL_PIV, TOL_RATIO_DIFF=TOL_RATIO_DIFF
+#)
 
 
 @jit(nopython=True, cache=True)
@@ -346,7 +347,6 @@ def _set_criterion_row(c, basis, tableau):
     return tableau
 
 
-[docs]
 @jit(nopython=True, cache=True)
 def solve_tableau(tableau, basis, max_iter=10**6, skip_aux=True,
                   piv_options=PivOptions()):
@@ -441,7 +441,6 @@ def solve_tableau(tableau, basis, max_iter=10**6, skip_aux=True,
 
 
 
-[docs]
 @jit(nopython=True, cache=True)
 def solve_phase_1(tableau, basis, max_iter=10**6, piv_options=PivOptions()):
     """
@@ -536,7 +535,6 @@ def _pivot_col(tableau, skip_aux, piv_options):
     return found, pivcol
 
 
-[docs]
 @jit(nopython=True, cache=True)
 def get_solution(tableau, basis, x, lambd, b_signs):
     """

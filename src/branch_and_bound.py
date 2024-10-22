@@ -1,13 +1,19 @@
 import numpy as np
-from scipy.optimize import linprog
-#from quantecon.optimize import linprog_simplex
+#from scipy.optimize import linprog
+from simplex import linprog_simplex, SimplexResult, PivOptions
 import networkx as nx
 import matplotlib.pyplot as plt
+import torch
+from torch_geometric.utils.convert import from_networkx
+import os
+import time
 import heapq
+import argparse
+from itertools import combinations
+
 
 class Node:
-    def __init__(self, bounds, parent=None, branch_var=None, branch_val=None, branch_direction=None):
-        self.bounds = bounds
+    def __init__(self, parent=None, branch_var=None, branch_val=None, branch_direction=None):
         self.parent = parent
         self.branch_var = branch_var
         self.branch_val = branch_val
@@ -17,19 +23,15 @@ class Node:
         self.estimate = parent.value if parent else 0
         self.id = None
         self.depth = parent.depth + 1 if parent else 0
-        self.local_lower_bound = -np.inf
-        self.local_upper_bound = np.inf
+        self.local_upper_bound = -np.inf # relaxation objective value
         self.relaxed_soln = None
-        self.relaxed_obj_value = None
         self.num_int = 0
         self.num_frac = 0
         self.indices_frac = []
         self.active_constraints = []
         self.slack_values = []
         self.optimality_gap = np.inf
-        self.reduced_costs = []
         self.parent_objective = parent.value if parent else None
-        self.children_pruned = 0
         self.prune_reason = None
 
     def __lt__(self, other):
@@ -42,88 +44,137 @@ class ILPSolver:
         self.enumeration_tree = nx.DiGraph()
         self.node_counter = 0
         self.optimal_node = None
-        self.global_lower_bound = -np.inf
-        self.global_upper_bound = np.inf
-        self.problem_counter = 0
-        self.root_relaxation_value = None
+        self.global_lower_bound = -np.inf # Greatest lower bound (integer feasible solution) found among all instances so far
+        self.problem_counter = 0 
+        self.root_relaxation_value = None # Objective value of root node relaxation
+        self.n_cities = 0
 
-    def solve(self, c, A_ub, b_ub, visualize=False):
+    def solve(self, c, A_ub, b_ub, A_eq=None, b_eq=None, problem_name="default_name", visualize=False):
         self._reset()
         self._set_global_attributes(c, A_ub, b_ub)
+        # Calculate number of cities
+        # Assumes that the TSP is of the standard formulaticon, i.e. c contains only the binary edge variables
+        # len(c) = n_cities * (n_cities - 1) / 2, so we solve for n_cities using the quadratic equation 
+        self.n_cities = round((1 + np.sqrt(1 + 8 * len(c))) / 2) 
 
-        root_bounds = [(0, None) for _ in range(len(c))]
-        root_node = Node(root_bounds)
+        root_node = Node()
         root_node.id = self._get_next_node_id()
+        
+        # Solve LP relaxation for root node
+        result = self._solve_lp_relaxation(c, A_ub, b_ub)
+        if not result.success:
+            return SimplexResult(None, None, None, False, 2, 0, None)
+        
+        root_node.relaxed_soln = result.x
+        root_node.value = result.fun
+        root_node.local_upper_bound = root_node.value
+        self.root_relaxation_value = root_node.value
+
         self._add_node_to_tree(root_node, c, A_ub, b_ub)
         self._update_node_attributes(root_node, {'color': 'blue'})
 
-        priority_queue = [(0, root_node)]
+        priority_queue = [(root_node.value, root_node)]
 
         while priority_queue:
             _, current_node = heapq.heappop(priority_queue)
 
-            result = self._solve_lp_relaxation(c, A_ub, b_ub, current_node.bounds)
-
-            if not result.success:
-                current_node.prune_reason = 'infeasible'
-                self._update_node_attributes(current_node, {'color': 'red', 'prune_reason': 'infeasible'})
-                if current_node.parent:
-                    current_node.parent.children_pruned += 1
-                continue
-
-            current_node.relaxed_soln = result.x
-            current_node.relaxed_obj_value = -result.fun  # Note the negation due to maximization
-            current_node.value = current_node.relaxed_obj_value
-            current_node.estimate = current_node.value
-
-            if self.root_relaxation_value is None:
-                self.root_relaxation_value = current_node.value
-                self.global_upper_bound = self.root_relaxation_value
-
-            self._calculate_node_attributes(current_node, c, A_ub, b_ub, result)
-
-            if current_node.value <= self.global_lower_bound:
+            if current_node.local_upper_bound <= self.global_lower_bound:
                 current_node.prune_reason = 'suboptimal'
                 self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
-                if current_node.parent:
-                    current_node.parent.children_pruned += 1
                 continue
 
-            non_integer_vars = current_node.indices_frac
+            is_integer_solution = all(abs(x - round(x)) < 1e-6 for x in current_node.relaxed_soln)
 
-            if not non_integer_vars:
-                self._update_node_attributes(current_node, {'color': 'green'})
-                if current_node.value > self.global_lower_bound:
-                    self.global_lower_bound = current_node.value
-                    self.optimal_obj_value = current_node.value
-                    self.optimal_solution = result.x
-                    self.optimal_node = current_node.id
+            if is_integer_solution:
+                violated_constraints = self._find_violated_subtour_constraints(current_node.relaxed_soln)
+                if not violated_constraints:
+                    if current_node.value > self.global_lower_bound:
+                        self.global_lower_bound = current_node.value
+                        self.optimal_obj_value = current_node.value
+                        self.optimal_solution = current_node.relaxed_soln
+                        self.optimal_node = current_node.id
+                        self._update_node_attributes(current_node, {'color': 'green'})
+                    else:
+                        current_node.prune_reason = 'suboptimal'
+                        self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
+                else:
+                    # Add violated constraints and re-solve
+                    new_A_ub = A_ub.copy()
+                    new_b_ub = b_ub.copy()
+                    for constraint in violated_constraints:
+                        new_A_ub = np.vstack([new_A_ub, constraint[:-1]])  # LHS
+                        new_b_ub = np.append(new_b_ub, constraint[-1])  # RHS
+                    result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
+                    if result.success:
+                        current_node.relaxed_soln = result.x
+                        current_node.value = result.fun
+                        current_node.local_upper_bound = current_node.value
+                        heapq.heappush(priority_queue, (current_node.value, current_node))
+                    continue
             else:
-                branch_var = non_integer_vars[0]
-                branch_val = result.x[branch_var]
+                # Branch on a fractional variable
+                fractional_vars = [i for i, x in enumerate(current_node.relaxed_soln) if abs(x - round(x)) > 1e-6]
+                branch_var = fractional_vars[0]
+                branch_val = current_node.relaxed_soln[branch_var]
 
                 for direction in ['floor', 'ceil']:
-                    new_bounds = current_node.bounds.copy()
+                    new_A_ub = A_ub.copy()
+                    new_b_ub = b_ub.copy()
+                    
                     if direction == 'floor':
-                        new_bounds[branch_var] = (new_bounds[branch_var][0], np.floor(branch_val))
+                        new_constraint = np.zeros(len(c))
+                        new_constraint[branch_var] = -1
+                        new_A_ub = np.vstack([new_A_ub, new_constraint])
+                        new_b_ub = np.append(new_b_ub, -np.floor(branch_val))
                         new_val = np.floor(branch_val)
                     else:
-                        new_bounds[branch_var] = (np.ceil(branch_val), new_bounds[branch_var][1])
+                        new_constraint = np.zeros(len(c))
+                        new_constraint[branch_var] = 1
+                        new_A_ub = np.vstack([new_A_ub, new_constraint])
+                        new_b_ub = np.append(new_b_ub, np.ceil(branch_val))
                         new_val = np.ceil(branch_val)
 
-                    new_node = Node(new_bounds, current_node, branch_var, new_val, direction)
+                    new_node = Node(parent=current_node, branch_var=branch_var, branch_val=new_val, branch_direction=direction)
                     new_node.id = self._get_next_node_id()
 
-                    new_A_ub, new_b_ub = self._update_constraints(A_ub, b_ub, branch_var, new_val, direction)
+                    result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
+                    if result.success:
+                        new_node.relaxed_soln = result.x
+                        new_node.value = result.fun
+                        new_node.local_upper_bound = new_node.value
+                        self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
+                        if new_node.local_upper_bound > self.global_lower_bound:
+                            heapq.heappush(priority_queue, (new_node.value, new_node))
+                    else:
+                        new_node.prune_reason = 'infeasible'
+                        self._update_node_attributes(new_node, {'color': 'red', 'prune_reason': 'infeasible'})
 
-                    self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
-                    heapq.heappush(priority_queue, (-new_node.estimate, new_node))
-
-        self._calculate_integrality_gap()
         if visualize:
-          self._visualize_tree()
-        self._save_graph_to_disk()
-        return self.optimal_solution, self.optimal_obj_value
+            self._visualize_tree(problem_name)
+        self._save_graph_to_disk(problem_name)
+        return SimplexResult(self.optimal_solution, None, self.optimal_obj_value, True, 0, 0, None)
+    
+    def _find_violated_subtour_constraints(self, solution):
+        edges = [(i, j) for i in range(self.n_cities) for j in range(i+1, self.n_cities) 
+                 if solution[i*(self.n_cities-1) - i*(i+1)//2 + j - 1] > 0.5]
+        G = nx.Graph(edges)
+        
+        violated_constraints = []
+        for r in range(2, self.n_cities):
+            for subset in combinations(range(self.n_cities), r):
+                subgraph = G.subgraph(subset)
+                if nx.is_connected(subgraph) and sum(solution[i*(self.n_cities-1) - i*(i+1)//2 + j - 1] 
+                                                     for i, j in combinations(subset, 2)) > len(subset) - 1 + 1e-6:
+                    constraint = [0] * (self.n_cities * (self.n_cities - 1) // 2)
+                    for i, j in combinations(subset, 2):
+                        if i < j:
+                            idx = i*(self.n_cities-1) - i*(i+1)//2 + j - 1
+                        else:
+                            idx = j*(self.n_cities-1) - j*(j+1)//2 + i - 1
+                        constraint[idx] = 1
+                    violated_constraints.append(constraint)
+        
+        return violated_constraints
 
     def _reset(self):
         self.optimal_obj_value = -np.inf
@@ -142,14 +193,12 @@ class ILPSolver:
             'branch_variable': node.branch_var,
             'branch_value': node.branch_val,
             'branch_direction': node.branch_direction,
-            'local_lower_bound': node.local_lower_bound,
             'local_upper_bound': node.local_upper_bound,
             'current_constraints': A_ub.tolist(),
             'current_rhs': b_ub.tolist(),
             'active_constraints': [],
             'slack_values': [],
             'optimality_gap': np.inf,
-            'reduced_costs': [],
             'parent_objective': node.parent_objective,
             'children_pruned': 0,
             'prune_reason': None,
@@ -173,7 +222,7 @@ class ILPSolver:
         # Update number of integer and fractional variables
         node.num_int = sum(1 for x in result.x if abs(x - round(x)) < 1e-6)
         node.num_frac = len(c) - node.num_int
-        node.indices_frac = [i for i, x in enumerate(current_node.x) if abs(x - round(x)) > 1e-6]
+        node.indices_frac = [i for i, x in enumerate(result.x) if abs(x - round(x)) > 1e-6]
 
         self._update_node_attributes(node, {
             'relaxed_soln': node.relaxed_soln.tolist(),
@@ -189,10 +238,10 @@ class ILPSolver:
             'children_pruned': node.children_pruned
         })
 
-    def _calculate_integrality_gap(self):
-        if self.optimal_obj_value > -np.inf and self.root_relaxation_value is not None:
-            integrality_gap = (self.root_relaxation_value - self.optimal_obj_value) / abs(self.optimal_obj_value)
-            self.enumeration_tree.graph['integrality_gap'] = integrality_gap
+    #def _calculate_integrality_gap(self):
+    #    if self.optimal_obj_value > -np.inf and self.root_relaxation_value is not None:
+    #        integrality_gap = (self.root_relaxation_value - self.optimal_obj_value) / abs(self.optimal_obj_value)
+    #        self.enumeration_tree.graph['integrality_gap'] = integrality_gap
 
     def _get_default_node_attributes(self):
         return {
@@ -240,15 +289,44 @@ class ILPSolver:
         self.node_counter += 1
         return f"Node {self.node_counter}"
 
-    def _solve_lp_relaxation(self, c, A_ub, b_ub, bounds):
-        return linprog(-c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method='highs')
+    def _solve_lp_relaxation(self, c, A_ub, b_ub, A_eq=None, b_eq=None):
+        # Ensure A_eq and b_eq are numpy arrays, even if empty
+        if A_eq is None:
+            A_eq = np.empty((0, len(c)))
+        if b_eq is None:
+            b_eq = np.empty(0)
+
+        # Create PivOptions with default values
+        piv_options = PivOptions()
+
+        # Call linprog_simplex
+        result = linprog_simplex(
+            c=c,
+            A_ub=A_ub,
+            b_ub=b_ub,
+            A_eq=A_eq,
+            b_eq=b_eq,
+            max_iter=10**6,
+            piv_options=piv_options
+        )
+
+        # Convert the result to our expected format
+        return SimplexResult(
+            x=result.x,
+            lambd=result.lambd,
+            fun=result.fun,
+            success=result.success,
+            status=result.status,
+            num_iter=result.num_iter,
+            tableau=result.tableau
+        )
 
     def _set_global_attributes(self, c, A_ub, b_ub):
-        self.enumeration_tree.graph['og_obj_coefs'] = c.tolist() # Convert numpy array to list
-        self.enumeration_tree.graph['og_constraints'] = A_ub.tolist() # Convert numpy array to list
-        self.enumeration_tree.graph['og_rhs'] = b_ub.tolist() # Convert numpy array to list
+        self.enumeration_tree.graph['og_obj_coefs'] = c.tolist() # Original objective coefficients
+        self.enumeration_tree.graph['og_constraints'] = A_ub.tolist() # Original constraint matrix
+        self.enumeration_tree.graph['og_rhs'] = b_ub.tolist() # Original right-hand side
 
-    def _visualize_tree(self):
+    def _visualize_tree(self, problem_name):
         fig, ax = plt.subplots(figsize=(24, 24))
 
         colors = []
@@ -292,11 +370,19 @@ class ILPSolver:
         ]
         ax.legend(handles=legend_elements, loc='best')
 
-        plt.title("ILP Branch and Bound Enumeration Tree (Best-First Search)")
+        plt.title(f"ILP Branch and Bound Enumeration Tree (Best-First Search) - {problem_name}")
         plt.tight_layout()
-        plt.show()
+        
+        # Create a directory for plots if it doesn't exist
+        os.makedirs('plots', exist_ok=True)
+        
+        # Save the plot as a PNG file
+        plot_filename = f"plots/{problem_name.replace(' ', '_').lower()}_tree.png"
+        plt.savefig(plot_filename)
+        plt.close()
+        print(f"Plot saved as {plot_filename}")
 
-    def _save_graph_to_disk(self):
+    def _save_graph_to_disk(self, problem_name):
         # Ensure all node attributes are lists or basic Python types
         for node, data in self.enumeration_tree.nodes(data=True):
             for key, value in data.items():
@@ -312,7 +398,7 @@ class ILPSolver:
 
         # Create a unique name for the graph
         timestamp = int(time.time() * 1000)
-        graph_name = f"graph_{self.problem_counter}_{timestamp}"
+        graph_name = f"graph_{problem_name.replace(' ', '_').lower()}_{self.problem_counter}_{timestamp}"
         self.problem_counter += 1
 
         # Ensure the 'saved_graphs' directory exists
@@ -324,21 +410,22 @@ class ILPSolver:
 
 
 
-def solve_and_print_results(solver, c, A_ub, b_ub, name, visualize=False):
-    print(f"\nSolving {name}:")
-    solution, value = solver.solve(c, A_ub, b_ub, visualize)
-    print(f"{name} Results:")
+def solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize=False):
+    print(f"\nSolving {problem_name}:")
+    solution, value = solver.solve(c, A_ub, b_ub, problem_name, visualize)
+    print(f"{problem_name} Results:")
     print("Optimal Solution:", solution)
     print("Optimal Value:", value)
+    return solution, value
 
-def main():
+def main(visualize):
     solver = ILPSolver()
 
     # Example 1: 2 variables, 2 constraints
     c1 = np.array([1, 1])
     A_ub1 = np.array([[-1, 1], [8, 2]])
     b_ub1 = np.array([2, 19])
-    solve_and_print_results(solver, c1, A_ub1, b_ub1, "Example 1 (2 variables, 2 constraints)", visualize=True)
+    solve_and_print_results(solver, c1, A_ub1, b_ub1, "Example 1 (2 var, 2 cons)", visualize=visualize)
 
     # Example 2: 5 variables, 3 constraints
     c2 = np.array([3, 2, 5, 4, 1])
@@ -348,7 +435,7 @@ def main():
         [1, 1, 2, 3, 1]
     ])
     b_ub2 = np.array([10, 8, 15])
-    solve_and_print_results(solver, c2, A_ub2, b_ub2, "Example 2 (5 variables, 3 constraints)", visualize=True)
+    solve_and_print_results(solver, c2, A_ub2, b_ub2, "Example 2 (5 var, 3 cons)", visualize=visualize)
 
     # Example 3: 8 variables, 5 constraints
     c3 = np.array([5, 7, 3, 2, 6, 4, 8, 1])
@@ -360,7 +447,7 @@ def main():
         [1, 2, 3, 4, 2, 1, 3, 2]
     ])
     b_ub3 = np.array([20, 25, 30, 22, 18])
-    solve_and_print_results(solver, c3, A_ub3, b_ub3, "Example 3 (8 variables, 5 constraints)", visualize=True)
+    solve_and_print_results(solver, c3, A_ub3, b_ub3, "Example 3 (8 var, 5 cons)", visualize=visualize)
 
     # Example 4: 10 variables, 7 constraints
     c4 = np.array([4, 6, 2, 3, 7, 5, 8, 1, 9, 3])
@@ -374,5 +461,12 @@ def main():
         [3, 2, 4, 1, 3, 5, 2, 1, 4, 2]
     ])
     b_ub4 = np.array([30, 25, 35, 40, 20, 28, 32])
-    solve_and_print_results(solver, c4, A_ub4, b_ub4, "Example 4 (10 variables, 7 constraints)", visualize=True)
+    solve_and_print_results(solver, c4, A_ub4, b_ub4, "Example 4 (10 var, 7 cons)", visualize=visualize)
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ILP Solver with Branch and Bound")
+    parser.add_argument("--visualize", action="store_true", help="Generate and save plots")
+    args = parser.parse_args()
+
+    print("Starting branch and bound solver...")
+    main(args.visualize)
