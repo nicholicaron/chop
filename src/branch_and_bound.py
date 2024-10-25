@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch_geometric.utils.convert import from_networkx
 import os
+import random
 import time
 import heapq
 import argparse
@@ -35,7 +36,7 @@ class Node:
         self.prune_reason = None
 
     def __lt__(self, other):
-        return -self.estimate < -other.estimate
+        return self.value < other.value
 
 class ILPSolver:
     def __init__(self):
@@ -50,55 +51,82 @@ class ILPSolver:
         self.n_cities = 0
 
     def solve(self, c, A_ub, b_ub, A_eq=None, b_eq=None, problem_name="default_name", visualize=False):
+        print(f"\nStarting to solve problem: {problem_name}")
         self._reset()
         self._set_global_attributes(c, A_ub, b_ub)
         # Calculate number of cities
         # Assumes that the TSP is of the standard formulaticon, i.e. c contains only the binary edge variables
         # len(c) = n_cities * (n_cities - 1) / 2, so we solve for n_cities using the quadratic equation 
         self.n_cities = round((1 + np.sqrt(1 + 8 * len(c))) / 2) 
+        print(f"Number of cities: {self.n_cities}")
 
         root_node = Node()
         root_node.id = self._get_next_node_id()
         
         # Solve LP relaxation for root node
+        print("Solving LP relaxation for root node...")
         result = self._solve_lp_relaxation(c, A_ub, b_ub)
         if not result.success:
+            print("Root node LP relaxation failed.")
             return SimplexResult(None, None, None, False, 2, 0, None)
         
         root_node.relaxed_soln = result.x
         root_node.value = result.fun
         root_node.local_upper_bound = root_node.value
         self.root_relaxation_value = root_node.value
+        print(f"Root node relaxation value: {self.root_relaxation_value}")
 
         self._add_node_to_tree(root_node, c, A_ub, b_ub)
         self._update_node_attributes(root_node, {'color': 'blue'})
 
         priority_queue = [(root_node.value, root_node)]
+        print("Starting branch and bound process...")
 
         while priority_queue:
             _, current_node = heapq.heappop(priority_queue)
+            print(f"\nProcessing node {current_node.id}")
+
+            result = self._solve_lp_relaxation(c, A_ub, b_ub)
+            if result.success:
+                current_node.relaxed_soln = result.x
+                current_node.value = result.fun
+                current_node.local_upper_bound = result.fun
+            else:
+                print("Node is infeasible")
+                current_node.prune_reason = 'infeasible'
+                self._update_node_attributes(current_node, {'color': 'red', 'prune_reason': 'infeasible'})
+                continue
+            
+
+            print(f"Current node value: {current_node.value}")
+            print(f"Global lower bound: {self.global_lower_bound}")
 
             if current_node.local_upper_bound <= self.global_lower_bound:
+                print("Node pruned: suboptimal")
                 current_node.prune_reason = 'suboptimal'
                 self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
                 continue
 
             is_integer_solution = all(abs(x - round(x)) < 1e-6 for x in current_node.relaxed_soln)
+            print(f"Is integer solution: {is_integer_solution}")
 
             if is_integer_solution:
                 violated_constraints = self._find_violated_subtour_constraints(current_node.relaxed_soln)
+                print(f"Number of violated subtour constraints: {len(violated_constraints)}")
                 if not violated_constraints:
                     if current_node.value > self.global_lower_bound:
+                        print("New best integer solution found!")
                         self.global_lower_bound = current_node.value
                         self.optimal_obj_value = current_node.value
                         self.optimal_solution = current_node.relaxed_soln
                         self.optimal_node = current_node.id
                         self._update_node_attributes(current_node, {'color': 'green'})
                     else:
+                        print("Integer solution found but not better than current best.")
                         current_node.prune_reason = 'suboptimal'
                         self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
                 else:
-                    # Add violated constraints and re-solve
+                    print("Adding violated subtour constraints and re-solving...")
                     new_A_ub = A_ub.copy()
                     new_b_ub = b_ub.copy()
                     for constraint in violated_constraints:
@@ -109,29 +137,37 @@ class ILPSolver:
                         current_node.relaxed_soln = result.x
                         current_node.value = result.fun
                         current_node.local_upper_bound = current_node.value
+                        print(f"Re-solved node value: {current_node.value}")
                         heapq.heappush(priority_queue, (current_node.value, current_node))
+                    else:
+                        print("Re-solving failed after adding subtour constraints.")
                     continue
             else:
-                # Branch on a fractional variable
+                print("Branching on a fractional variable...")
                 fractional_vars = [i for i, x in enumerate(current_node.relaxed_soln) if abs(x - round(x)) > 1e-6]
-                branch_var = fractional_vars[0]
+                branch_var = random.choice(fractional_vars)
                 branch_val = current_node.relaxed_soln[branch_var]
+                print(f"Branching on variable X{branch_var} which has value {branch_val}")
 
                 for direction in ['floor', 'ceil']:
                     new_A_ub = A_ub.copy()
                     new_b_ub = b_ub.copy()
                     
                     if direction == 'floor':
-                        new_constraint = np.zeros(len(c))
-                        new_constraint[branch_var] = -1
-                        new_A_ub = np.vstack([new_A_ub, new_constraint])
-                        new_b_ub = np.append(new_b_ub, -np.floor(branch_val))
                         new_val = np.floor(branch_val)
-                    else:
+                        print(f"Creating {direction} branch (adding constraint X{branch_var} <= {new_val})...")
                         new_constraint = np.zeros(len(c))
                         new_constraint[branch_var] = 1
                         new_A_ub = np.vstack([new_A_ub, new_constraint])
-                        new_b_ub = np.append(new_b_ub, np.ceil(branch_val))
+                        new_b_ub = np.append(new_b_ub, new_val)
+                        new_val = np.floor(branch_val)
+                    else:
+                        new_val = -np.ceil(branch_val)
+                        print(f"Creating {direction} branch (adding constraint -X{branch_var} <= -{new_val})...")
+                        new_constraint = np.zeros(len(c))
+                        new_constraint[branch_var] = -1
+                        new_A_ub = np.vstack([new_A_ub, new_constraint])
+                        new_b_ub = np.append(new_b_ub, -np.ceil(branch_val))
                         new_val = np.ceil(branch_val)
 
                     new_node = Node(parent=current_node, branch_var=branch_var, branch_val=new_val, branch_direction=direction)
@@ -142,12 +178,24 @@ class ILPSolver:
                         new_node.relaxed_soln = result.x
                         new_node.value = result.fun
                         new_node.local_upper_bound = new_node.value
+                        print(f"New {direction} node value: {new_node.value}")
                         self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
                         if new_node.local_upper_bound > self.global_lower_bound:
                             heapq.heappush(priority_queue, (new_node.value, new_node))
+                            print(f"Added {direction} node to priority queue")
+                        else:
+                            print(f"{direction} node pruned: suboptimal")
+                            new_node.prune_reason = 'suboptimal'
+                            self._update_node_attributes(new_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
                     else:
+                        print(f"{direction} node is infeasible")
                         new_node.prune_reason = 'infeasible'
+                        self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
                         self._update_node_attributes(new_node, {'color': 'red', 'prune_reason': 'infeasible'})
+
+        print("\nBranch and bound process completed.")
+        print(f"Optimal objective value: {self.optimal_obj_value}")
+        print(f"Number of nodes explored: {self.node_counter}")
 
         if visualize:
             self._visualize_tree(problem_name)
