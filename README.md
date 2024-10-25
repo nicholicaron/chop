@@ -71,7 +71,7 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in which we explore ways to solve Combinatorial Optimization problems faster by using Deep Reinforcement Learning to learn better heuristics in Mixed-Integer Linear Program solvers.
+CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in which we explore ways to solve Combinatorial Optimization problems faster by using Graph Neural Networks to learn better heuristics in Mixed-Integer Linear Program solvers.
 
 
 
@@ -93,13 +93,13 @@ To get a local copy up and running follow these simple example steps.
 
 ### Dependencies
 
-1. Python version 3 or greater
-2. PuLP
-3. networkx
-4. matplotlib
-5. numpy
-6. anytree
-7. graphviz
+1. Python version 3.7 or greater
+2. NumPy
+3. Numba
+4. NetworkX
+5. Matplotlib
+6. PyTorch
+7. PyTorch Geometric
 
 ### Installation
 
@@ -108,15 +108,43 @@ To get a local copy up and running follow these simple example steps.
    git clone https://github.com/nicholicaron/chop.git
    ```
 2. Install the dependencies
-  ```sh
-  pip install -r requirements.txt
-  ```
-   <!-- USAGE EXAMPLES -->
+   ```sh
+   pip install numpy numba networkx matplotlib torch torch_geometric
+   ```
+
+<!-- USAGE EXAMPLES -->
 ## Usage
 
-Coming Soon
+To run the ILP solver with branch and bound:
 
- <!-- _For more examples, please refer to the [Documentation](https://neumann-labs.com/Robocop)_ -->
+```sh
+python src/branch_and_bound.py [--visualize]
+```
+
+The `--visualize` flag is optional and will generate and save plots of the branch and bound tree.
+
+For more detailed usage:
+
+```python
+from src.branch_and_bound import ILPSolver
+
+# Initialize the solver
+solver = ILPSolver()
+
+# Define your problem
+c = np.array([...])  # Objective coefficients
+A_ub = np.array([...])  # Inequality constraint coefficients
+b_ub = np.array([...])  # Inequality constraint right-hand sides
+A_eq = np.array([...])  # Equality constraint coefficients (optional)
+b_eq = np.array([...])  # Equality constraint right-hand sides (optional)
+
+# Solve the problem
+solution, value, num_nodes, optimal_node = solver.solve(c, A_ub, b_ub, A_eq, b_eq, problem_name="My Problem", visualize=True)
+
+print(f"Optimal solution: {solution}")
+print(f"Optimal value: {value}")
+print(f"Number of nodes explored: {num_nodes}")
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -126,20 +154,14 @@ Coming Soon
 ## Roadmap
 
 ### 1. Implement Basic Linear Programming Solver:
-  - [x] Create LinearProgram class structure
-  - [x] Implement data ingestion methods (add_obj_fn, add_cons)
-  - [x] Develop expression parsing functionality
-  - [ ] Implement core Simplex algorithm components:
+  - [x] Implement core Simplex algorithm components:
     + [x] Initialize solution
     + [x] Choose entering variable
     + [x] Choose leaving variable
-    + [ ] Perform pivot operation
+    + [x] Perform pivot operation
     + [x] Implement solution extraction and result reporting
 ### 2. Enhance Solver Capabilities:
   - [ ] Add support for minimization problems
-  - [ ] Implement two-phase Simplex method
-  - [ ] Develop robust error handling and edge case detection
-  - [ ] Implement sensitivity analysis functionality
 ### 3. Improve Numerical Stability:
   - [ ] Implement techniques to handle degeneracy
   - [ ] Add safeguards against cycling
