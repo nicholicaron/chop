@@ -53,7 +53,7 @@ class ILPSolver:
         self.optimal_solution = None
         self.enumeration_tree = nx.DiGraph()
         self.node_counter = 0
-        self.optimal_node = None
+        self.optimal_node = None 
         self.global_lower_bound = -np.inf # Greatest lower bound (integer feasible solution) found among all instances so far
         self.problem_counter = 0 
         self.root_relaxation_value = None # Objective value of root node relaxation
@@ -132,41 +132,23 @@ class ILPSolver:
             print(f"Is integer solution: {is_integer_solution}")
 
             if is_integer_solution:
-                # Comment out the subtour constraint check and addition
-                # violated_constraints = self._find_violated_subtour_constraints(current_node.relaxed_soln)
-                # print(f"Number of violated subtour constraints: {len(violated_constraints)}")
-                # if not violated_constraints:
                 if current_node.value > self.global_lower_bound:
                     print("New best integer solution found!")
+                    # Reset the color of the previous optimal node
+                    if self.optimal_node is not None:
+                        self._update_node_attributes(self.optimal_node, {'color': 'lightblue'})
+                    
                     self.global_lower_bound = current_node.value
                     self.optimal_obj_value = current_node.value
                     self.optimal_solution = current_node.relaxed_soln
-                    self.optimal_node = current_node.id
+                    self.optimal_node = current_node
                     self._update_node_attributes(current_node, {
                         'color': 'green', 
                         'relaxed_obj_value': current_node.value
                     })
                 else:
                     print("Integer solution found but not better than current best.")
-                    current_node.prune_reason = 'suboptimal'
-                    self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
-                # else:
-                #     print("Adding violated subtour constraints and re-solving...")
-                #     new_A_ub = current_node.A_ub.copy()
-                #     new_b_ub = current_node.b_ub.copy()
-                #     for constraint in violated_constraints:
-                #         new_A_ub = np.vstack([new_A_ub, constraint[:-1]])  # LHS
-                #         new_b_ub = np.append(new_b_ub, constraint[-1])  # RHS
-                #     result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
-                #     if result.success:
-                #         current_node.relaxed_soln = result.x
-                #         current_node.value = result.fun
-                #         current_node.local_upper_bound = current_node.value
-                #         current_node.set_constraints(new_A_ub, new_b_ub)
-                #         heapq.heappush(priority_queue, (current_node.value, current_node))
-                #     else:
-                #         print("Re-solving failed after adding subtour constraints.")
-                #     continue
+                    self._update_node_attributes(current_node, {'color': 'lightblue'})
             else:
                 print("Branching on a fractional variable...")
                 fractional_vars = [i for i, x in enumerate(current_node.relaxed_soln) if abs(x - round(x)) > 1e-6]
@@ -416,8 +398,10 @@ class ILPSolver:
                 colors.append('red')
             elif node_data['prune_reason'] == 'suboptimal':
                 colors.append('orange')
-            elif node_data.get('color') == 'green': # Optimal node
+            elif node_data.get('color') == 'green':  # Optimal node
                 colors.append('green')
+            elif node_data.get('color') == 'lightblue':  # Integer feasible but not optimal
+                colors.append('lightblue')
             else:
                 colors.append('lightgray')
         labels = {}
@@ -450,7 +434,8 @@ class ILPSolver:
             plt.Rectangle((0,0),1,1,fc="blue", edgecolor='none', label='Root'),
             plt.Rectangle((0,0),1,1,fc="red", edgecolor='none', label='Pruned (Infeasible)'),
             plt.Rectangle((0,0),1,1,fc="orange", edgecolor='none', label='Pruned (Suboptimal)'),
-            plt.Rectangle((0,0),1,1,fc="green", edgecolor='none', label='Integer Solution'),
+            plt.Rectangle((0,0),1,1,fc="green", edgecolor='none', label='Optimal Solution'),
+            plt.Rectangle((0,0),1,1,fc="lightblue", edgecolor='none', label='Integer Feasible'),
             plt.Rectangle((0,0),1,1,fc="lightgray", edgecolor='none', label='Non-integral')
         ]
         ax.legend(handles=legend_elements, loc='best')
@@ -592,6 +577,8 @@ if __name__ == "__main__":
     sys.stdout.log.close()
     # Restore the original stdout
     sys.stdout = sys.stdout.terminal
+
+
 
 
 
