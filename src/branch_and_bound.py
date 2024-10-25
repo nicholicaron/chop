@@ -298,10 +298,6 @@ class ILPSolver:
             'children_pruned': node.children_pruned
         })
 
-    #def _calculate_integrality_gap(self):
-    #    if self.optimal_obj_value > -np.inf and self.root_relaxation_value is not None:
-    #        integrality_gap = (self.root_relaxation_value - self.optimal_obj_value) / abs(self.optimal_obj_value)
-    #        self.enumeration_tree.graph['integrality_gap'] = integrality_gap
 
     def _get_default_node_attributes(self):
         return {

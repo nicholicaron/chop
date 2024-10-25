@@ -5,6 +5,7 @@ from branch_and_bound import solve_and_print_results, ILPSolver
 import os
 import time
 import random
+import networkx as nx
 
 def generate_random_tsp(n, x_range=(0, 100), y_range=(0, 100)):
     coordinates = [(random.uniform(*x_range), random.uniform(*y_range)) for _ in range(n)]
@@ -55,41 +56,45 @@ def visualize_points(coordinates, edges, distances, title="TSP Instance", filena
         plt.close()
         print(f"TSP instance plot saved as {filename}")
 
-def visualize_tour(coordinates, tour, edges, title="TSP Solution", filename=None):
-    x, y = zip(*coordinates)
-    plt.figure(figsize=(12, 12))
-    
-    # Plot all edges
-    for i, j in edges:
-        plt.plot([x[i], x[j]], [y[i], y[j]], 'gray', alpha=0.1)
+def visualize_tour(coordinates, tour, edges, title, filename=None):
+    G = nx.Graph()
+    G.add_nodes_from(range(len(coordinates)))
+    G.add_edges_from(edges)
 
-    # Plot tour
-    for i in range(len(tour)):
-        start = coordinates[tour[i]]
-        end = coordinates[tour[(i + 1) % len(tour)]]
-        plt.plot([start[0], end[0]], [start[1], end[1]], c='red', linewidth=2, zorder=4)
-
-    plt.scatter(x, y, c='blue', zorder=5)
-    for i, (x, y) in enumerate(coordinates):
-        plt.annotate(f"{i}", (x, y), xytext=(5, 5), textcoords='offset points', zorder=5)
+    pos = {i: coord for i, coord in enumerate(coordinates)}
     
+    plt.figure(figsize=(12, 8))
+    
+    # Draw all edges in light gray
+    nx.draw_networkx_edges(G, pos, edge_color='lightgray', width=1)
+    
+    # Draw the tour edges in red
+    tour_edges = list(zip(tour, tour[1:] + [tour[0]]))
+    nx.draw_networkx_edges(G, pos, edgelist=tour_edges, edge_color='red', width=2)
+    
+    # Draw nodes
+    nx.draw_networkx_nodes(G, pos, node_size=300, node_color='lightblue')
+    
+    # Add node labels
+    labels = {i: f"{i}" for i in range(len(coordinates))}
+    nx.draw_networkx_labels(G, pos, labels, font_size=10)
+
     plt.title(title)
-    plt.xlabel("X coordinate")
-    plt.ylabel("Y coordinate")
-    plt.grid(True)
+    plt.axis('off')
     
     if filename:
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        plt.savefig(filename)
-        plt.close()
-        print(f"TSP solution plot saved as {filename}")
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"Tour visualization saved as {filename}")
+    else:
+        plt.show()
+    plt.close()
 
 def create_tsp_ilp(distances, edges):
     n = max(max(i, j) for i, j in edges) + 1
     edge_to_index = {(min(i, j), max(i, j)): idx for idx, (i, j) in enumerate(edges)}
     
-    # Objective function coefficients (we'll maximize negative distances to minimize the total distance)
-    c = [-distances[i, j] for i, j in edges]
+    # Objective function coefficients (we'll minimize distances)
+    c = [distances[i, j] for i, j in edges]
 
     # Constraints matrix and right-hand side
     A_ub = []
@@ -105,6 +110,17 @@ def create_tsp_ilp(distances, edges):
         b_ub.append(2)
         A_ub.append([-x for x in row])
         b_ub.append(-2)
+
+    # Subtour elimination constraints (for small instances)
+    if n <= 5:
+        for r in range(2, n):
+            for subset in combinations(range(n), r):
+                row = [0] * len(edges)
+                for i, j in combinations(subset, 2):
+                    if (min(i, j), max(i, j)) in edge_to_index:
+                        row[edge_to_index[min(i, j), max(i, j)]] = 1
+                A_ub.append(row)
+                b_ub.append(len(subset) - 1)
 
     # Convert to numpy arrays
     c = np.array(c)
@@ -144,9 +160,9 @@ def solve_tsp(n, problem_name="TSP", visualize=True):
     c, A_ub, b_ub, edge_to_index = create_tsp_ilp(distances, edges)
     
     solver = ILPSolver()
-    solution, objective_value = solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize)
+    solution, objective_value, _, _ = solver.solve(c, A_ub, b_ub, problem_name=problem_name, visualize=visualize)
 
-    if solution is None or objective_value == -np.inf:
+    if solution is None:
         print("Failed to find a valid solution.")
         return None, None
 
@@ -158,9 +174,9 @@ def solve_tsp(n, problem_name="TSP", visualize=True):
 
     if visualize:
         solution_filename = f"plots/{problem_name}_solution_{timestamp}.png"
-        visualize_tour(coordinates, tour, edges, f"{problem_name} Solution (Total Distance: {-objective_value:.2f})", filename=solution_filename)
+        visualize_tour(coordinates, tour, edges, f"{problem_name} Solution (Total Distance: {objective_value:.2f})", filename=solution_filename)
 
-    return tour, -objective_value  # Negate the objective value to get the actual distance
+    return tour, objective_value
 
 def main():
     n = 5  # Number of cities
