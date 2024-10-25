@@ -1,6 +1,0 @@
-pulp == 2.9.0
-networkx
-matplotlib
-numpy
-anytree
-graphviz
