@@ -404,6 +404,7 @@ class ILPSolver:
                 colors.append('lightblue')
             else:
                 colors.append('lightgray')
+
         labels = {}
         for node in self.enumeration_tree.nodes:
             node_data = self.enumeration_tree.nodes[node]
@@ -426,9 +427,23 @@ class ILPSolver:
 
             labels[node] = label
 
+        # Create a top-down hierarchical layout
         pos = nx.spring_layout(self.enumeration_tree)
+        
+        # Adjust y-coordinates based on depth
+        for node in self.enumeration_tree.nodes():
+            depth = nx.shortest_path_length(self.enumeration_tree, source="Node 1", target=node)
+            pos[node] = (pos[node][0], 1 - depth * 0.1)  # Adjust the 0.1 factor to control vertical spacing
+
         nx.draw(self.enumeration_tree, pos, with_labels=True, labels=labels,
-                node_color=colors, node_size=5000, font_size=8, ax=ax)
+                node_color=colors, node_size=5000, font_size=8, ax=ax,
+                arrows=True, arrowsize=20)
+
+        # Add edge labels for branch directions
+        edge_labels = {(u, v): self.enumeration_tree.nodes[v]['branch_direction'] 
+                       for (u, v) in self.enumeration_tree.edges()
+                       if 'branch_direction' in self.enumeration_tree.nodes[v]}
+        nx.draw_networkx_edge_labels(self.enumeration_tree, pos, edge_labels=edge_labels, font_size=8)
 
         legend_elements = [
             plt.Rectangle((0,0),1,1,fc="blue", edgecolor='none', label='Root'),
@@ -577,6 +592,7 @@ if __name__ == "__main__":
     sys.stdout.log.close()
     # Restore the original stdout
     sys.stdout = sys.stdout.terminal
+
 
 
 
