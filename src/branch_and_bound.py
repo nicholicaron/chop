@@ -387,8 +387,30 @@ class ILPSolver:
         self.enumeration_tree.graph['og_rhs'] = b_ub.tolist() # Original right-hand side
 
     def _visualize_tree(self, problem_name):
-        fig, ax = plt.subplots(figsize=(24, 24))
+        # Create a new figure with a size that scales with the number of nodes
+        n_nodes = len(self.enumeration_tree.nodes)
+        fig_size = max(24, int(np.sqrt(n_nodes) * 3))  # Scale figure size with sqrt of node count
+        fig, ax = plt.subplots(figsize=(fig_size, fig_size))
 
+        # Use a hierarchical layout instead of spring layout
+        pos = nx.spring_layout(self.enumeration_tree, k=2, iterations=50)  # Increase spacing
+
+        # Adjust x and y coordinates based on depth and number of nodes at each level
+        levels = {}
+        for node in self.enumeration_tree.nodes():
+            depth = nx.shortest_path_length(self.enumeration_tree, source="Node 1", target=node)
+            if depth not in levels:
+                levels[depth] = []
+            levels[depth].append(node)
+
+        max_nodes_at_level = max(len(nodes) for nodes in levels.values())
+        for depth, nodes in levels.items():
+            y = 1 - depth * 0.1  # Adjust the 0.1 factor to control vertical spacing
+            for i, node in enumerate(nodes):
+                x = (i + 1) / (len(nodes) + 1)  # Distribute nodes horizontally
+                pos[node] = (x, y)
+
+        # Prepare node colors
         colors = []
         for node in self.enumeration_tree.nodes:
             node_data = self.enumeration_tree.nodes[node]
@@ -405,6 +427,7 @@ class ILPSolver:
             else:
                 colors.append('lightgray')
 
+        # Prepare node labels
         labels = {}
         for node in self.enumeration_tree.nodes:
             node_data = self.enumeration_tree.nodes[node]
@@ -427,24 +450,18 @@ class ILPSolver:
 
             labels[node] = label
 
-        # Create a top-down hierarchical layout
-        pos = nx.spring_layout(self.enumeration_tree)
-        
-        # Adjust y-coordinates based on depth
-        for node in self.enumeration_tree.nodes():
-            depth = nx.shortest_path_length(self.enumeration_tree, source="Node 1", target=node)
-            pos[node] = (pos[node][0], 1 - depth * 0.1)  # Adjust the 0.1 factor to control vertical spacing
-
+        # Draw the graph
         nx.draw(self.enumeration_tree, pos, with_labels=True, labels=labels,
-                node_color=colors, node_size=5000, font_size=8, ax=ax,
-                arrows=True, arrowsize=20)
+                node_color=colors, node_size=3000, font_size=6, ax=ax,
+                arrows=True, arrowsize=10)
 
         # Add edge labels for branch directions
         edge_labels = {(u, v): self.enumeration_tree.nodes[v]['branch_direction'] 
                        for (u, v) in self.enumeration_tree.edges()
                        if 'branch_direction' in self.enumeration_tree.nodes[v]}
-        nx.draw_networkx_edge_labels(self.enumeration_tree, pos, edge_labels=edge_labels, font_size=8)
+        nx.draw_networkx_edge_labels(self.enumeration_tree, pos, edge_labels=edge_labels, font_size=6)
 
+        # Add legend
         legend_elements = [
             plt.Rectangle((0,0),1,1,fc="blue", edgecolor='none', label='Root'),
             plt.Rectangle((0,0),1,1,fc="red", edgecolor='none', label='Pruned (Infeasible)'),
@@ -461,9 +478,9 @@ class ILPSolver:
         # Create a directory for plots if it doesn't exist
         os.makedirs('plots', exist_ok=True)
         
-        # Save the plot as a PNG file
+        # Save the plot as a PNG file with high DPI
         plot_filename = f"plots/{problem_name.replace(' ', '_').lower()}_tree.png"
-        plt.savefig(plot_filename)
+        plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
         plt.close()
         print(f"Plot saved as {plot_filename}")
 
@@ -592,6 +609,8 @@ if __name__ == "__main__":
     sys.stdout.log.close()
     # Restore the original stdout
     sys.stdout = sys.stdout.terminal
+
+
 
 
 
