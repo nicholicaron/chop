@@ -34,6 +34,14 @@ class Node:
         self.optimality_gap = np.inf
         self.parent_objective = parent.value if parent else None
         self.prune_reason = None
+        self.A_ub = None
+        self.b_ub = None
+        self.processed = False  # Track if node has been processed
+    
+    def set_constraints(self, A_ub, b_ub):
+        """Store the node-specific constraints"""
+        self.A_ub = A_ub.copy()
+        self.b_ub = b_ub.copy()
 
     def __lt__(self, other):
         return self.value < other.value
@@ -60,12 +68,15 @@ class ILPSolver:
         self.n_cities = round((1 + np.sqrt(1 + 8 * len(c))) / 2) 
         print(f"Number of cities: {self.n_cities}")
 
+        self.processed_nodes = set() # Track processed nodes to avoid reprocessing
+
         root_node = Node()
         root_node.id = self._get_next_node_id()
+        root_node.set_constraints(A_ub, b_ub)
         
         # Solve LP relaxation for root node
         print("Solving LP relaxation for root node...")
-        result = self._solve_lp_relaxation(c, A_ub, b_ub)
+        result = self._solve_lp_relaxation(c, root_node.A_ub, root_node.b_ub)
         if not result.success:
             print("Root node LP relaxation failed.")
             return SimplexResult(None, None, None, False, 2, 0, None)
@@ -84,17 +95,17 @@ class ILPSolver:
 
         while priority_queue:
             _, current_node = heapq.heappop(priority_queue)
-            print(f"\nProcessing node {current_node.id}")
 
-            result = self._solve_lp_relaxation(c, A_ub, b_ub)
-            if result.success:
-                current_node.relaxed_soln = result.x
-                current_node.value = result.fun
-                current_node.local_upper_bound = result.fun
-            else:
-                print("Node is infeasible")
-                current_node.prune_reason = 'infeasible'
-                self._update_node_attributes(current_node, {'color': 'red', 'prune_reason': 'infeasible'})
+            if current_node.id in self.processed_nodes:
+                print(f"Node {current_node.id} already processed. Skipping...")
+                continue
+
+            print(f"\nProcessing node {current_node.id}")
+            self.processed_nodes.add(current_node.id)
+
+            # Use stored solution if available
+            if current_node.relaxed_soln is None:
+                print("Warning: Node has no stored solution")
                 continue
             
 
@@ -127,8 +138,8 @@ class ILPSolver:
                         self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
                 else:
                     print("Adding violated subtour constraints and re-solving...")
-                    new_A_ub = A_ub.copy()
-                    new_b_ub = b_ub.copy()
+                    new_A_ub = current_node.A_ub.copy()
+                    new_b_ub = current_node.b_ub.copy()
                     for constraint in violated_constraints:
                         new_A_ub = np.vstack([new_A_ub, constraint[:-1]])  # LHS
                         new_b_ub = np.append(new_b_ub, constraint[-1])  # RHS
@@ -137,7 +148,7 @@ class ILPSolver:
                         current_node.relaxed_soln = result.x
                         current_node.value = result.fun
                         current_node.local_upper_bound = current_node.value
-                        print(f"Re-solved node value: {current_node.value}")
+                        current_node.set_constraints(new_A_ub, new_b_ub)
                         heapq.heappush(priority_queue, (current_node.value, current_node))
                     else:
                         print("Re-solving failed after adding subtour constraints.")
@@ -150,8 +161,8 @@ class ILPSolver:
                 print(f"Branching on variable X{branch_var} which has value {branch_val}")
 
                 for direction in ['floor', 'ceil']:
-                    new_A_ub = A_ub.copy()
-                    new_b_ub = b_ub.copy()
+                    new_A_ub = current_node.A_ub.copy()
+                    new_b_ub = current_node.b_ub.copy()
                     
                     if direction == 'floor':
                         new_val = np.floor(branch_val)
@@ -172,6 +183,7 @@ class ILPSolver:
 
                     new_node = Node(parent=current_node, branch_var=branch_var, branch_val=new_val, branch_direction=direction)
                     new_node.id = self._get_next_node_id()
+                    new_node.set_constraints(new_A_ub, new_b_ub)
 
                     result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
                     if result.success:
