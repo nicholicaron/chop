@@ -11,7 +11,7 @@ def generate_random_tsp(n, x_range=(0, 100), y_range=(0, 100)):
     coordinates = [(random.uniform(*x_range), random.uniform(*y_range)) for _ in range(n)]
     edges = set()
     for i in range(n):
-        degree = random.randint(2, 5)
+        degree = random.randint(2, n)
         possible_neighbors = list(set(range(n)) - {i} - set(j for j, _ in edges if i == _) - set(_ for _, j in edges if i == j))
         neighbors = random.sample(possible_neighbors, min(degree, len(possible_neighbors)))
         for j in neighbors:
@@ -148,45 +148,77 @@ def extract_tour(solution, edge_to_index, n):
             return None
     return tour
 
-def solve_tsp(n, problem_name="TSP", visualize=True):
+def visualize_tsp_solution(coordinates, edges, distances, tour, objective_value, problem_name):
+    G = nx.Graph()
+    G.add_nodes_from(range(len(coordinates)))
+    G.add_edges_from(edges)
+
+    pos = {i: coord for i, coord in enumerate(coordinates)}
+    
+    plt.figure(figsize=(12, 8))
+    
+    # Draw all edges in light gray
+    nx.draw_networkx_edges(G, pos, edge_color='lightgray', width=1, alpha=0.5)
+    
+    # Draw the tour edges in red
+    tour_edges = list(zip(tour, tour[1:] + [tour[0]]))
+    nx.draw_networkx_edges(G, pos, edgelist=tour_edges, edge_color='red', width=2)
+    
+    # Draw nodes
+    nx.draw_networkx_nodes(G, pos, node_size=300, node_color='lightblue')
+    
+    # Add node labels
+    labels = {i: f"{i}" for i in range(len(coordinates))}
+    nx.draw_networkx_labels(G, pos, labels, font_size=10)
+
+    # Add edge labels (distances)
+    edge_labels = {(min(i, j), max(i, j)): f"{distances[i, j]:.2f}" for i, j in edges}
+    nx.draw_networkx_edge_labels(G, pos, edge_labels, font_size=8)
+
+    plt.title(f"{problem_name} Solution (Total Distance: {objective_value:.2f})")
+    plt.axis('off')
+    
     timestamp = int(time.time() * 1000)
+    filename = f"plots/{problem_name}_solution_{timestamp}.png"
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    print(f"TSP solution visualization saved as {filename}")
+    plt.close()
+
+def solve_tsp(n, problem_name="TSP", visualize=True):
     coordinates, edges = generate_random_tsp(n)
     distances = calculate_distances(coordinates, edges)
     
-    if visualize:
-        instance_filename = f"plots/{problem_name}_instance_{timestamp}.png"
-        visualize_points(coordinates, edges, distances, f"{problem_name} Instance", filename=instance_filename)
-
     c, A_ub, b_ub, edge_to_index = create_tsp_ilp(distances, edges)
     
     solver = ILPSolver()
-    solution, objective_value, _, _ = solver.solve(c, A_ub, b_ub, problem_name=problem_name, visualize=visualize)
+    solution, objective_value, num_nodes, optimal_node = solver.solve(c, A_ub, b_ub, problem_name=problem_name, visualize=visualize)
 
     if solution is None:
         print("Failed to find a valid solution.")
-        return None, None
+        return None, None, num_nodes, optimal_node
 
     tour = extract_tour(solution, edge_to_index, n)
     
     if tour is None:
         print("Failed to extract a valid tour from the solution.")
-        return None, None
+        return None, objective_value, num_nodes, optimal_node
 
     if visualize:
-        solution_filename = f"plots/{problem_name}_solution_{timestamp}.png"
-        visualize_tour(coordinates, tour, edges, f"{problem_name} Solution (Total Distance: {objective_value:.2f})", filename=solution_filename)
+        visualize_tsp_solution(coordinates, edges, distances, tour, objective_value, problem_name)
 
-    return tour, objective_value
+    return tour, objective_value, num_nodes, optimal_node
 
 def main():
     n = 5  # Number of cities
     print(f"Solving TSP with {n} cities...")
-    tour, distance = solve_tsp(n, f"TSP_{n}_Cities")
-    if tour and distance:
+    tour, distance, num_nodes, optimal_node = solve_tsp(n, f"TSP_{n}_Cities", visualize=True)
+    if tour:
         print(f"Optimal tour: {tour}")
         print(f"Total distance: {distance:.2f}")
     else:
-        print("Failed to solve the TSP instance.")
+        print("Failed to find a valid tour.")
+    print(f"Number of nodes explored: {num_nodes}")
+    print(f"Optimal node ID: {optimal_node.id}")
 
 if __name__ == "__main__":
     main()
