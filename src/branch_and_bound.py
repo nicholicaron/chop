@@ -519,7 +519,7 @@ def solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize=False
     solution = result[0]
     value = result[1]
     num_nodes_explored = result[2] if len(result) > 2 else None
-    optimal_node_id = result[3] if len(result) > 3 else None
+    optimal_node = result[3] if len(result) > 3 else None
     
     print(f"\nResults for {problem_name}:")
     print(f"Optimal solution: {solution}")
@@ -528,8 +528,8 @@ def solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize=False
     if num_nodes_explored is not None:
         print(f"Number of nodes explored: {num_nodes_explored}")
     
-    if optimal_node_id is not None:
-        print(f"Optimal node ID: {optimal_node_id}")
+    if optimal_node is not None:
+        print(f"Optimal node ID: {optimal_node.id}")
     
     print("\n" + "="*50 + "\n")
 
