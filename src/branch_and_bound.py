@@ -11,6 +11,7 @@ import time
 import heapq
 import argparse
 from itertools import combinations
+import sys
 
 
 class Node:
@@ -44,7 +45,7 @@ class Node:
         self.b_ub = b_ub.copy()
 
     def __lt__(self, other):
-        return self.value < other.value
+        return self.value > other.value  # Changed to '>' for maximization
 
 class ILPSolver:
     def __init__(self):
@@ -57,6 +58,12 @@ class ILPSolver:
         self.problem_counter = 0 
         self.root_relaxation_value = None # Objective value of root node relaxation
         self.n_cities = 0
+
+    def _print_priority_queue(self, priority_queue):
+        print("Priority Queue Contents:")
+        for i, (value, node) in enumerate(priority_queue):
+            print(f"  {i+1}. Value: {value:.4f}, Node ID: {node.id}")
+        print()
 
     def solve(self, c, A_ub, b_ub, A_eq=None, b_eq=None, problem_name="default_name", visualize=False):
         print(f"\nStarting to solve problem: {problem_name}")
@@ -92,9 +99,12 @@ class ILPSolver:
 
         priority_queue = [(root_node.value, root_node)]
         print("Starting branch and bound process...")
+        self._print_priority_queue(priority_queue)
 
         while priority_queue:
             _, current_node = heapq.heappop(priority_queue)
+            print(f"Popped node {current_node.id} from priority queue")
+            self._print_priority_queue(priority_queue)
 
             if current_node.id in self.processed_nodes:
                 print(f"Node {current_node.id} already processed. Skipping...")
@@ -122,37 +132,41 @@ class ILPSolver:
             print(f"Is integer solution: {is_integer_solution}")
 
             if is_integer_solution:
-                violated_constraints = self._find_violated_subtour_constraints(current_node.relaxed_soln)
-                print(f"Number of violated subtour constraints: {len(violated_constraints)}")
-                if not violated_constraints:
-                    if current_node.value > self.global_lower_bound:
-                        print("New best integer solution found!")
-                        self.global_lower_bound = current_node.value
-                        self.optimal_obj_value = current_node.value
-                        self.optimal_solution = current_node.relaxed_soln
-                        self.optimal_node = current_node.id
-                        self._update_node_attributes(current_node, {'color': 'green'})
-                    else:
-                        print("Integer solution found but not better than current best.")
-                        current_node.prune_reason = 'suboptimal'
-                        self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
+                # Comment out the subtour constraint check and addition
+                # violated_constraints = self._find_violated_subtour_constraints(current_node.relaxed_soln)
+                # print(f"Number of violated subtour constraints: {len(violated_constraints)}")
+                # if not violated_constraints:
+                if current_node.value > self.global_lower_bound:
+                    print("New best integer solution found!")
+                    self.global_lower_bound = current_node.value
+                    self.optimal_obj_value = current_node.value
+                    self.optimal_solution = current_node.relaxed_soln
+                    self.optimal_node = current_node.id
+                    self._update_node_attributes(current_node, {
+                        'color': 'green', 
+                        'relaxed_obj_value': current_node.value
+                    })
                 else:
-                    print("Adding violated subtour constraints and re-solving...")
-                    new_A_ub = current_node.A_ub.copy()
-                    new_b_ub = current_node.b_ub.copy()
-                    for constraint in violated_constraints:
-                        new_A_ub = np.vstack([new_A_ub, constraint[:-1]])  # LHS
-                        new_b_ub = np.append(new_b_ub, constraint[-1])  # RHS
-                    result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
-                    if result.success:
-                        current_node.relaxed_soln = result.x
-                        current_node.value = result.fun
-                        current_node.local_upper_bound = current_node.value
-                        current_node.set_constraints(new_A_ub, new_b_ub)
-                        heapq.heappush(priority_queue, (current_node.value, current_node))
-                    else:
-                        print("Re-solving failed after adding subtour constraints.")
-                    continue
+                    print("Integer solution found but not better than current best.")
+                    current_node.prune_reason = 'suboptimal'
+                    self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
+                # else:
+                #     print("Adding violated subtour constraints and re-solving...")
+                #     new_A_ub = current_node.A_ub.copy()
+                #     new_b_ub = current_node.b_ub.copy()
+                #     for constraint in violated_constraints:
+                #         new_A_ub = np.vstack([new_A_ub, constraint[:-1]])  # LHS
+                #         new_b_ub = np.append(new_b_ub, constraint[-1])  # RHS
+                #     result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
+                #     if result.success:
+                #         current_node.relaxed_soln = result.x
+                #         current_node.value = result.fun
+                #         current_node.local_upper_bound = current_node.value
+                #         current_node.set_constraints(new_A_ub, new_b_ub)
+                #         heapq.heappush(priority_queue, (current_node.value, current_node))
+                #     else:
+                #         print("Re-solving failed after adding subtour constraints.")
+                #     continue
             else:
                 print("Branching on a fractional variable...")
                 fractional_vars = [i for i, x in enumerate(current_node.relaxed_soln) if abs(x - round(x)) > 1e-6]
@@ -192,9 +206,13 @@ class ILPSolver:
                         new_node.local_upper_bound = new_node.value
                         print(f"New {direction} node value: {new_node.value}")
                         self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
+                        self._update_node_attributes(new_node, {
+                            'relaxed_obj_value': new_node.value
+                        })
                         if new_node.local_upper_bound > self.global_lower_bound:
                             heapq.heappush(priority_queue, (new_node.value, new_node))
                             print(f"Added {direction} node to priority queue")
+                            self._print_priority_queue(priority_queue)
                         else:
                             print(f"{direction} node pruned: suboptimal")
                             new_node.prune_reason = 'suboptimal'
@@ -212,7 +230,7 @@ class ILPSolver:
         if visualize:
             self._visualize_tree(problem_name)
         self._save_graph_to_disk(problem_name)
-        return SimplexResult(self.optimal_solution, None, self.optimal_obj_value, True, 0, 0, None)
+        return self.optimal_solution, self.optimal_obj_value, self.node_counter, self.optimal_node
     
     def _find_violated_subtour_constraints(self, solution):
         edges = [(i, j) for i in range(self.n_cities) for j in range(i+1, self.n_cities) 
@@ -406,7 +424,14 @@ class ILPSolver:
         for node in self.enumeration_tree.nodes:
             node_data = self.enumeration_tree.nodes[node]
             label = f"{node}\n"
-            label += f"Value: {node_data.get('relaxed_obj_value', 'N/A'):.2f}\n"
+            if 'relaxed_obj_value' in node_data:
+                value = node_data['relaxed_obj_value']
+                if value is not None:
+                    label += f"Value: {value:.2f}\n"
+                else:
+                    label += "Value: N/A\n"
+            else:
+                label += "Value: N/A\n"
 
             if node_data.get('color') == 'blue':
                 label += "Root Node"
@@ -471,14 +496,46 @@ class ILPSolver:
 
 
 def solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize=False):
-    print(f"\nSolving {problem_name}:")
-    solution, value = solver.solve(c, A_ub, b_ub, problem_name, visualize)
-    print(f"{problem_name} Results:")
-    print("Optimal Solution:", solution)
-    print("Optimal Value:", value)
-    return solution, value
+    result = solver.solve(c, A_ub, b_ub, problem_name=problem_name, visualize=visualize)
+    
+    # Unpack the result
+    solution = result[0]
+    value = result[1]
+    num_nodes_explored = result[2] if len(result) > 2 else None
+    optimal_node_id = result[3] if len(result) > 3 else None
+    
+    print(f"\nResults for {problem_name}:")
+    print(f"Optimal solution: {solution}")
+    print(f"Optimal objective value: {value}")
+    
+    if num_nodes_explored is not None:
+        print(f"Number of nodes explored: {num_nodes_explored}")
+    
+    if optimal_node_id is not None:
+        print(f"Optimal node ID: {optimal_node_id}")
+    
+    print("\n" + "="*50 + "\n")
+
+class OutputRedirector:
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, 'w')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
 
 def main(visualize):
+    # Create a directory for logs if it doesn't exist
+    os.makedirs('logs', exist_ok=True)
+
+    # Set up output redirection
+    sys.stdout = OutputRedirector('logs/branch_and_bound_output.txt')
+
     solver = ILPSolver()
 
     # Example 1: 2 variables, 2 constraints
@@ -530,3 +587,16 @@ if __name__ == "__main__":
 
     print("Starting branch and bound solver...")
     main(args.visualize)
+
+    # Close the log file
+    sys.stdout.log.close()
+    # Restore the original stdout
+    sys.stdout = sys.stdout.terminal
+
+
+
+
+
+
+
+

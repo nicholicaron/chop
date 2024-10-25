@@ -1,0 +1,4953 @@
+
+Starting to solve problem: Example 1 (2 var, 2 cons)
+Solving LP relaxation for root node...
+Root node relaxation value: 5.0
+Starting branch and bound process...
+Priority Queue Contents:
+  1. Value: 5.0000, Node ID: Node 1
+
+Popped node Node 1 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 1
+Current node value: 5.0
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 3.5
+Creating floor branch (adding constraint X1 <= 3.0)...
+New floor node value: 4.625
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 4.6250, Node ID: Node 2
+
+Creating ceil branch (adding constraint -X1 <= --4.0)...
+ceil node is infeasible
+Popped node Node 2 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 2
+Current node value: 4.625
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 1.625
+Creating floor branch (adding constraint X0 <= 1.0)...
+New floor node value: 4.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 4.0000, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X0 <= --2.0)...
+New ceil node value: 3.5
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 3.5000, Node ID: Node 5
+  2. Value: 4.0000, Node ID: Node 4
+
+Popped node Node 5 from priority queue
+Priority Queue Contents:
+  1. Value: 4.0000, Node ID: Node 4
+
+
+Processing node Node 5
+Current node value: 3.5
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 1.5
+Creating floor branch (adding constraint X1 <= 1.0)...
+New floor node value: 3.125
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 3.1250, Node ID: Node 6
+  2. Value: 4.0000, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X1 <= --2.0)...
+ceil node is infeasible
+Popped node Node 6 from priority queue
+Priority Queue Contents:
+  1. Value: 4.0000, Node ID: Node 4
+
+
+Processing node Node 6
+Current node value: 3.125
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.125
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 3.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 3.0000, Node ID: Node 8
+  2. Value: 4.0000, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+ceil node is infeasible
+Popped node Node 8 from priority queue
+Priority Queue Contents:
+  1. Value: 4.0000, Node ID: Node 4
+
+
+Processing node Node 8
+Current node value: 3.0
+Global lower bound: -inf
+Is integer solution: True
+New best integer solution found!
+Popped node Node 4 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 4
+Current node value: 4.0
+Global lower bound: 3.0
+Is integer solution: True
+New best integer solution found!
+
+Branch and bound process completed.
+Optimal objective value: 4.0
+Number of nodes explored: 9
+Plot saved as plots/example_1_(2_var,_2_cons)_tree.png
+Graph saved as graph_example_1_(2_var,_2_cons)_0_1729876807132.pt
+
+Results for Example 1 (2 var, 2 cons):
+Optimal solution: [1. 3.]
+Optimal objective value: 4.0
+Number of nodes explored: 9
+Optimal node ID: Node 4
+
+==================================================
+
+
+Starting to solve problem: Example 2 (5 var, 3 cons)
+Solving LP relaxation for root node...
+Root node relaxation value: 20.0
+Starting branch and bound process...
+Priority Queue Contents:
+  1. Value: 20.0000, Node ID: Node 1
+
+Popped node Node 1 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 1
+Current node value: 20.0
+Global lower bound: -inf
+Is integer solution: True
+New best integer solution found!
+
+Branch and bound process completed.
+Optimal objective value: 20.0
+Number of nodes explored: 1
+Plot saved as plots/example_2_(5_var,_3_cons)_tree.png
+Graph saved as graph_example_2_(5_var,_3_cons)_1_1729876807366.pt
+
+Results for Example 2 (5 var, 3 cons):
+Optimal solution: [0. 2. 0. 4. 0.]
+Optimal objective value: 20.0
+Number of nodes explored: 1
+Optimal node ID: Node 1
+
+==================================================
+
+
+Starting to solve problem: Example 3 (8 var, 5 cons)
+Solving LP relaxation for root node...
+Root node relaxation value: 59.36363636363637
+Starting branch and bound process...
+Priority Queue Contents:
+  1. Value: 59.3636, Node ID: Node 1
+
+Popped node Node 1 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 1
+Current node value: 59.36363636363637
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 1.727272727272728
+Creating floor branch (adding constraint X6 <= 1.0)...
+New floor node value: 56.84615384615385
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 56.8462, Node ID: Node 2
+
+Creating ceil branch (adding constraint -X6 <= --2.0)...
+New ceil node value: 59.09090909090909
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 56.8462, Node ID: Node 2
+  2. Value: 59.0909, Node ID: Node 3
+
+Popped node Node 2 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 2
+Current node value: 56.84615384615385
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 6.23076923076923
+Creating floor branch (adding constraint X1 <= 6.0)...
+New floor node value: 56.61538461538462
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 56.6154, Node ID: Node 4
+  2. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X1 <= --7.0)...
+New ceil node value: 52.999999999999986
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 53.0000, Node ID: Node 5
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.6154, Node ID: Node 4
+
+Popped node Node 5 from priority queue
+Priority Queue Contents:
+  1. Value: 56.6154, Node ID: Node 4
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 5
+Current node value: 52.999999999999986
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 0.49999999999999967
+Creating floor branch (adding constraint X6 <= 0.0)...
+New floor node value: 52.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 53.0000, Node ID: Node 6
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.6154, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X6 <= --1.0)...
+ceil node is infeasible
+Popped node Node 6 from priority queue
+Priority Queue Contents:
+  1. Value: 56.6154, Node ID: Node 4
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 6
+Current node value: 52.99999999999999
+Global lower bound: -inf
+Is integer solution: True
+New best integer solution found!
+Popped node Node 4 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 4
+Current node value: 56.61538461538462
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 0.23076923076923062
+Creating floor branch (adding constraint X4 <= 0.0)...
+New floor node value: 56.333333333333336
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X4 <= --1.0)...
+New ceil node value: 55.333333333333336
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 55.3333, Node ID: Node 9
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Popped node Node 9 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 9
+Current node value: 55.333333333333336
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 5.333333333333333
+Creating floor branch (adding constraint X1 <= 5.0)...
+New floor node value: 55.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.0000, Node ID: Node 10
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X1 <= --6.0)...
+New ceil node value: 52.00000000000001
+ceil node pruned: suboptimal
+Popped node Node 10 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 10
+Current node value: 55.0
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.2608695652173916
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 54.860465116279066
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.8605, Node ID: Node 12
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 46.5
+ceil node pruned: suboptimal
+Popped node Node 12 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 12
+Current node value: 54.860465116279066
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.1395348837209303
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 54.599999999999994
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.6000, Node ID: Node 14
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+New ceil node value: 53.5
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 53.5000, Node ID: Node 15
+  2. Value: 54.6000, Node ID: Node 14
+  3. Value: 56.3333, Node ID: Node 8
+  4. Value: 59.0909, Node ID: Node 3
+
+Popped node Node 15 from priority queue
+Priority Queue Contents:
+  1. Value: 54.6000, Node ID: Node 14
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+
+Processing node Node 15
+Current node value: 53.5
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 4.5
+Creating floor branch (adding constraint X1 <= 4.0)...
+New floor node value: 53.00000000000001
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 53.0000, Node ID: Node 16
+  2. Value: 54.6000, Node ID: Node 14
+  3. Value: 56.3333, Node ID: Node 8
+  4. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X1 <= --5.0)...
+New ceil node value: 51.00000000000001
+ceil node pruned: suboptimal
+Popped node Node 16 from priority queue
+Priority Queue Contents:
+  1. Value: 54.6000, Node ID: Node 14
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+
+Processing node Node 16
+Current node value: 53.00000000000001
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.7692307692307693
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 52.0
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 52.88888888888889
+ceil node pruned: suboptimal
+Popped node Node 14 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 14
+Current node value: 54.599999999999994
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X2 which has value 0.10000000000000009
+Creating floor branch (adding constraint X2 <= 0.0)...
+New floor node value: 54.53846153846153
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.5385, Node ID: Node 20
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X2 <= --1.0)...
+New ceil node value: 53.0
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 53.0000, Node ID: Node 21
+  2. Value: 54.5385, Node ID: Node 20
+  3. Value: 56.3333, Node ID: Node 8
+  4. Value: 59.0909, Node ID: Node 3
+
+Popped node Node 21 from priority queue
+Priority Queue Contents:
+  1. Value: 54.5385, Node ID: Node 20
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+
+Processing node Node 21
+Current node value: 53.0
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 4.8
+Creating floor branch (adding constraint X1 <= 4.0)...
+New floor node value: 51.6
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X1 <= --5.0)...
+New ceil node value: 52.0
+ceil node pruned: suboptimal
+Popped node Node 20 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 20
+Current node value: 54.53846153846153
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.38461538461538464
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 54.25
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.2500, Node ID: Node 24
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 50.0
+ceil node pruned: suboptimal
+Popped node Node 24 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 24
+Current node value: 54.25
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 0.25
+Creating floor branch (adding constraint X0 <= 0.0)...
+New floor node value: 53.25
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 53.2500, Node ID: Node 26
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X0 <= --1.0)...
+New ceil node value: 51.0
+ceil node pruned: suboptimal
+Popped node Node 26 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 26
+Current node value: 53.25
+Global lower bound: 52.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X7 which has value 0.25
+Creating floor branch (adding constraint X7 <= 0.0)...
+New floor node value: 53.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 53.0000, Node ID: Node 28
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.3333, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X7 <= --1.0)...
+New ceil node value: 47.0
+ceil node pruned: suboptimal
+Popped node Node 28 from priority queue
+Priority Queue Contents:
+  1. Value: 56.3333, Node ID: Node 8
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 28
+Current node value: 53.0
+Global lower bound: 52.99999999999999
+Is integer solution: True
+New best integer solution found!
+Popped node Node 8 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 8
+Current node value: 56.333333333333336
+Global lower bound: 53.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X2 which has value 0.3333333333333331
+Creating floor branch (adding constraint X2 <= 0.0)...
+New floor node value: 56.05882352941176
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 56.0588, Node ID: Node 30
+  2. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X2 <= --1.0)...
+New ceil node value: 54.36363636363637
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 54.3636, Node ID: Node 31
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.0588, Node ID: Node 30
+
+Popped node Node 31 from priority queue
+Priority Queue Contents:
+  1. Value: 56.0588, Node ID: Node 30
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 31
+Current node value: 54.36363636363637
+Global lower bound: 53.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 5.727272727272727
+Creating floor branch (adding constraint X1 <= 5.0)...
+New floor node value: 53.54545454545455
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 53.5455, Node ID: Node 32
+  2. Value: 59.0909, Node ID: Node 3
+  3. Value: 56.0588, Node ID: Node 30
+
+Creating ceil branch (adding constraint -X1 <= --6.0)...
+New ceil node value: 53.0
+ceil node pruned: suboptimal
+Popped node Node 32 from priority queue
+Priority Queue Contents:
+  1. Value: 56.0588, Node ID: Node 30
+  2. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 32
+Current node value: 53.54545454545455
+Global lower bound: 53.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.3636363636363635
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 52.6
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 47.0
+ceil node pruned: suboptimal
+Popped node Node 30 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 30
+Current node value: 56.05882352941176
+Global lower bound: 53.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 0.1764705882352941
+Creating floor branch (adding constraint X0 <= 0.0)...
+New floor node value: 55.6
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.6000, Node ID: Node 36
+  2. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X0 <= --1.0)...
+New ceil node value: 52.38461538461539
+ceil node pruned: suboptimal
+Popped node Node 36 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 36
+Current node value: 55.6
+Global lower bound: 53.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.4000000000000001
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 55.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.0000, Node ID: Node 38
+  2. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 47.5
+ceil node pruned: suboptimal
+Popped node Node 38 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 38
+Current node value: 55.0
+Global lower bound: 53.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.5000000000000001
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 54.25
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.2500, Node ID: Node 40
+  2. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 50.28571428571429
+ceil node pruned: suboptimal
+Popped node Node 40 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 40
+Current node value: 54.25
+Global lower bound: 53.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X7 which has value 0.25
+Creating floor branch (adding constraint X7 <= 0.0)...
+New floor node value: 54.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.0000, Node ID: Node 42
+  2. Value: 59.0909, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X7 <= --1.0)...
+New ceil node value: 48.0
+ceil node pruned: suboptimal
+Popped node Node 42 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0909, Node ID: Node 3
+
+
+Processing node Node 42
+Current node value: 54.0
+Global lower bound: 53.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 3 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 3
+Current node value: 59.09090909090909
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 0.27272727272727204
+Creating floor branch (adding constraint X0 <= 0.0)...
+New floor node value: 58.75
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X0 <= --1.0)...
+New ceil node value: 58.36363636363636
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 58.3636, Node ID: Node 45
+  2. Value: 58.7500, Node ID: Node 44
+
+Popped node Node 45 from priority queue
+Priority Queue Contents:
+  1. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 45
+Current node value: 58.36363636363636
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.3636363636363638
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 57.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 46
+  2. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 55.5
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 55.5000, Node ID: Node 47
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 58.0000, Node ID: Node 46
+
+Popped node Node 47 from priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 46
+  2. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 47
+Current node value: 55.5
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 1.5000000000000004
+Creating floor branch (adding constraint X1 <= 1.0)...
+New floor node value: 55.25
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.2500, Node ID: Node 48
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 58.0000, Node ID: Node 46
+
+Creating ceil branch (adding constraint -X1 <= --2.0)...
+New ceil node value: 51.000000000000014
+ceil node pruned: suboptimal
+Popped node Node 48 from priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 46
+  2. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 48
+Current node value: 55.25
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 1.2500000000000002
+Creating floor branch (adding constraint X0 <= 1.0)...
+New floor node value: 55.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.0000, Node ID: Node 50
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 58.0000, Node ID: Node 46
+
+Creating ceil branch (adding constraint -X0 <= --2.0)...
+New ceil node value: 50.0
+ceil node pruned: suboptimal
+Popped node Node 50 from priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 46
+  2. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 50
+Current node value: 55.0
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 0.5000000000000002
+Creating floor branch (adding constraint X4 <= 0.0)...
+New floor node value: 54.85714285714284
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.8571, Node ID: Node 52
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 58.0000, Node ID: Node 46
+
+Creating ceil branch (adding constraint -X4 <= --1.0)...
+New ceil node value: 54.5
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 54.5000, Node ID: Node 53
+  2. Value: 54.8571, Node ID: Node 52
+  3. Value: 58.0000, Node ID: Node 46
+  4. Value: 58.7500, Node ID: Node 44
+
+Popped node Node 53 from priority queue
+Priority Queue Contents:
+  1. Value: 54.8571, Node ID: Node 52
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 58.0000, Node ID: Node 46
+
+
+Processing node Node 53
+Current node value: 54.5
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 0.4999999999999998
+Creating floor branch (adding constraint X1 <= 0.0)...
+New floor node value: 54.0
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X1 <= --1.0)...
+New ceil node value: 50.0
+ceil node pruned: suboptimal
+Popped node Node 52 from priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 46
+  2. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 52
+Current node value: 54.85714285714284
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 2.142857142857143
+Creating floor branch (adding constraint X5 <= 2.0)...
+New floor node value: 54.66666666666667
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.6667, Node ID: Node 56
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 58.0000, Node ID: Node 46
+
+Creating ceil branch (adding constraint -X5 <= --3.0)...
+New ceil node value: 32.99999999999999
+ceil node pruned: suboptimal
+Popped node Node 56 from priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 46
+  2. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 56
+Current node value: 54.66666666666667
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 4.333333333333334
+Creating floor branch (adding constraint X6 <= 4.0)...
+New floor node value: 52.99999999999999
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --5.0)...
+New ceil node value: 53.0
+ceil node pruned: suboptimal
+Popped node Node 46 from priority queue
+Priority Queue Contents:
+  1. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 46
+Current node value: 57.99999999999999
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 3.8000000000000003
+Creating floor branch (adding constraint X1 <= 3.0)...
+New floor node value: 57.6
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 57.6000, Node ID: Node 60
+  2. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X1 <= --4.0)...
+New ceil node value: 57.0
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 57.0000, Node ID: Node 61
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 57.6000, Node ID: Node 60
+
+Popped node Node 61 from priority queue
+Priority Queue Contents:
+  1. Value: 57.6000, Node ID: Node 60
+  2. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 61
+Current node value: 57.0
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 2.4999999999999996
+Creating floor branch (adding constraint X6 <= 2.0)...
+New floor node value: 55.333333333333336
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.3333, Node ID: Node 62
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 57.6000, Node ID: Node 60
+
+Creating ceil branch (adding constraint -X6 <= --3.0)...
+New ceil node value: 57.0
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 55.3333, Node ID: Node 62
+  2. Value: 57.0000, Node ID: Node 63
+  3. Value: 57.6000, Node ID: Node 60
+  4. Value: 58.7500, Node ID: Node 44
+
+Popped node Node 62 from priority queue
+Priority Queue Contents:
+  1. Value: 57.0000, Node ID: Node 63
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 57.6000, Node ID: Node 60
+
+
+Processing node Node 62
+Current node value: 55.333333333333336
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 4.333333333333333
+Creating floor branch (adding constraint X1 <= 4.0)...
+New floor node value: 55.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.0000, Node ID: Node 64
+  2. Value: 57.0000, Node ID: Node 63
+  3. Value: 57.6000, Node ID: Node 60
+  4. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X1 <= --5.0)...
+ceil node is infeasible
+Popped node Node 64 from priority queue
+Priority Queue Contents:
+  1. Value: 57.0000, Node ID: Node 63
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 57.6000, Node ID: Node 60
+
+
+Processing node Node 64
+Current node value: 55.0
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.4
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 55.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 55.0000, Node ID: Node 66
+  2. Value: 57.0000, Node ID: Node 63
+  3. Value: 57.6000, Node ID: Node 60
+  4. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+ceil node is infeasible
+Popped node Node 66 from priority queue
+Priority Queue Contents:
+  1. Value: 57.0000, Node ID: Node 63
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 57.6000, Node ID: Node 60
+
+
+Processing node Node 66
+Current node value: 55.0
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 0.333333333333333
+Creating floor branch (adding constraint X4 <= 0.0)...
+New floor node value: 54.5
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.5000, Node ID: Node 68
+  2. Value: 57.0000, Node ID: Node 63
+  3. Value: 57.6000, Node ID: Node 60
+  4. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X4 <= --1.0)...
+ceil node is infeasible
+Popped node Node 68 from priority queue
+Priority Queue Contents:
+  1. Value: 57.0000, Node ID: Node 63
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 57.6000, Node ID: Node 60
+
+
+Processing node Node 68
+Current node value: 54.5
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X2 which has value 0.49999999999999956
+Creating floor branch (adding constraint X2 <= 0.0)...
+New floor node value: 54.25
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 54.2500, Node ID: Node 70
+  2. Value: 57.0000, Node ID: Node 63
+  3. Value: 57.6000, Node ID: Node 60
+  4. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X2 <= --1.0)...
+New ceil node value: 52.0
+ceil node pruned: suboptimal
+Popped node Node 70 from priority queue
+Priority Queue Contents:
+  1. Value: 57.0000, Node ID: Node 63
+  2. Value: 58.7500, Node ID: Node 44
+  3. Value: 57.6000, Node ID: Node 60
+
+
+Processing node Node 70
+Current node value: 54.25
+Global lower bound: 54.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 1.25
+Creating floor branch (adding constraint X0 <= 1.0)...
+New floor node value: 53.25
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X0 <= --2.0)...
+ceil node is infeasible
+Popped node Node 63 from priority queue
+Priority Queue Contents:
+  1. Value: 57.6000, Node ID: Node 60
+  2. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 63
+Current node value: 57.0
+Global lower bound: 54.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 60 from priority queue
+Priority Queue Contents:
+  1. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 60
+Current node value: 57.6
+Global lower bound: 57.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 3.1999999999999993
+Creating floor branch (adding constraint X6 <= 3.0)...
+New floor node value: 57.4
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 57.4000, Node ID: Node 74
+  2. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X6 <= --4.0)...
+New ceil node value: 56.8
+ceil node pruned: suboptimal
+Popped node Node 74 from priority queue
+Priority Queue Contents:
+  1. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 74
+Current node value: 57.4
+Global lower bound: 57.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 1.2000000000000002
+Creating floor branch (adding constraint X0 <= 1.0)...
+New floor node value: 57.19999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 57.2000, Node ID: Node 76
+  2. Value: 58.7500, Node ID: Node 44
+
+Creating ceil branch (adding constraint -X0 <= --2.0)...
+New ceil node value: 54.333333333333336
+ceil node pruned: suboptimal
+Popped node Node 76 from priority queue
+Priority Queue Contents:
+  1. Value: 58.7500, Node ID: Node 44
+
+
+Processing node Node 76
+Current node value: 57.19999999999999
+Global lower bound: 57.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 0.7999999999999995
+Creating floor branch (adding constraint X4 <= 0.0)...
+New floor node value: 55.0
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --1.0)...
+New ceil node value: 57.0
+ceil node pruned: suboptimal
+Popped node Node 44 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 44
+Current node value: 58.75
+Global lower bound: 57.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 5.249999999999999
+Creating floor branch (adding constraint X1 <= 5.0)...
+New floor node value: 58.5
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 58.5000, Node ID: Node 80
+
+Creating ceil branch (adding constraint -X1 <= --6.0)...
+New ceil node value: 58.0
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 81
+  2. Value: 58.5000, Node ID: Node 80
+
+Popped node Node 81 from priority queue
+Priority Queue Contents:
+  1. Value: 58.5000, Node ID: Node 80
+
+
+Processing node Node 81
+Current node value: 58.0
+Global lower bound: 57.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 80 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 80
+Current node value: 58.5
+Global lower bound: 58.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 0.25000000000000067
+Creating floor branch (adding constraint X4 <= 0.0)...
+New floor node value: 58.42857142857143
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 58.4286, Node ID: Node 82
+
+Creating ceil branch (adding constraint -X4 <= --1.0)...
+New ceil node value: 57.66666666666667
+ceil node pruned: suboptimal
+Popped node Node 82 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 82
+Current node value: 58.42857142857143
+Global lower bound: 58.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 2.1428571428571432
+Creating floor branch (adding constraint X6 <= 2.0)...
+New floor node value: 57.714285714285715
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --3.0)...
+New ceil node value: 56.50000000000001
+ceil node pruned: suboptimal
+
+Branch and bound process completed.
+Optimal objective value: 58.0
+Number of nodes explored: 85
+Plot saved as plots/example_3_(8_var,_5_cons)_tree.png
+Graph saved as graph_example_3_(8_var,_5_cons)_2_1729876808687.pt
+
+Results for Example 3 (8 var, 5 cons):
+Optimal solution: [0.00000000e+00 6.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 1.11022302e-15 2.00000000e+00 0.00000000e+00]
+Optimal objective value: 58.0
+Number of nodes explored: 85
+Optimal node ID: Node 81
+
+==================================================
+
+
+Starting to solve problem: Example 4 (10 var, 7 cons)
+Solving LP relaxation for root node...
+Root node relaxation value: 77.27027027027027
+Starting branch and bound process...
+Priority Queue Contents:
+  1. Value: 77.2703, Node ID: Node 1
+
+Popped node Node 1 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 1
+Current node value: 77.27027027027027
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 5.4324324324324325
+Creating floor branch (adding constraint X8 <= 5.0)...
+New floor node value: 76.0909090909091
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 76.0909, Node ID: Node 2
+
+Creating ceil branch (adding constraint -X8 <= --6.0)...
+New ceil node value: 76.90909090909088
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 76.0909, Node ID: Node 2
+  2. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 2 from priority queue
+Priority Queue Contents:
+  1. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 2
+Current node value: 76.0909090909091
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 0.48484848484848536
+Creating floor branch (adding constraint X0 <= 0.0)...
+New floor node value: 76.06122448979592
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 76.0612, Node ID: Node 4
+  2. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X0 <= --1.0)...
+New ceil node value: 74.8378378378379
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 74.8378, Node ID: Node 5
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 5 from priority queue
+Priority Queue Contents:
+  1. Value: 76.0612, Node ID: Node 4
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 5
+Current node value: 74.8378378378379
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 4.5405405405405475
+Creating floor branch (adding constraint X8 <= 4.0)...
+New floor node value: 73.36363636363637
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.3636, Node ID: Node 6
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X8 <= --5.0)...
+New ceil node value: 74.54545454545456
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 73.3636, Node ID: Node 6
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 6 from priority queue
+Priority Queue Contents:
+  1. Value: 74.5455, Node ID: Node 7
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 6
+Current node value: 73.36363636363637
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 1.606060606060608
+Creating floor branch (adding constraint X0 <= 1.0)...
+New floor node value: 73.32653061224488
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X0 <= --2.0)...
+New ceil node value: 72.40540540540545
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 72.4054, Node ID: Node 9
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Popped node Node 9 from priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 9
+Current node value: 72.40540540540545
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 1.486486486486487
+Creating floor branch (adding constraint X6 <= 1.0)...
+New floor node value: 71.76923076923082
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 71.7692, Node ID: Node 10
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X6 <= --2.0)...
+New ceil node value: 69.89285714285717
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 69.8929, Node ID: Node 11
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 11 from priority queue
+Priority Queue Contents:
+  1. Value: 71.7692, Node ID: Node 10
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 11
+Current node value: 69.89285714285717
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.6785714285714272
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 68.87500000000007
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 68.70270270270272
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 68.7027, Node ID: Node 13
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Popped node Node 13 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 13
+Current node value: 68.70270270270272
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 2.2432432432432443
+Creating floor branch (adding constraint X6 <= 2.0)...
+New floor node value: 68.38461538461542
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.3846, Node ID: Node 14
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X6 <= --3.0)...
+New ceil node value: 64.14285714285717
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 64.1429, Node ID: Node 15
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 15 from priority queue
+Priority Queue Contents:
+  1. Value: 68.3846, Node ID: Node 14
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 15
+Current node value: 64.14285714285717
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.4285714285714288
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 63.50000000000004
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.5000, Node ID: Node 16
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 51.00000000000003
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 51.0000, Node ID: Node 17
+  2. Value: 63.5000, Node ID: Node 16
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Popped node Node 17 from priority queue
+Priority Queue Contents:
+  1. Value: 63.5000, Node ID: Node 16
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 17
+Current node value: 51.00000000000003
+Global lower bound: -inf
+Is integer solution: True
+New best integer solution found!
+Popped node Node 16 from priority queue
+Priority Queue Contents:
+  1. Value: 68.3846, Node ID: Node 14
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 16
+Current node value: 63.50000000000004
+Global lower bound: 51.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.4999999999999973
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 62.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.0000, Node ID: Node 18
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 58.00000000000003
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 58.0000, Node ID: Node 19
+  2. Value: 63.0000, Node ID: Node 18
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Popped node Node 19 from priority queue
+Priority Queue Contents:
+  1. Value: 63.0000, Node ID: Node 18
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 19
+Current node value: 58.00000000000003
+Global lower bound: 51.00000000000003
+Is integer solution: True
+New best integer solution found!
+Popped node Node 18 from priority queue
+Priority Queue Contents:
+  1. Value: 68.3846, Node ID: Node 14
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 18
+Current node value: 62.99999999999999
+Global lower bound: 58.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.4000000000000014
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 62.99999999999997
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.0000, Node ID: Node 20
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 58.0
+ceil node pruned: suboptimal
+Popped node Node 20 from priority queue
+Priority Queue Contents:
+  1. Value: 68.3846, Node ID: Node 14
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 20
+Current node value: 62.99999999999997
+Global lower bound: 58.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 1.3333333333333297
+Creating floor branch (adding constraint X8 <= 1.0)...
+New floor node value: 61.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 22
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X8 <= --2.0)...
+New ceil node value: 61.99999999999999
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 22
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Popped node Node 22 from priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 23
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 22
+Current node value: 61.99999999999999
+Global lower bound: 58.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.1999999999999984
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 61.83333333333332
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 61.8333, Node ID: Node 24
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+New ceil node value: 60.99999999999998
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 61.0000, Node ID: Node 25
+  2. Value: 61.8333, Node ID: Node 24
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 62.0000, Node ID: Node 23
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+
+Popped node Node 25 from priority queue
+Priority Queue Contents:
+  1. Value: 61.8333, Node ID: Node 24
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+
+Processing node Node 25
+Current node value: 60.99999999999998
+Global lower bound: 58.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 0.6666666666666643
+Creating floor branch (adding constraint X8 <= 0.0)...
+New floor node value: 58.999999999999986
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 59.0000, Node ID: Node 26
+  2. Value: 61.8333, Node ID: Node 24
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 62.0000, Node ID: Node 23
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X8 <= --1.0)...
+New ceil node value: 60.49999999999996
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 59.0000, Node ID: Node 26
+  2. Value: 60.5000, Node ID: Node 27
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 61.8333, Node ID: Node 24
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+  11. Value: 62.0000, Node ID: Node 23
+
+Popped node Node 26 from priority queue
+Priority Queue Contents:
+  1. Value: 60.5000, Node ID: Node 27
+  2. Value: 61.8333, Node ID: Node 24
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 62.0000, Node ID: Node 23
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 26
+Current node value: 58.999999999999986
+Global lower bound: 58.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 3.666666666666664
+Creating floor branch (adding constraint X0 <= 3.0)...
+New floor node value: 58.42857142857142
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 58.4286, Node ID: Node 28
+  2. Value: 60.5000, Node ID: Node 27
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 61.8333, Node ID: Node 24
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+  11. Value: 62.0000, Node ID: Node 23
+
+Creating ceil branch (adding constraint -X0 <= --4.0)...
+New ceil node value: 58.999999999999986
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 58.4286, Node ID: Node 28
+  2. Value: 60.5000, Node ID: Node 27
+  3. Value: 59.0000, Node ID: Node 29
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 61.8333, Node ID: Node 24
+  6. Value: 68.8750, Node ID: Node 12
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+  11. Value: 62.0000, Node ID: Node 23
+  12. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 28 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0000, Node ID: Node 29
+  2. Value: 60.5000, Node ID: Node 27
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 61.8333, Node ID: Node 24
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+  11. Value: 62.0000, Node ID: Node 23
+
+
+Processing node Node 28
+Current node value: 58.42857142857142
+Global lower bound: 58.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 3.285714285714285
+Creating floor branch (adding constraint X6 <= 3.0)...
+New floor node value: 58.199999999999996
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 58.2000, Node ID: Node 30
+  2. Value: 60.5000, Node ID: Node 27
+  3. Value: 59.0000, Node ID: Node 29
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 61.8333, Node ID: Node 24
+  6. Value: 68.8750, Node ID: Node 12
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+  11. Value: 62.0000, Node ID: Node 23
+  12. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X6 <= --4.0)...
+New ceil node value: 52.5
+ceil node pruned: suboptimal
+Popped node Node 30 from priority queue
+Priority Queue Contents:
+  1. Value: 59.0000, Node ID: Node 29
+  2. Value: 60.5000, Node ID: Node 27
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 61.8333, Node ID: Node 24
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+  11. Value: 62.0000, Node ID: Node 23
+
+
+Processing node Node 30
+Current node value: 58.199999999999996
+Global lower bound: 58.00000000000003
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X2 which has value 0.4000000000000003
+Creating floor branch (adding constraint X2 <= 0.0)...
+New floor node value: 57.99999999999999
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X2 <= --1.0)...
+New ceil node value: 57.0
+ceil node pruned: suboptimal
+Popped node Node 29 from priority queue
+Priority Queue Contents:
+  1. Value: 60.5000, Node ID: Node 27
+  2. Value: 61.8333, Node ID: Node 24
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 62.0000, Node ID: Node 23
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 29
+Current node value: 58.999999999999986
+Global lower bound: 58.00000000000003
+Is integer solution: True
+New best integer solution found!
+Popped node Node 27 from priority queue
+Priority Queue Contents:
+  1. Value: 61.8333, Node ID: Node 24
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+
+Processing node Node 27
+Current node value: 60.49999999999996
+Global lower bound: 58.999999999999986
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.4999999999999938
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 58.99999999999998
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+ceil node is infeasible
+Popped node Node 24 from priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 23
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 24
+Current node value: 61.83333333333332
+Global lower bound: 58.999999999999986
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 3.083333333333332
+Creating floor branch (adding constraint X6 <= 3.0)...
+New floor node value: 61.8
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 61.8000, Node ID: Node 36
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X6 <= --4.0)...
+New ceil node value: 55.500000000000064
+ceil node pruned: suboptimal
+Popped node Node 36 from priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 23
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 36
+Current node value: 61.8
+Global lower bound: 58.999999999999986
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X2 which has value 0.6000000000000009
+Creating floor branch (adding constraint X2 <= 0.0)...
+New floor node value: 61.5
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 61.5000, Node ID: Node 38
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X2 <= --1.0)...
+New ceil node value: 60.5
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 60.5000, Node ID: Node 39
+  2. Value: 61.5000, Node ID: Node 38
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 62.0000, Node ID: Node 23
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+  10. Value: 74.5455, Node ID: Node 7
+
+Popped node Node 39 from priority queue
+Priority Queue Contents:
+  1. Value: 61.5000, Node ID: Node 38
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+
+Processing node Node 39
+Current node value: 60.5
+Global lower bound: 58.999999999999986
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.7000000000000008
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 57.00000000000001
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+New ceil node value: 57.500000000000014
+ceil node pruned: suboptimal
+Popped node Node 38 from priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 23
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 38
+Current node value: 61.5
+Global lower bound: 58.999999999999986
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 0.2500000000000003
+Creating floor branch (adding constraint X1 <= 0.0)...
+New floor node value: 61.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 61.0000, Node ID: Node 42
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X1 <= --1.0)...
+New ceil node value: 57.00000000000001
+ceil node pruned: suboptimal
+Popped node Node 42 from priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 23
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 42
+Current node value: 61.0
+Global lower bound: 58.999999999999986
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.3333333333333337
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 60.25
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 60.2500, Node ID: Node 44
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 40.0
+ceil node pruned: suboptimal
+Popped node Node 44 from priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 23
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 44
+Current node value: 60.25
+Global lower bound: 58.999999999999986
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X7 which has value 0.25
+Creating floor branch (adding constraint X7 <= 0.0)...
+New floor node value: 60.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 60.0000, Node ID: Node 46
+  2. Value: 62.0000, Node ID: Node 23
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.3846, Node ID: Node 14
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X7 <= --1.0)...
+New ceil node value: 52.0
+ceil node pruned: suboptimal
+Popped node Node 46 from priority queue
+Priority Queue Contents:
+  1. Value: 62.0000, Node ID: Node 23
+  2. Value: 68.3846, Node ID: Node 14
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 46
+Current node value: 60.0
+Global lower bound: 58.999999999999986
+Is integer solution: True
+New best integer solution found!
+Popped node Node 23 from priority queue
+Priority Queue Contents:
+  1. Value: 68.3846, Node ID: Node 14
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 23
+Current node value: 61.99999999999999
+Global lower bound: 60.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 14 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 14
+Current node value: 68.38461538461542
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 0.3461538461538474
+Creating floor branch (adding constraint X1 <= 0.0)...
+New floor node value: 68.17391304347828
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.1739, Node ID: Node 48
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X1 <= --1.0)...
+New ceil node value: 65.10714285714286
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 65.1071, Node ID: Node 49
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 49 from priority queue
+Priority Queue Contents:
+  1. Value: 68.1739, Node ID: Node 48
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 49
+Current node value: 65.10714285714286
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 1.2500000000000013
+Creating floor branch (adding constraint X8 <= 1.0)...
+New floor node value: 64.42857142857143
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 64.4286, Node ID: Node 50
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X8 <= --2.0)...
+New ceil node value: 64.14285714285715
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 64.1429, Node ID: Node 51
+  2. Value: 64.4286, Node ID: Node 50
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.1739, Node ID: Node 48
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Popped node Node 51 from priority queue
+Priority Queue Contents:
+  1. Value: 64.4286, Node ID: Node 50
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 51
+Current node value: 64.14285714285715
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.2857142857142865
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 63.90909090909093
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.9091, Node ID: Node 52
+  2. Value: 64.4286, Node ID: Node 50
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.1739, Node ID: Node 48
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+ceil node is infeasible
+Popped node Node 52 from priority queue
+Priority Queue Contents:
+  1. Value: 64.4286, Node ID: Node 50
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 52
+Current node value: 63.90909090909093
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.4545454545454546
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 63.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.0000, Node ID: Node 54
+  2. Value: 64.4286, Node ID: Node 50
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.1739, Node ID: Node 48
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+ceil node is infeasible
+Popped node Node 54 from priority queue
+Priority Queue Contents:
+  1. Value: 64.4286, Node ID: Node 50
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 54
+Current node value: 63.0
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.6250000000000004
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 63.00000000000002
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.0000, Node ID: Node 56
+  2. Value: 64.4286, Node ID: Node 50
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.1739, Node ID: Node 48
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 56.00000000000001
+ceil node pruned: suboptimal
+Popped node Node 56 from priority queue
+Priority Queue Contents:
+  1. Value: 64.4286, Node ID: Node 50
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 56
+Current node value: 63.00000000000002
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 2.333333333333336
+Creating floor branch (adding constraint X8 <= 2.0)...
+New floor node value: 61.999999999999986
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X8 <= --3.0)...
+New ceil node value: 61.99999999999998
+ceil node pruned: suboptimal
+Popped node Node 50 from priority queue
+Priority Queue Contents:
+  1. Value: 68.1739, Node ID: Node 48
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 50
+Current node value: 64.42857142857143
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.285714285714286
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 63.999999999999986
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 64.0000, Node ID: Node 60
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 48.999999999999964
+ceil node pruned: suboptimal
+Popped node Node 60 from priority queue
+Priority Queue Contents:
+  1. Value: 68.1739, Node ID: Node 48
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 60
+Current node value: 63.999999999999986
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.333333333333333
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 63.66666666666667
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.6667, Node ID: Node 62
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+New ceil node value: 62.75
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 62.7500, Node ID: Node 63
+  2. Value: 63.6667, Node ID: Node 62
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 68.1739, Node ID: Node 48
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Popped node Node 63 from priority queue
+Priority Queue Contents:
+  1. Value: 63.6667, Node ID: Node 62
+  2. Value: 68.1739, Node ID: Node 48
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 63
+Current node value: 62.75
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 0.5000000000000022
+Creating floor branch (adding constraint X8 <= 0.0)...
+New floor node value: 61.5
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X8 <= --1.0)...
+New ceil node value: 61.99999999999998
+ceil node pruned: suboptimal
+Popped node Node 62 from priority queue
+Priority Queue Contents:
+  1. Value: 68.1739, Node ID: Node 48
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 62
+Current node value: 63.66666666666667
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.666666666666667
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 61.33333333333334
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 60.50000000000002
+ceil node pruned: suboptimal
+Popped node Node 48 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 48
+Current node value: 68.17391304347828
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.5217391304347823
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 67.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 68
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 63.50000000000003
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 63.5000, Node ID: Node 69
+  2. Value: 68.0000, Node ID: Node 68
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 69 from priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 68
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 69
+Current node value: 63.50000000000003
+Global lower bound: 61.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 1.5000000000000027
+Creating floor branch (adding constraint X8 <= 1.0)...
+New floor node value: 62.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 63.0000, Node ID: Node 70
+  2. Value: 68.0000, Node ID: Node 68
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X8 <= --2.0)...
+ceil node is infeasible
+Popped node Node 70 from priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 68
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 70
+Current node value: 62.99999999999999
+Global lower bound: 61.99999999999999
+Is integer solution: True
+New best integer solution found!
+Popped node Node 68 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 68
+Current node value: 67.99999999999999
+Global lower bound: 62.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 2.666666666666666
+Creating floor branch (adding constraint X8 <= 2.0)...
+New floor node value: 65.9047619047619
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 65.9048, Node ID: Node 72
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X8 <= --3.0)...
+New ceil node value: 67.85714285714285
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 65.9048, Node ID: Node 72
+  2. Value: 67.8571, Node ID: Node 73
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 72 from priority queue
+Priority Queue Contents:
+  1. Value: 67.8571, Node ID: Node 73
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 72
+Current node value: 65.9047619047619
+Global lower bound: 62.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.4761904761904777
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 65.2
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 65.2000, Node ID: Node 74
+  2. Value: 67.8571, Node ID: Node 73
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 56.99999999999994
+ceil node pruned: suboptimal
+Popped node Node 74 from priority queue
+Priority Queue Contents:
+  1. Value: 67.8571, Node ID: Node 73
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 74
+Current node value: 65.2
+Global lower bound: 62.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.5999999999999988
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 64.56249999999997
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 64.5625, Node ID: Node 76
+  2. Value: 67.8571, Node ID: Node 73
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+New ceil node value: 64.99999999999999
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 64.5625, Node ID: Node 76
+  2. Value: 65.0000, Node ID: Node 77
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 67.8571, Node ID: Node 73
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Popped node Node 76 from priority queue
+Priority Queue Contents:
+  1. Value: 65.0000, Node ID: Node 77
+  2. Value: 67.8571, Node ID: Node 73
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 76
+Current node value: 64.56249999999997
+Global lower bound: 62.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.5624999999999996
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 63.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 64.0000, Node ID: Node 78
+  2. Value: 65.0000, Node ID: Node 77
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 67.8571, Node ID: Node 73
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+  9. Value: 73.3265, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 62.78571428571425
+ceil node pruned: suboptimal
+Popped node Node 78 from priority queue
+Priority Queue Contents:
+  1. Value: 65.0000, Node ID: Node 77
+  2. Value: 67.8571, Node ID: Node 73
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 78
+Current node value: 63.99999999999999
+Global lower bound: 62.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.4736842105263153
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 62.80000000000001
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 61.49999999999997
+ceil node pruned: suboptimal
+Popped node Node 77 from priority queue
+Priority Queue Contents:
+  1. Value: 67.8571, Node ID: Node 73
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 77
+Current node value: 64.99999999999999
+Global lower bound: 62.99999999999999
+Is integer solution: True
+New best integer solution found!
+Popped node Node 73 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 73
+Current node value: 67.85714285714285
+Global lower bound: 64.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.5714285714285718
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 67.66666666666669
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 67.6667, Node ID: Node 82
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+ceil node is infeasible
+Popped node Node 82 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 82
+Current node value: 67.66666666666669
+Global lower bound: 64.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 3.444444444444447
+Creating floor branch (adding constraint X8 <= 3.0)...
+New floor node value: 66.52380952380952
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 66.5238, Node ID: Node 84
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X8 <= --4.0)...
+New ceil node value: 67.42857142857144
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 66.5238, Node ID: Node 84
+  2. Value: 67.4286, Node ID: Node 85
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 84 from priority queue
+Priority Queue Contents:
+  1. Value: 67.4286, Node ID: Node 85
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 84
+Current node value: 66.52380952380952
+Global lower bound: 64.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.3809523809523809
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 66.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 66.0000, Node ID: Node 86
+  2. Value: 67.4286, Node ID: Node 85
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 59.00000000000006
+ceil node pruned: suboptimal
+Popped node Node 86 from priority queue
+Priority Queue Contents:
+  1. Value: 67.4286, Node ID: Node 85
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+
+Processing node Node 86
+Current node value: 66.0
+Global lower bound: 64.99999999999999
+Is integer solution: True
+New best integer solution found!
+Popped node Node 85 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 85
+Current node value: 67.42857142857144
+Global lower bound: 66.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.14285714285714213
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 67.33333333333329
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 67.3333, Node ID: Node 88
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+ceil node is infeasible
+Popped node Node 88 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 88
+Current node value: 67.33333333333329
+Global lower bound: 66.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 0.3333333333333267
+Creating floor branch (adding constraint X4 <= 0.0)...
+New floor node value: 66.49999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 66.5000, Node ID: Node 90
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X4 <= --1.0)...
+ceil node is infeasible
+Popped node Node 90 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 90
+Current node value: 66.49999999999999
+Global lower bound: 66.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.49999999999999606
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 66.33333333333331
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 66.3333, Node ID: Node 92
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+ceil node is infeasible
+Popped node Node 92 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 92
+Current node value: 66.33333333333331
+Global lower bound: 66.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.3333333333333277
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 66.00000000000001
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 66.0000, Node ID: Node 94
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.8750, Node ID: Node 12
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+ceil node is infeasible
+Popped node Node 94 from priority queue
+Priority Queue Contents:
+  1. Value: 68.8750, Node ID: Node 12
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 94
+Current node value: 66.00000000000001
+Global lower bound: 66.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.1578947368421038
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 65.6
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+ceil node is infeasible
+Popped node Node 12 from priority queue
+Priority Queue Contents:
+  1. Value: 71.7692, Node ID: Node 10
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 12
+Current node value: 68.87500000000007
+Global lower bound: 66.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 2.7499999999999947
+Creating floor branch (adding constraint X8 <= 2.0)...
+New floor node value: 66.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 67.0000, Node ID: Node 98
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X8 <= --3.0)...
+New ceil node value: 68.5
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 67.0000, Node ID: Node 98
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.5000, Node ID: Node 99
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Popped node Node 98 from priority queue
+Priority Queue Contents:
+  1. Value: 68.5000, Node ID: Node 99
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 98
+Current node value: 66.99999999999999
+Global lower bound: 66.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 99 from priority queue
+Priority Queue Contents:
+  1. Value: 71.7692, Node ID: Node 10
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 99
+Current node value: 68.5
+Global lower bound: 66.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.4999999999999996
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 68.00000000000001
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 100
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+ceil node is infeasible
+Popped node Node 100 from priority queue
+Priority Queue Contents:
+  1. Value: 71.7692, Node ID: Node 10
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 100
+Current node value: 68.00000000000001
+Global lower bound: 66.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.7000000000000016
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 67.99999999999999
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 102
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 67.62499999999999
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 67.6250, Node ID: Node 103
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.0000, Node ID: Node 102
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Popped node Node 103 from priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 102
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 103
+Current node value: 67.62499999999999
+Global lower bound: 66.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 3.249999999999999
+Creating floor branch (adding constraint X8 <= 3.0)...
+New floor node value: 67.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 67.0000, Node ID: Node 104
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 68.0000, Node ID: Node 102
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.7692, Node ID: Node 10
+
+Creating ceil branch (adding constraint -X8 <= --4.0)...
+New ceil node value: 66.5
+ceil node pruned: suboptimal
+Popped node Node 104 from priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 102
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 104
+Current node value: 67.0
+Global lower bound: 66.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.333333333333332
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 66.66666666666667
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+New ceil node value: 64.99999999999996
+ceil node pruned: suboptimal
+Popped node Node 102 from priority queue
+Priority Queue Contents:
+  1. Value: 71.7692, Node ID: Node 10
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 102
+Current node value: 67.99999999999999
+Global lower bound: 66.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 3.333333333333332
+Creating floor branch (adding constraint X8 <= 3.0)...
+New floor node value: 67.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 67.0000, Node ID: Node 108
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.7692, Node ID: Node 10
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X8 <= --4.0)...
+New ceil node value: 66.99999999999999
+ceil node pruned: suboptimal
+Popped node Node 108 from priority queue
+Priority Queue Contents:
+  1. Value: 71.7692, Node ID: Node 10
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 108
+Current node value: 67.0
+Global lower bound: 66.99999999999999
+Is integer solution: True
+New best integer solution found!
+Popped node Node 10 from priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 10
+Current node value: 71.76923076923082
+Global lower bound: 67.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 0.6923076923076943
+Creating floor branch (adding constraint X1 <= 0.0)...
+New floor node value: 71.34782608695656
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 71.3478, Node ID: Node 110
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X1 <= --1.0)...
+New ceil node value: 71.48648648648648
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 71.3478, Node ID: Node 110
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 110 from priority queue
+Priority Queue Contents:
+  1. Value: 71.4865, Node ID: Node 111
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 110
+Current node value: 71.34782608695656
+Global lower bound: 67.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 3.0434782608695645
+Creating floor branch (adding constraint X4 <= 3.0)...
+New floor node value: 71.33333333333333
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 71.3333, Node ID: Node 112
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X4 <= --4.0)...
+New ceil node value: 65.3
+ceil node pruned: suboptimal
+Popped node Node 112 from priority queue
+Priority Queue Contents:
+  1. Value: 71.4865, Node ID: Node 111
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 112
+Current node value: 71.33333333333333
+Global lower bound: 67.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.7777777777777775
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 70.75
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.7500, Node ID: Node 114
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 71.00000000000001
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 70.7500, Node ID: Node 114
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+Popped node Node 114 from priority queue
+Priority Queue Contents:
+  1. Value: 71.0000, Node ID: Node 115
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 114
+Current node value: 70.75
+Global lower bound: 67.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 3.750000000000002
+Creating floor branch (adding constraint X8 <= 3.0)...
+New floor node value: 68.1
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.1000, Node ID: Node 116
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+Creating ceil branch (adding constraint -X8 <= --4.0)...
+New ceil node value: 70.6666666666666
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 68.1000, Node ID: Node 116
+  2. Value: 70.6667, Node ID: Node 117
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+  8. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 116 from priority queue
+Priority Queue Contents:
+  1. Value: 70.6667, Node ID: Node 117
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+
+Processing node Node 116
+Current node value: 68.1
+Global lower bound: 67.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.2999999999999989
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 68.00000000000001
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 68.0000, Node ID: Node 118
+  2. Value: 70.6667, Node ID: Node 117
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+  8. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 65.99999999999999
+ceil node pruned: suboptimal
+Popped node Node 118 from priority queue
+Priority Queue Contents:
+  1. Value: 70.6667, Node ID: Node 117
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+
+Processing node Node 118
+Current node value: 68.00000000000001
+Global lower bound: 67.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 117 from priority queue
+Priority Queue Contents:
+  1. Value: 71.0000, Node ID: Node 115
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 117
+Current node value: 70.6666666666666
+Global lower bound: 68.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.666666666666659
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 69.00000000000001
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 69.0000, Node ID: Node 120
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 69.00000000000003
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 69.0000, Node ID: Node 120
+  2. Value: 69.0000, Node ID: Node 121
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 73.3265, Node ID: Node 8
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+  8. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 120 from priority queue
+Priority Queue Contents:
+  1. Value: 69.0000, Node ID: Node 121
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.0000, Node ID: Node 115
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+
+Processing node Node 120
+Current node value: 69.00000000000001
+Global lower bound: 68.00000000000001
+Is integer solution: True
+New best integer solution found!
+Popped node Node 121 from priority queue
+Priority Queue Contents:
+  1. Value: 71.0000, Node ID: Node 115
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 121
+Current node value: 69.00000000000003
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 0.500000000000003
+Creating floor branch (adding constraint X6 <= 0.0)...
+New floor node value: 66.5
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --1.0)...
+ceil node is infeasible
+Popped node Node 115 from priority queue
+Priority Queue Contents:
+  1. Value: 71.4865, Node ID: Node 111
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 115
+Current node value: 71.00000000000001
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 3.571428571428569
+Creating floor branch (adding constraint X8 <= 3.0)...
+New floor node value: 69.47826086956522
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 69.4783, Node ID: Node 124
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X8 <= --4.0)...
+New ceil node value: 70.72727272727272
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 69.4783, Node ID: Node 124
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 70.7273, Node ID: Node 125
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+Popped node Node 124 from priority queue
+Priority Queue Contents:
+  1. Value: 70.7273, Node ID: Node 125
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 124
+Current node value: 69.47826086956522
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.13043478260869623
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 69.3076923076923
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 69.3077, Node ID: Node 126
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 70.7273, Node ID: Node 125
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.4865, Node ID: Node 111
+
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 65.36842105263159
+ceil node pruned: suboptimal
+Popped node Node 126 from priority queue
+Priority Queue Contents:
+  1. Value: 70.7273, Node ID: Node 125
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 126
+Current node value: 69.3076923076923
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.615384615384616
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 68.36363636363635
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+New ceil node value: 68.4814814814815
+ceil node pruned: suboptimal
+Popped node Node 125 from priority queue
+Priority Queue Contents:
+  1. Value: 71.4865, Node ID: Node 111
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 125
+Current node value: 70.72727272727272
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 0.8181818181818187
+Creating floor branch (adding constraint X6 <= 0.0)...
+New floor node value: 68.85714285714285
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --1.0)...
+New ceil node value: 69.42857142857143
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 69.4286, Node ID: Node 131
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.4865, Node ID: Node 111
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 131 from priority queue
+Priority Queue Contents:
+  1. Value: 71.4865, Node ID: Node 111
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 131
+Current node value: 69.42857142857143
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.2857142857142847
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 69.0
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 64.85714285714289
+ceil node pruned: suboptimal
+Popped node Node 111 from priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 111
+Current node value: 71.48648648648648
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.9729729729729755
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 70.75
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.7500, Node ID: Node 134
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 71.37499999999999
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 70.7500, Node ID: Node 134
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.3750, Node ID: Node 135
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 134 from priority queue
+Priority Queue Contents:
+  1. Value: 71.3750, Node ID: Node 135
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 134
+Current node value: 70.75
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.25000000000000255
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 70.69565217391303
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.6957, Node ID: Node 136
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.3750, Node ID: Node 135
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 69.86486486486488
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 69.8649, Node ID: Node 137
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 70.6957, Node ID: Node 136
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+  7. Value: 71.3750, Node ID: Node 135
+
+Popped node Node 137 from priority queue
+Priority Queue Contents:
+  1. Value: 70.6957, Node ID: Node 136
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.3750, Node ID: Node 135
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 137
+Current node value: 69.86486486486488
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.729729729729731
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 68.86567164179105
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+New ceil node value: 68.75000000000003
+ceil node pruned: suboptimal
+Popped node Node 136 from priority queue
+Priority Queue Contents:
+  1. Value: 71.3750, Node ID: Node 135
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 136
+Current node value: 70.69565217391303
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.08695652173913071
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 70.5454545454545
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.5455, Node ID: Node 140
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.3750, Node ID: Node 135
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 66.8
+ceil node pruned: suboptimal
+Popped node Node 140 from priority queue
+Priority Queue Contents:
+  1. Value: 71.3750, Node ID: Node 135
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 140
+Current node value: 70.5454545454545
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 2.1818181818181746
+Creating floor branch (adding constraint X0 <= 2.0)...
+New floor node value: 70.44444444444443
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.4444, Node ID: Node 142
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.3750, Node ID: Node 135
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X0 <= --3.0)...
+New ceil node value: 68.50000000000004
+ceil node pruned: suboptimal
+Popped node Node 142 from priority queue
+Priority Queue Contents:
+  1. Value: 71.3750, Node ID: Node 135
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 142
+Current node value: 70.44444444444443
+Global lower bound: 69.00000000000001
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 0.777777777777777
+Creating floor branch (adding constraint X6 <= 0.0)...
+New floor node value: 70.0
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.0000, Node ID: Node 144
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 71.3750, Node ID: Node 135
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X6 <= --1.0)...
+New ceil node value: 68.99999999999999
+ceil node pruned: suboptimal
+Popped node Node 144 from priority queue
+Priority Queue Contents:
+  1. Value: 71.3750, Node ID: Node 135
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 144
+Current node value: 70.0
+Global lower bound: 69.00000000000001
+Is integer solution: True
+New best integer solution found!
+Popped node Node 135 from priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 135
+Current node value: 71.37499999999999
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 0.7499999999999989
+Creating floor branch (adding constraint X6 <= 0.0)...
+New floor node value: 70.39999999999998
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.4000, Node ID: Node 146
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X6 <= --1.0)...
+New ceil node value: 70.0
+ceil node pruned: suboptimal
+Popped node Node 146 from priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 146
+Current node value: 70.39999999999998
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 3.199999999999995
+Creating floor branch (adding constraint X8 <= 3.0)...
+New floor node value: 70.13333333333333
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.1333, Node ID: Node 148
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X8 <= --4.0)...
+ceil node is infeasible
+Popped node Node 148 from priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 148
+Current node value: 70.13333333333333
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.06666666666666633
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 70.00000000000001
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.0000, Node ID: Node 150
+  2. Value: 73.3265, Node ID: Node 8
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 65.5
+ceil node pruned: suboptimal
+Popped node Node 150 from priority queue
+Priority Queue Contents:
+  1. Value: 73.3265, Node ID: Node 8
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 150
+Current node value: 70.00000000000001
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 3.105263157894738
+Creating floor branch (adding constraint X4 <= 3.0)...
+New floor node value: 69.80952380952381
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --4.0)...
+New ceil node value: 64.5
+ceil node pruned: suboptimal
+Popped node Node 8 from priority queue
+Priority Queue Contents:
+  1. Value: 74.5455, Node ID: Node 7
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 8
+Current node value: 73.32653061224488
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 1.7142857142857175
+Creating floor branch (adding constraint X6 <= 1.0)...
+New floor node value: 73.19047619047622
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.1905, Node ID: Node 154
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X6 <= --2.0)...
+New ceil node value: 71.92857142857144
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 71.9286, Node ID: Node 155
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Popped node Node 155 from priority queue
+Priority Queue Contents:
+  1. Value: 73.1905, Node ID: Node 154
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 155
+Current node value: 71.92857142857144
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 3.500000000000001
+Creating floor branch (adding constraint X8 <= 3.0)...
+New floor node value: 70.53061224489797
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.5306, Node ID: Node 156
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X8 <= --4.0)...
+New ceil node value: 71.28571428571433
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 70.5306, Node ID: Node 156
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 71.2857, Node ID: Node 157
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 156 from priority queue
+Priority Queue Contents:
+  1. Value: 71.2857, Node ID: Node 157
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 156
+Current node value: 70.53061224489797
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.1632653061224494
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 70.33333333333336
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.3333, Node ID: Node 158
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 71.2857, Node ID: Node 157
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 65.42857142857146
+ceil node pruned: suboptimal
+Popped node Node 158 from priority queue
+Priority Queue Contents:
+  1. Value: 71.2857, Node ID: Node 157
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 158
+Current node value: 70.33333333333336
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 0.33333333333333287
+Creating floor branch (adding constraint X1 <= 0.0)...
+New floor node value: 70.2857142857143
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.2857, Node ID: Node 160
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 71.2857, Node ID: Node 157
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X1 <= --1.0)...
+New ceil node value: 66.50000000000001
+ceil node pruned: suboptimal
+Popped node Node 160 from priority queue
+Priority Queue Contents:
+  1. Value: 71.2857, Node ID: Node 157
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 160
+Current node value: 70.2857142857143
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.2857142857142856
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 69.5294117647059
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 68.00000000000003
+ceil node pruned: suboptimal
+Popped node Node 157 from priority queue
+Priority Queue Contents:
+  1. Value: 73.1905, Node ID: Node 154
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 157
+Current node value: 71.28571428571433
+Global lower bound: 70.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.5714285714285814
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 70.28358208955225
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.2836, Node ID: Node 164
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+New ceil node value: 70.00000000000009
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 70.0000, Node ID: Node 165
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 70.2836, Node ID: Node 164
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 165 from priority queue
+Priority Queue Contents:
+  1. Value: 70.2836, Node ID: Node 164
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 165
+Current node value: 70.00000000000009
+Global lower bound: 70.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 164 from priority queue
+Priority Queue Contents:
+  1. Value: 73.1905, Node ID: Node 154
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 164
+Current node value: 70.28358208955225
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.7462686567164175
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 68.17647058823529
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 70.125
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 70.1250, Node ID: Node 167
+  2. Value: 73.1905, Node ID: Node 154
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Popped node Node 167 from priority queue
+Priority Queue Contents:
+  1. Value: 73.1905, Node ID: Node 154
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 167
+Current node value: 70.125
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 2.1250000000000004
+Creating floor branch (adding constraint X6 <= 2.0)...
+New floor node value: 69.99999999999999
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --3.0)...
+ceil node is infeasible
+Popped node Node 154 from priority queue
+Priority Queue Contents:
+  1. Value: 74.5455, Node ID: Node 7
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 154
+Current node value: 73.19047619047622
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.7142857142857117
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 71.62962962962963
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 71.6296, Node ID: Node 170
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 72.99999999999999
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 71.6296, Node ID: Node 170
+  2. Value: 73.0000, Node ID: Node 171
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Popped node Node 170 from priority queue
+Priority Queue Contents:
+  1. Value: 73.0000, Node ID: Node 171
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 170
+Current node value: 71.62962962962963
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.3703703703703707
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 70.57142857142857
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.5714, Node ID: Node 172
+  2. Value: 73.0000, Node ID: Node 171
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 69.39999999999999
+ceil node pruned: suboptimal
+Popped node Node 172 from priority queue
+Priority Queue Contents:
+  1. Value: 73.0000, Node ID: Node 171
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 172
+Current node value: 70.57142857142857
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 1.0714285714285712
+Creating floor branch (adding constraint X1 <= 1.0)...
+New floor node value: 70.45454545454544
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.4545, Node ID: Node 174
+  2. Value: 73.0000, Node ID: Node 171
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X1 <= --2.0)...
+New ceil node value: 70.3529411764706
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 70.3529, Node ID: Node 175
+  2. Value: 73.0000, Node ID: Node 171
+  3. Value: 70.4545, Node ID: Node 174
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+  6. Value: 76.0612, Node ID: Node 4
+
+Popped node Node 175 from priority queue
+Priority Queue Contents:
+  1. Value: 70.4545, Node ID: Node 174
+  2. Value: 73.0000, Node ID: Node 171
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+
+Processing node Node 175
+Current node value: 70.3529411764706
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.8235294117647063
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 69.44444444444443
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 69.83333333333333
+ceil node pruned: suboptimal
+Popped node Node 174 from priority queue
+Priority Queue Contents:
+  1. Value: 73.0000, Node ID: Node 171
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 174
+Current node value: 70.45454545454544
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.09090909090909041
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 70.26666666666665
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 70.2667, Node ID: Node 178
+  2. Value: 73.0000, Node ID: Node 171
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+  5. Value: 74.5455, Node ID: Node 7
+
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 69.28571428571426
+ceil node pruned: suboptimal
+Popped node Node 178 from priority queue
+Priority Queue Contents:
+  1. Value: 73.0000, Node ID: Node 171
+  2. Value: 74.5455, Node ID: Node 7
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 178
+Current node value: 70.26666666666665
+Global lower bound: 70.00000000000009
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.7333333333333338
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 69.53333333333333
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 69.25
+ceil node pruned: suboptimal
+Popped node Node 171 from priority queue
+Priority Queue Contents:
+  1. Value: 74.5455, Node ID: Node 7
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 171
+Current node value: 72.99999999999999
+Global lower bound: 70.00000000000009
+Is integer solution: True
+New best integer solution found!
+Popped node Node 7 from priority queue
+Priority Queue Contents:
+  1. Value: 76.0612, Node ID: Node 4
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 7
+Current node value: 74.54545454545456
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.090909090909092
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 74.375
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 74.3750, Node ID: Node 182
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 69.99999999999997
+ceil node pruned: suboptimal
+Popped node Node 182 from priority queue
+Priority Queue Contents:
+  1. Value: 76.0612, Node ID: Node 4
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 182
+Current node value: 74.375
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.125000000000002
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 74.34782608695654
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 74.3478, Node ID: Node 184
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 73.1818181818182
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 73.1818, Node ID: Node 185
+  2. Value: 74.3478, Node ID: Node 184
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 185 from priority queue
+Priority Queue Contents:
+  1. Value: 74.3478, Node ID: Node 184
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 185
+Current node value: 73.1818181818182
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.3636363636363646
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 72.46268656716421
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+New ceil node value: 70.00000000000004
+ceil node pruned: suboptimal
+Popped node Node 184 from priority queue
+Priority Queue Contents:
+  1. Value: 76.0612, Node ID: Node 4
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 184
+Current node value: 74.34782608695654
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 1.391304347826087
+Creating floor branch (adding constraint X6 <= 1.0)...
+New floor node value: 74.00000000000003
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 74.0000, Node ID: Node 188
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X6 <= --2.0)...
+New ceil node value: 70.0
+ceil node pruned: suboptimal
+Popped node Node 188 from priority queue
+Priority Queue Contents:
+  1. Value: 76.0612, Node ID: Node 4
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 188
+Current node value: 74.00000000000003
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 0.49999999999999967
+Creating floor branch (adding constraint X1 <= 0.0)...
+New floor node value: 73.2857142857143
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.2857, Node ID: Node 190
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+Creating ceil branch (adding constraint -X1 <= --1.0)...
+New ceil node value: 73.45454545454545
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 73.2857, Node ID: Node 190
+  2. Value: 73.4545, Node ID: Node 191
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 190 from priority queue
+Priority Queue Contents:
+  1. Value: 73.4545, Node ID: Node 191
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 190
+Current node value: 73.2857142857143
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.07142857142857154
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 73.28571428571429
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.2857, Node ID: Node 192
+  2. Value: 73.4545, Node ID: Node 191
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 67.57142857142858
+ceil node pruned: suboptimal
+Popped node Node 192 from priority queue
+Priority Queue Contents:
+  1. Value: 73.4545, Node ID: Node 191
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 192
+Current node value: 73.28571428571429
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X0 which has value 1.1428571428571372
+Creating floor branch (adding constraint X0 <= 1.0)...
+New floor node value: 73.0909090909091
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.0909, Node ID: Node 194
+  2. Value: 73.4545, Node ID: Node 191
+  3. Value: 76.0612, Node ID: Node 4
+  4. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X0 <= --2.0)...
+New ceil node value: 70.71428571428572
+ceil node pruned: suboptimal
+Popped node Node 194 from priority queue
+Priority Queue Contents:
+  1. Value: 73.4545, Node ID: Node 191
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 76.0612, Node ID: Node 4
+
+
+Processing node Node 194
+Current node value: 73.0909090909091
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X3 which has value 0.6363636363636354
+Creating floor branch (adding constraint X3 <= 0.0)...
+New floor node value: 71.73333333333332
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X3 <= --1.0)...
+New ceil node value: 72.44444444444446
+ceil node pruned: suboptimal
+Popped node Node 191 from priority queue
+Priority Queue Contents:
+  1. Value: 76.0612, Node ID: Node 4
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 191
+Current node value: 73.45454545454545
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 0.6363636363636361
+Creating floor branch (adding constraint X6 <= 0.0)...
+New floor node value: 72.5
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --1.0)...
+New ceil node value: 70.85714285714286
+ceil node pruned: suboptimal
+Popped node Node 4 from priority queue
+Priority Queue Contents:
+  1. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 4
+Current node value: 76.06122448979592
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 0.3265306122448987
+Creating floor branch (adding constraint X5 <= 0.0)...
+New floor node value: 75.8
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 75.8000, Node ID: Node 200
+  2. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X5 <= --1.0)...
+New ceil node value: 73.56756756756758
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 73.5676, Node ID: Node 201
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.8000, Node ID: Node 200
+
+Popped node Node 201 from priority queue
+Priority Queue Contents:
+  1. Value: 75.8000, Node ID: Node 200
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 201
+Current node value: 73.56756756756758
+Global lower bound: 72.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 4.10810810810811
+Creating floor branch (adding constraint X8 <= 4.0)...
+New floor node value: 73.26530612244898
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.2653, Node ID: Node 202
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.8000, Node ID: Node 200
+
+Creating ceil branch (adding constraint -X8 <= --5.0)...
+New ceil node value: 73.0
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 73.0000, Node ID: Node 203
+  2. Value: 73.2653, Node ID: Node 202
+  3. Value: 75.8000, Node ID: Node 200
+  4. Value: 76.9091, Node ID: Node 3
+
+Popped node Node 203 from priority queue
+Priority Queue Contents:
+  1. Value: 73.2653, Node ID: Node 202
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.8000, Node ID: Node 200
+
+
+Processing node Node 203
+Current node value: 73.0
+Global lower bound: 72.99999999999999
+Is integer solution: True
+New best integer solution found!
+Popped node Node 202 from priority queue
+Priority Queue Contents:
+  1. Value: 75.8000, Node ID: Node 200
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 202
+Current node value: 73.26530612244898
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X5 which has value 1.0816326530612264
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 73.20000000000002
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.2000, Node ID: Node 204
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.8000, Node ID: Node 200
+
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 68.57142857142858
+ceil node pruned: suboptimal
+Popped node Node 204 from priority queue
+Priority Queue Contents:
+  1. Value: 75.8000, Node ID: Node 200
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 204
+Current node value: 73.20000000000002
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 1.7999999999999994
+Creating floor branch (adding constraint X6 <= 1.0)...
+New floor node value: 72.15384615384616
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --2.0)...
+New ceil node value: 73.16666666666666
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 73.1667, Node ID: Node 207
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.8000, Node ID: Node 200
+
+Popped node Node 207 from priority queue
+Priority Queue Contents:
+  1. Value: 75.8000, Node ID: Node 200
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 207
+Current node value: 73.16666666666666
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.1666666666666674
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 72.76470588235294
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 64.50000000000003
+ceil node pruned: suboptimal
+Popped node Node 200 from priority queue
+Priority Queue Contents:
+  1. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 200
+Current node value: 75.8
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 1.5999999999999985
+Creating floor branch (adding constraint X1 <= 1.0)...
+New floor node value: 75.71428571428571
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 75.7143, Node ID: Node 210
+  2. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X1 <= --2.0)...
+New ceil node value: 74.875
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 74.8750, Node ID: Node 211
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.7143, Node ID: Node 210
+
+Popped node Node 211 from priority queue
+Priority Queue Contents:
+  1. Value: 75.7143, Node ID: Node 210
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 211
+Current node value: 74.875
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 4.75
+Creating floor branch (adding constraint X8 <= 4.0)...
+New floor node value: 72.00000000000001
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X8 <= --5.0)...
+New ceil node value: 74.5
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 74.5000, Node ID: Node 213
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.7143, Node ID: Node 210
+
+Popped node Node 213 from priority queue
+Priority Queue Contents:
+  1. Value: 75.7143, Node ID: Node 210
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 213
+Current node value: 74.5
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.499999999999999
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 73.58823529411764
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.5882, Node ID: Node 214
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.7143, Node ID: Node 210
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+ceil node is infeasible
+Popped node Node 214 from priority queue
+Priority Queue Contents:
+  1. Value: 75.7143, Node ID: Node 210
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 214
+Current node value: 73.58823529411764
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.7058823529411763
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 72.77777777777777
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 72.66666666666667
+ceil node pruned: suboptimal
+Popped node Node 210 from priority queue
+Priority Queue Contents:
+  1. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 210
+Current node value: 75.71428571428571
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 2.7142857142857135
+Creating floor branch (adding constraint X4 <= 2.0)...
+New floor node value: 74.05882352941174
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 74.0588, Node ID: Node 218
+  2. Value: 76.9091, Node ID: Node 3
+
+Creating ceil branch (adding constraint -X4 <= --3.0)...
+New ceil node value: 74.99999999999999
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 74.0588, Node ID: Node 218
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.0000, Node ID: Node 219
+
+Popped node Node 218 from priority queue
+Priority Queue Contents:
+  1. Value: 75.0000, Node ID: Node 219
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 218
+Current node value: 74.05882352941174
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X9 which has value 0.4705882352941182
+Creating floor branch (adding constraint X9 <= 0.0)...
+New floor node value: 73.66666666666667
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.6667, Node ID: Node 220
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.0000, Node ID: Node 219
+
+Creating ceil branch (adding constraint -X9 <= --1.0)...
+New ceil node value: 72.5
+ceil node pruned: suboptimal
+Popped node Node 220 from priority queue
+Priority Queue Contents:
+  1. Value: 75.0000, Node ID: Node 219
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 220
+Current node value: 73.66666666666667
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X2 which has value 0.6666666666666666
+Creating floor branch (adding constraint X2 <= 0.0)...
+New floor node value: 73.4
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 73.4000, Node ID: Node 222
+  2. Value: 76.9091, Node ID: Node 3
+  3. Value: 75.0000, Node ID: Node 219
+
+Creating ceil branch (adding constraint -X2 <= --1.0)...
+New ceil node value: 71.86486486486487
+ceil node pruned: suboptimal
+Popped node Node 222 from priority queue
+Priority Queue Contents:
+  1. Value: 75.0000, Node ID: Node 219
+  2. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 222
+Current node value: 73.4
+Global lower bound: 73.0
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X6 which has value 1.7999999999999998
+Creating floor branch (adding constraint X6 <= 1.0)...
+New floor node value: 73.0
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X6 <= --2.0)...
+New ceil node value: 72.0
+ceil node pruned: suboptimal
+Popped node Node 219 from priority queue
+Priority Queue Contents:
+  1. Value: 76.9091, Node ID: Node 3
+
+
+Processing node Node 219
+Current node value: 74.99999999999999
+Global lower bound: 73.0
+Is integer solution: True
+New best integer solution found!
+Popped node Node 3 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 3
+Current node value: 76.90909090909088
+Global lower bound: 74.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 1.8181818181818215
+Creating floor branch (adding constraint X4 <= 1.0)...
+New floor node value: 76.50000000000004
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 76.5000, Node ID: Node 226
+
+Creating ceil branch (adding constraint -X4 <= --2.0)...
+New ceil node value: 75.99999999999999
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 76.0000, Node ID: Node 227
+  2. Value: 76.5000, Node ID: Node 226
+
+Popped node Node 227 from priority queue
+Priority Queue Contents:
+  1. Value: 76.5000, Node ID: Node 226
+
+
+Processing node Node 227
+Current node value: 75.99999999999999
+Global lower bound: 74.99999999999999
+Is integer solution: True
+New best integer solution found!
+Popped node Node 226 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 226
+Current node value: 76.50000000000004
+Global lower bound: 75.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X8 which has value 6.642857142857146
+Creating floor branch (adding constraint X8 <= 6.0)...
+New floor node value: 75.37500000000001
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X8 <= --7.0)...
+New ceil node value: 76.2727272727273
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 76.2727, Node ID: Node 229
+
+Popped node Node 229 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 229
+Current node value: 76.2727272727273
+Global lower bound: 75.99999999999999
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X4 which has value 0.5454545454545494
+Creating floor branch (adding constraint X4 <= 0.0)...
+New floor node value: 75.99999999999996
+floor node pruned: suboptimal
+Creating ceil branch (adding constraint -X4 <= --1.0)...
+New ceil node value: 74.00000000000007
+ceil node pruned: suboptimal
+
+Branch and bound process completed.
+Optimal objective value: 75.99999999999999
+Number of nodes explored: 231
+Plot saved as plots/example_4_(10_var,_7_cons)_tree.png
+Graph saved as graph_example_4_(10_var,_7_cons)_3_1729876811948.pt
+
+Results for Example 4 (10 var, 7 cons):
+Optimal solution: [0. 0. 0. 0. 2. 0. 1. 0. 6. 0.]
+Optimal objective value: 75.99999999999999
+Number of nodes explored: 231
+Optimal node ID: Node 227
+
+==================================================
+
