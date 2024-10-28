@@ -14,50 +14,150 @@ from itertools import combinations
 import sys
 
 
+"""
+Integer Linear Program (ILP) Solver using Branch-and-Bound Method
+
+This module implements a Branch-and-Bound algorithm for solving Integer Linear Programs,
+with specific optimizations for the Traveling Salesman Problem (TSP). The solver uses
+a best-first search strategy to explore the solution space efficiently.
+
+Key Features:
+- Pure integer and mixed integer linear program support
+- Special cuts for TSP (subtour elimination)
+- Best-first search branching strategy
+- Branch-and-bound tree visualization
+- Solution persistence for machine learning applications
+- Progress logging and monitoring
+- Support for multiple example problems
+
+The solver maintains:
+- A priority queue of nodes to explore
+- Global bounds on the objective value
+- A tree structure representing the search space
+- Visualization capabilities for analysis
+
+Dependencies:
+    numpy: For numerical computations and array operations
+    networkx: For tree data structures and visualization
+    torch: For graph persistence and ML integration
+    torch_geometric: For graph neural network compatibility
+    matplotlib: For visualization of the branch-and-bound tree
+    simplex: Custom implementation of the simplex algorithm
+
+Example Usage:
+    solver = ILPSolver()
+    solution, value, nodes, optimal_node = solver.solve(
+        c=objective_coefficients,
+        A_ub=inequality_constraint_matrix,
+        b_ub=inequality_constraint_vector,
+        problem_name="example_problem"
+    )
+
+Notes:
+    - The solver assumes maximization problems. For minimization,
+      negate the objective coefficients.
+    - Solution persistence creates PyTorch geometric data objects
+      suitable for machine learning applications.
+    - Visualization generates both static PNG files and interactive
+      network visualizations.
+"""
+
 class Node:
-    def __init__(self, parent=None, branch_var=None, branch_val=None, branch_direction=None):
-        self.parent = parent
-        self.branch_var = branch_var
-        self.branch_val = branch_val
-        self.branch_direction = branch_direction
-        self.solution = None
-        self.value = None
-        self.estimate = parent.value if parent else 0
-        self.id = None
-        self.depth = parent.depth + 1 if parent else 0
-        self.local_upper_bound = -np.inf # relaxation objective value
-        self.relaxed_soln = None
-        self.num_int = 0
-        self.num_frac = 0
-        self.indices_frac = []
-        self.active_constraints = []
-        self.slack_values = []
-        self.optimality_gap = np.inf
-        self.parent_objective = parent.value if parent else None
-        self.prune_reason = None
-        self.A_ub = None
-        self.b_ub = None
-        self.processed = False  # Track if node has been processed
+    """
+    Represents a node in the branch-and-bound enumeration tree.
     
-    def set_constraints(self, A_ub, b_ub):
-        """Store the node-specific constraints"""
+    Each node maintains its own state within the branch-and-bound process,
+    including local bounds, branching decisions, and solution information.
+    """
+    
+    def __init__(self, parent=None, branch_var=None, branch_val=None, 
+                 branch_direction=None):
+        """
+        Initialize a new node in the branch-and-bound tree.
+        
+        Args:
+            parent (Node, optional): Parent node in B&B tree.
+            branch_var (int, optional): Branching variable index. 
+            branch_val (float, optional): Branching value. 
+            branch_direction (str, optional): Branch direction. 
+        """
+        # Basic node information
+        self.parent = parent  # Reference to parent node in tree
+        self.branch_var = branch_var  # Variable index chosen for branching
+        self.branch_val = branch_val  # Value at which branching occurs
+        self.branch_direction = branch_direction  # Direction of branch (floor/ceil)
+        
+        # Solution information
+        self.solution = None  # Current solution vector
+        self.value = None  # Objective value at this node
+        self.id = None  # Unique node identifier
+        
+        # Tree structure information
+        self.depth = parent.depth + 1 if parent else 0  # Node depth in tree
+        
+        # Bounds and relaxation information
+        self.local_upper_bound = -np.inf  # Upper bound from LP relaxation
+        self.relaxed_soln = None  # Solution to LP relaxation
+        
+        # Solution characteristics
+        self.num_int = 0  # Count of integer variables
+        self.num_frac = 0  # Count of fractional variables
+        self.indices_frac = []  # List of fractional variable indices
+        self.optimality_gap = np.inf  # Gap to best known solution
+        
+        # Status tracking
+        self.prune_reason = None  # Why node was pruned (if applicable)
+        self.A_ub = None  # Node-specific constraint matrix
+        self.b_ub = None  # Node-specific RHS vector
+        self.processed = False  # Processing status flag
+
+    def set_constraints(self, A_ub: np.ndarray, b_ub: np.ndarray) -> None:
+        """
+        Store the node-specific constraints.
+        
+        Makes deep copies of the constraint matrix and RHS vector to ensure
+        node independence in the branch-and-bound tree.
+        
+        Args:
+            A_ub (np.ndarray): Inequality constraint matrix
+            b_ub (np.ndarray): Inequality RHS vector
+        """
         self.A_ub = A_ub.copy()
         self.b_ub = b_ub.copy()
 
-    def __lt__(self, other):
+    def __lt__(self, other: 'Node') -> bool:
+        """
+        Compare nodes for priority queue ordering.
+        
+        Implements '>' for maximization (max-queue ordering -- highest values prioritized first).
+        
+        Args:
+            other (Node): Node to compare against
+            
+        Returns:
+            bool: True if this node's value > other node's value
+        """
         return self.value > other.value  # Changed to '>' for maximization
+    
 
 class ILPSolver:
+    """
+    Branch-and-Bound solver for Integer Linear Programs.
+    
+    Implements a best-first search strategy for solving ILPs with visualization 
+    capabilities and solution persistence for machine learning applications.
+    """
+
     def __init__(self):
-        self.optimal_obj_value = -np.inf
-        self.optimal_solution = None
-        self.enumeration_tree = nx.DiGraph()
-        self.node_counter = 0
-        self.optimal_node = None 
+        self.optimal_obj_value = -np.inf # Best integer feasible solution value found
+        self.optimal_solution = None # Best integer feasible solution vector found
+        self.enumeration_tree = nx.DiGraph() # Branch-and-bound tree structure
+        self.node_counter = 0 # Number of nodes created in the tree
+        self.optimal_node = None # Node containing the optimal solution
         self.global_lower_bound = -np.inf # Greatest lower bound (integer feasible solution) found among all instances so far
-        self.problem_counter = 0 
+        self.problem_counter = 0 # Number of problems solved by this instance
         self.root_relaxation_value = None # Objective value of root node relaxation
-        self.n_cities = 0
+        self.n_cities = 0 # Number of cities (for TSP instances)
 
     def _print_priority_queue(self, priority_queue):
         print("Priority Queue Contents:")
@@ -66,11 +166,31 @@ class ILPSolver:
         print()
 
     def solve(self, c, A_ub, b_ub, A_eq=None, b_eq=None, problem_name="default_name", visualize=False):
+        """
+        Solve an Integer Linear Program using branch-and-bound.
+        
+        Args:
+            c (np.ndarray): Objective function coefficients
+            A_ub (np.ndarray): Inequality constraint matrix
+            b_ub (np.ndarray): Inequality constraint RHS
+            A_eq (np.ndarray, optional): Equality constraint matrix
+            b_eq (np.ndarray, optional): Equality constraint RHS
+            problem_name (str, optional): Name for visualization/logging
+            visualize (bool, optional): Whether to generate visualizations
+        
+        Returns:
+            tuple: (optimal_solution, optimal_value, node_count, optimal_node)
+                - optimal_solution (np.ndarray): Best integer solution found
+                - optimal_value (float): Objective value of best solution
+                - node_count (int): Number of nodes explored
+                - optimal_node (Node): Node containing optimal solution
+        """
+        
         print(f"\nStarting to solve problem: {problem_name}")
         self._reset()
         self._set_global_attributes(c, A_ub, b_ub)
         # Calculate number of cities
-        # Assumes that the TSP is of the standard formulaticon, i.e. c contains only the binary edge variables
+        # Assumes that the TSP is of the standard formulation, i.e. c contains only the binary edge variables
         # len(c) = n_cities * (n_cities - 1) / 2, so we solve for n_cities using the quadratic equation 
         self.n_cities = round((1 + np.sqrt(1 + 8 * len(c))) / 2) 
         print(f"Number of cities: {self.n_cities}")
@@ -215,16 +335,35 @@ class ILPSolver:
         return self.optimal_solution, self.optimal_obj_value, self.node_counter, self.optimal_node
     
     def _find_violated_subtour_constraints(self, solution):
+        """
+        Find violated subtour elimination constraints for TSP.
+        
+        Identifies connected components in the current solution that violate
+        the TSP requirement of a single tour. Returns constraints that
+        eliminate these subtours.
+        
+        Args:
+            solution (np.ndarray): Current solution vector
+            
+        Returns:
+            list: List of violated subtour elimination constraints
+        """
+        # Create edges from solution variables
         edges = [(i, j) for i in range(self.n_cities) for j in range(i+1, self.n_cities) 
                  if solution[i*(self.n_cities-1) - i*(i+1)//2 + j - 1] > 0.5]
+        # Create graph from edges
         G = nx.Graph(edges)
         
+        # Find violated subtour elimination constraints
         violated_constraints = []
+        # Check all subsets of cities of size r >= 2
         for r in range(2, self.n_cities):
             for subset in combinations(range(self.n_cities), r):
                 subgraph = G.subgraph(subset)
+                # Check if subgraph is connected and if the sum of the solution variables for the edges in the subgraph is greater than the number of edges in the subgraph minus 1
                 if nx.is_connected(subgraph) and sum(solution[i*(self.n_cities-1) - i*(i+1)//2 + j - 1] 
                                                      for i, j in combinations(subset, 2)) > len(subset) - 1 + 1e-6:
+                    # If violated, add the corresponding constraint to the list
                     constraint = [0] * (self.n_cities * (self.n_cities - 1) // 2)
                     for i, j in combinations(subset, 2):
                         if i < j:
@@ -237,16 +376,37 @@ class ILPSolver:
         return violated_constraints
 
     def _reset(self):
-        self.optimal_obj_value = -np.inf
-        self.optimal_solution = None
-        self.enumeration_tree = nx.DiGraph()
-        self.node_counter = 0
-        self.optimal_node = None
-        self.global_lower_bound = -np.inf
-        self.global_upper_bound = np.inf
-        self.root_relaxation_value = None
+        """
+        Reset the solver's state for a new problem.
+        
+        Reinitializes all internal tracking variables and data structures,
+        preparing the solver for a fresh optimization problem. This includes
+        clearing bounds, solutions, tree structure, and counters.
+        """
+        self.optimal_obj_value = -np.inf # Reset best integer solution value found
+        self.optimal_solution = None # Reset best integer solution vector found
+        self.enumeration_tree = nx.DiGraph() # Reset branch-and-bound tree structure
+        self.node_counter = 0 # Reset node counter
+        self.optimal_node = None # Reset optimal node
+        self.global_lower_bound = -np.inf # Reset global lower bound
+        self.global_upper_bound = np.inf # Reset global upper bound
+        self.root_relaxation_value = None # Reset root node relaxation value
 
     def _add_node_to_tree(self, node, c, A_ub, b_ub):
+        """
+        Add a new node to the branch-and-bound tree with its attributes.
+        
+        Creates a node in the NetworkX graph structure with all relevant
+        problem data and solution information. Also establishes parent-child
+        relationships in the tree.
+        
+        Args:
+            node (Node): Node to add to the tree
+            c (np.ndarray): Objective coefficients
+            A_ub (np.ndarray): Constraint matrix for this node
+            b_ub (np.ndarray): RHS vector for this node
+        """
+        # Get default attributes then update with node-specific values
         attributes = self._get_default_node_attributes()
         attributes.update({
             'depth': node.depth,
@@ -254,36 +414,56 @@ class ILPSolver:
             'branch_value': node.branch_val,
             'branch_direction': node.branch_direction,
             'local_upper_bound': node.local_upper_bound,
-            'current_constraints': A_ub.tolist(),
-            'current_rhs': b_ub.tolist(),
+            'current_constraints': A_ub.tolist(), # Convert numpy arrays to lists for NetworkX
+            'current_rhs': b_ub.tolist(), # Convert numpy arrays to lists for NetworkX
             'active_constraints': [],
             'slack_values': [],
             'optimality_gap': np.inf,
-            'parent_objective': node.parent_objective,
             'children_pruned': 0,
             'prune_reason': None,
         })
+
+        # Add node to the tree with its attributes
         self.enumeration_tree.add_node(node.id, **attributes)
 
+        # If node has a parent, add edge to represent relationship
         if node.parent:
             self.enumeration_tree.add_edge(node.parent.id, node.id)
 
     def _calculate_node_attributes(self, node, c, A_ub, b_ub, result):
-        # Calculate active constraints
+        """
+        Calculate and update various node metrics and attributes.
+        
+        Computes important node characteristics including:
+        - Active constraints identification
+        - Slack values in constraints
+        - Optimality gap
+        - Integer/fractional variable counts
+        
+        Args:
+            node (Node): Node to update
+            c (np.ndarray): Objective coefficients
+            A_ub (np.ndarray): Constraint matrix
+            b_ub (np.ndarray): RHS vector
+            result (SimplexResult): Result from LP relaxation
+        """
+        # Find constraints that are binding (slack near zero)
         node.active_constraints = np.where(np.isclose(A_ub @ result.x, b_ub))[0].tolist()
 
-        # Calculate slack values
+        # Calculate slack variables (difference between LHS and RHS)
         node.slack_values = (b_ub - A_ub @ result.x).tolist()
 
-        # Calculate optimality gap
+        # Calculate gap between node value and global lower bound
         if self.global_lower_bound > -np.inf:
             node.optimality_gap = (node.value - self.global_lower_bound) / abs(self.global_lower_bound)
 
-        # Update number of integer and fractional variables
+        # Count integer and fractional variables in solution
         node.num_int = sum(1 for x in result.x if abs(x - round(x)) < 1e-6)
         node.num_frac = len(c) - node.num_int
+        # Store indices of fractional variables for branching decisions
         node.indices_frac = [i for i, x in enumerate(result.x) if abs(x - round(x)) > 1e-6]
 
+        # Update node attributes in the enumeration tree
         self._update_node_attributes(node, {
             'relaxed_soln': node.relaxed_soln.tolist(),
             'relaxed_obj_value': node.relaxed_obj_value,
@@ -294,40 +474,59 @@ class ILPSolver:
             'num_int': node.num_int,
             'num_frac': node.num_frac,
             'indices_frac': node.indices_frac,
-            'parent_objective': node.parent_objective,
             'children_pruned': node.children_pruned
         })
 
 
     def _get_default_node_attributes(self):
+        """
+        Get default attributes for a new node in the enumeration tree.
+        
+        Returns a dictionary of initial values for all possible node attributes,
+        ensuring consistent attribute presence across all nodes.
+        
+        Returns:
+            dict: Default node attributes with initial values
+        """
         return {
-            'depth': 0,
-            'branch_variable': None,
-            'branch_value': None,
-            'branch_direction': None,
-            'fractionality': None,
-            'local_lower_bound': -np.inf,
-            'local_upper_bound': np.inf,
-            'global_lower_bound': -np.inf,
-            'global_upper_bound': np.inf,
-            'current_constraints': None,
-            'current_rhs': None,
-            'relaxed_soln': None,
-            'relaxed_obj_value': None,
-            'num_int': 0,
-            'num_frac': 0,
-            'indices_frac': [],
-            'active_constraints': [],
-            'slack_values': [],
-            'optimality_gap': np.inf,
-            'parent_objective': None,
-            'children_pruned': 0,
-            'color': 'lightgray'
+            'depth': 0,  # Level in the B&B tree
+            'branch_variable': None,  # Variable used for branching
+            'branch_value': None,  # Value used for branching
+            'branch_direction': None,  # Direction of branching decision
+            'fractionality': None,  # Measure of non-integrality
+            'local_lower_bound': -np.inf,  # Best integer solution in subtree
+            'local_upper_bound': np.inf,  # Best possible value in subtree
+            'global_lower_bound': -np.inf,  # Best known integer solution
+            'global_upper_bound': np.inf,  # Best possible solution overall
+            'current_constraints': None,  # Node's constraint matrix
+            'current_rhs': None,  # Node's RHS vector
+            'relaxed_soln': None,  # LP relaxation solution
+            'relaxed_obj_value': None,  # LP relaxation objective value
+            'num_int': 0,  # Count of integer variables
+            'num_frac': 0,  # Count of fractional variables
+            'indices_frac': [],  # Indices of fractional variables
+            'active_constraints': [],  # Binding constraints
+            'slack_values': [],  # Constraint slack values
+            'optimality_gap': np.inf,  # Gap to best known solution
+            'children_pruned': 0,  # Number of pruned child nodes
+            'color': 'lightgray'  # Visual attribute for plotting
         }
 
     def _update_node_attributes(self, node, attributes):
-        # Ensure we're only updating existing attributes
+        """
+        Update attributes of a node in the enumeration tree.
+        
+        Safely updates node attributes while ensuring proper data type conversion
+        for NetworkX storage (converting numpy arrays to lists).
+        
+        Args:
+            node (Node): Node to update
+            attributes (dict): New attributes to set or update
+        """
+        # Get current attributes from tree
         current_attributes = self.enumeration_tree.nodes[node.id]
+
+        # Update only existing attributes, converting numpy arrays to lists
         for key, value in attributes.items():
             if key in current_attributes:
                 if isinstance(value, np.ndarray):
@@ -335,27 +534,72 @@ class ILPSolver:
                 current_attributes[key] = value
 
     def _update_constraints(self, A_ub, b_ub, branch_var, branch_val, direction):
-        new_row = np.zeros(A_ub.shape[1])
+        """
+        Update constraint matrices for a new branching decision.
+        
+        Creates new constraint matrices that enforce the branching decision,
+        either upper or lower bounding a variable.
+        
+        Args:
+            A_ub (np.ndarray): Current constraint matrix
+            b_ub (np.ndarray): Current RHS vector
+            branch_var (int): Variable to branch on
+            branch_val (float): Value to branch at
+            direction (str): 'floor' or 'ceil' for branching direction
+            
+        Returns:
+            tuple: (new_A_ub, new_b_ub) Updated constraint matrices
+        """
+        # Create new constraint row for branching decision
+        new_row = np.zeros(A_ub.shape[1])  
         new_row[branch_var] = 1 if direction == 'floor' else -1
+
+        # Stack new row to constraint matrix and append new RHS value
         new_A_ub = np.vstack([A_ub, new_row])
         new_b_ub = np.append(b_ub, branch_val if direction == 'floor' else -branch_val)
+
         return new_A_ub, new_b_ub
 
     def _get_next_node_id(self):
+        """
+        Generate unique identifier for a new node.
+        
+        Increments the node counter and returns a string identifier
+        that maintains ordering of node creation.
+        
+        Returns:
+            str: Unique node identifier
+        """
         self.node_counter += 1
         return f"Node {self.node_counter}"
 
     def _solve_lp_relaxation(self, c, A_ub, b_ub, A_eq=None, b_eq=None):
-        # Ensure A_eq and b_eq are numpy arrays, even if empty
+        """
+        Solve the LP relaxation of the current node.
+        
+        Uses custom simplex implementation to solve the linear programming
+        relaxation at the current node.
+        
+        Args:
+            c (np.ndarray): Objective coefficients
+            A_ub (np.ndarray): Inequality constraint matrix
+            b_ub (np.ndarray): Inequality RHS vector
+            A_eq (np.ndarray, optional): Equality constraint matrix
+            b_eq (np.ndarray, optional): Equality RHS vector
+            
+        Returns:
+            SimplexResult: Solution information from LP solver
+        """
+        # Ensure equality constraints are numpy arrays
         if A_eq is None:
             A_eq = np.empty((0, len(c)))
         if b_eq is None:
             b_eq = np.empty(0)
 
-        # Create PivOptions with default values
+        # Create PivOptions with default values for simplex solver
         piv_options = PivOptions()
 
-        # Call linprog_simplex
+        # Solve the LP Relaxation
         result = linprog_simplex(
             c=c,
             A_ub=A_ub,
@@ -366,7 +610,7 @@ class ILPSolver:
             piv_options=piv_options
         )
 
-        # Convert the result to our expected format
+        # Return formatted result
         return SimplexResult(
             x=result.x,
             lambd=result.lambd,
@@ -378,18 +622,52 @@ class ILPSolver:
         )
 
     def _set_global_attributes(self, c, A_ub, b_ub):
+        """
+        Set global problem attributes in the enumeration tree.
+        
+        Stores the original problem data in the graph object for
+        reference and persistence.
+        
+        Args:
+            c (np.ndarray): Original objective coefficients
+            A_ub (np.ndarray): Original constraint matrix
+            b_ub (np.ndarray): Original RHS vector
+        """
+        # Store original problem data as lists in graph attributes
         self.enumeration_tree.graph['og_obj_coefs'] = c.tolist() # Original objective coefficients
         self.enumeration_tree.graph['og_constraints'] = A_ub.tolist() # Original constraint matrix
         self.enumeration_tree.graph['og_rhs'] = b_ub.tolist() # Original right-hand side
 
     def _visualize_tree(self, problem_name):
+        """
+        Create and save a visualization of the branch-and-bound tree.
+        
+        Generates a comprehensive visualization of the enumeration tree showing:
+        - Node relationships and branching decisions
+        - Solution values and branching information
+        - Color coding for different node types (root, pruned, optimal, etc.)
+        - Legend explaining node colors
+        
+        Args:
+            problem_name (str): Name of the problem for file naming
+            
+        The visualization is saved as a PNG file in the 'plots' directory.
+        Node colors indicate:
+        - Blue: Root node
+        - Red: Pruned (infeasible)
+        - Orange: Pruned (suboptimal)
+        - Green: Optimal solution
+        - Light blue: Integer feasible but not optimal
+        - Light gray: Non-integral solution
+        """
+
         # Create a new figure with a size that scales with the number of nodes
         n_nodes = len(self.enumeration_tree.nodes)
         fig_size = max(24, int(np.sqrt(n_nodes) * 3))  # Scale figure size with sqrt of node count
         fig, ax = plt.subplots(figsize=(fig_size, fig_size))
 
-        # Use a hierarchical layout instead of spring layout
-        pos = nx.spring_layout(self.enumeration_tree, k=2, iterations=50)  # Increase spacing
+        # Calculate node positions using spring layout
+        pos = nx.spring_layout(self.enumeration_tree, k=2, iterations=50)
 
         # Adjust x and y coordinates based on depth and number of nodes at each level
         levels = {}
@@ -428,6 +706,7 @@ class ILPSolver:
         for node in self.enumeration_tree.nodes:
             node_data = self.enumeration_tree.nodes[node]
             label = f"{node}\n"
+            # Add objective value to label if available
             if 'relaxed_obj_value' in node_data:
                 value = node_data['relaxed_obj_value']
                 if value is not None:
@@ -437,8 +716,10 @@ class ILPSolver:
             else:
                 label += "Value: N/A\n"
 
+            
             if node_data.get('color') == 'blue':
                 label += "Root Node"
+            # Add branching information to label if available
             elif node_data['branch_variable'] is not None:
                 label += f"Branch Var: X{node_data['branch_variable']}\n"
                 label += f"Branch Val: {node_data['branch_value']:.2f}\n"
@@ -446,9 +727,9 @@ class ILPSolver:
 
             labels[node] = label
 
-        # Draw the graph
+        # Draw the graph with all components
         nx.draw(self.enumeration_tree, pos, with_labels=True, labels=labels,
-                node_color=colors, node_size=3000, font_size=6, ax=ax,
+                node_color=colors, node_size=4000, font_size=6, ax=ax,
                 arrows=True, arrowsize=10)
 
         # Add edge labels for branch directions
@@ -481,6 +762,18 @@ class ILPSolver:
         print(f"Plot saved as {plot_filename}")
 
     def _save_graph_to_disk(self, problem_name):
+        """
+        Persist the branch-and-bound tree for machine learning applications.
+        
+        Converts the NetworkX graph to a PyTorch Geometric data object and saves
+        it to disk. Ensures all data is in a format compatible with PyTorch.
+        
+        Args:
+            problem_name (str): Name of the problem for file naming
+            
+        The graph is saved in the 'saved_graphs' directory with a timestamp
+        to ensure unique filenames.
+        """
         # Ensure all node attributes are lists or basic Python types
         for node, data in self.enumeration_tree.nodes(data=True):
             for key, value in data.items():
@@ -491,7 +784,7 @@ class ILPSolver:
                 elif isinstance(value, np.floating):
                     data[key] = float(value)
 
-        # Convert NetworkX graph to PyG Data
+        # Convert NetworkX graph to Pytorch Geometric format
         data = from_networkx(self.enumeration_tree)
 
         # Create a unique name for the graph
@@ -509,13 +802,28 @@ class ILPSolver:
 
 
 def solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize=False):
+    """
+    Helper function to solve ILP and display results.
+    
+    Solves the given ILP problem and prints detailed results including the
+    optimal solution, objective value, and search statistics.
+    
+    Args:
+        solver (ILPSolver): Instance of ILP solver
+        c (np.ndarray): Objective coefficients
+        A_ub (np.ndarray): Constraint matrix
+        b_ub (np.ndarray): RHS vector
+        problem_name (str): Name for the problem
+        visualize (bool): Whether to generate visualization
+    """
+
     result = solver.solve(c, A_ub, b_ub, problem_name=problem_name, visualize=visualize)
     
     # Unpack the result
-    solution = result[0]
-    value = result[1]
-    num_nodes_explored = result[2] if len(result) > 2 else None
-    optimal_node = result[3] if len(result) > 3 else None
+    solution = result[0] # Optimal solution vector
+    value = result[1] # Optimal objective value
+    num_nodes_explored = result[2] if len(result) > 2 else None # Number of nodes explored
+    optimal_node = result[3] if len(result) > 3 else None # Optimal node
     
     print(f"\nResults for {problem_name}:")
     print(f"Optimal solution: {solution}")
@@ -530,6 +838,16 @@ def solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize=False
     print("\n" + "="*50 + "\n")
 
 class OutputRedirector:
+    """
+    Utility class for redirecting output to both console and log file.
+    
+    Enables simultaneous writing of output to both the terminal and a log file,
+    useful for debugging and analysis of the branch-and-bound process.
+    
+    Attributes:
+        terminal: Original stdout stream
+        log: File stream for logging
+    """
     def __init__(self, filename):
         self.terminal = sys.stdout
         self.log = open(filename, 'w')
@@ -605,16 +923,3 @@ if __name__ == "__main__":
     sys.stdout.log.close()
     # Restore the original stdout
     sys.stdout = sys.stdout.terminal
-
-
-
-
-
-
-
-
-
-
-
-
-
