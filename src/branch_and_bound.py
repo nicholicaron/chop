@@ -158,6 +158,7 @@ class ILPSolver:
         self.problem_counter = 0 # Number of problems solved by this instance
         self.root_relaxation_value = None # Objective value of root node relaxation
         self.n_cities = 0 # Number of cities (for TSP instances)
+        self.cut_probability = 0.0  # Probability of using Gomory cuts vs branching
 
     def _print_priority_queue(self, priority_queue):
         print("Priority Queue Contents:")
@@ -270,60 +271,7 @@ class ILPSolver:
                     print("Integer solution found but not better than current best.")
                     self._update_node_attributes(current_node, {'color': 'lightblue'})
             else:
-                print("Branching on a fractional variable...")
-                fractional_vars = [i for i, x in enumerate(current_node.relaxed_soln) if abs(x - round(x)) > 1e-6]
-                branch_var = random.choice(fractional_vars)
-                branch_val = current_node.relaxed_soln[branch_var]
-                print(f"Branching on variable X{branch_var} which has value {branch_val}")
-
-                for direction in ['floor', 'ceil']:
-                    new_A_ub = current_node.A_ub.copy()
-                    new_b_ub = current_node.b_ub.copy()
-                    
-                    if direction == 'floor':
-                        new_val = np.floor(branch_val)
-                        print(f"Creating {direction} branch (adding constraint X{branch_var} <= {new_val})...")
-                        new_constraint = np.zeros(len(c))
-                        new_constraint[branch_var] = 1
-                        new_A_ub = np.vstack([new_A_ub, new_constraint])
-                        new_b_ub = np.append(new_b_ub, new_val)
-                        new_val = np.floor(branch_val)
-                    else:
-                        new_val = -np.ceil(branch_val)
-                        print(f"Creating {direction} branch (adding constraint -X{branch_var} <= -{new_val})...")
-                        new_constraint = np.zeros(len(c))
-                        new_constraint[branch_var] = -1
-                        new_A_ub = np.vstack([new_A_ub, new_constraint])
-                        new_b_ub = np.append(new_b_ub, -np.ceil(branch_val))
-                        new_val = np.ceil(branch_val)
-
-                    new_node = Node(parent=current_node, branch_var=branch_var, branch_val=new_val, branch_direction=direction)
-                    new_node.id = self._get_next_node_id()
-                    new_node.set_constraints(new_A_ub, new_b_ub)
-
-                    result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
-                    if result.success:
-                        new_node.relaxed_soln = result.x
-                        new_node.value = result.fun
-                        new_node.local_upper_bound = new_node.value
-                        print(f"New {direction} node value: {new_node.value}")
-                        self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
-                        self._update_node_attributes(new_node, {
-                            'relaxed_obj_value': new_node.value
-                        })
-                        if new_node.local_upper_bound > self.global_lower_bound:
-                            heapq.heappush(priority_queue, (new_node.value, new_node))
-                            print(f"Added {direction} node to priority queue")
-                            self._print_priority_queue(priority_queue)
-                        else:
-                            print(f"{direction} node pruned: suboptimal")
-                            new_node.prune_reason = 'suboptimal'
-                            self._update_node_attributes(new_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
-                    else:
-                        print(f"{direction} node is infeasible")
-                        new_node.prune_reason = 'infeasible'
-                        self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
-                        self._update_node_attributes(new_node, {'color': 'red', 'prune_reason': 'infeasible'})
+                self.add_constraints(current_node, c, priority_queue)
 
         print("\nBranch and bound process completed.")
         print(f"Optimal objective value: {self.optimal_obj_value}")
@@ -640,8 +588,6 @@ class ILPSolver:
 
     def _visualize_tree(self, problem_name):
         """
-        Create and save a visualization of the branch-and-bound tree.
-        
         Generates a comprehensive visualization of the enumeration tree showing:
         - Node relationships and branching decisions
         - Solution values and branching information
@@ -660,10 +606,9 @@ class ILPSolver:
         - Light blue: Integer feasible but not optimal
         - Light gray: Non-integral solution
         """
-
         # Create a new figure with a size that scales with the number of nodes
         n_nodes = len(self.enumeration_tree.nodes)
-        fig_size = max(24, int(np.sqrt(n_nodes) * 3))  # Scale figure size with sqrt of node count
+        fig_size = max(24, int(np.sqrt(n_nodes) * 3))
         fig, ax = plt.subplots(figsize=(fig_size, fig_size))
 
         # Calculate node positions using spring layout
@@ -679,9 +624,9 @@ class ILPSolver:
 
         max_nodes_at_level = max(len(nodes) for nodes in levels.values())
         for depth, nodes in levels.items():
-            y = 1 - depth * 0.1  # Adjust the 0.1 factor to control vertical spacing
+            y = 1 - depth * 0.1
             for i, node in enumerate(nodes):
-                x = (i + 1) / (len(nodes) + 1)  # Distribute nodes horizontally
+                x = (i + 1) / (len(nodes) + 1)
                 pos[node] = (x, y)
 
         # Prepare node colors
@@ -690,9 +635,9 @@ class ILPSolver:
             node_data = self.enumeration_tree.nodes[node]
             if node_data.get('color') == 'blue':  # Root node
                 colors.append('blue')
-            elif node_data['prune_reason'] == 'infeasible':
+            elif node_data['prune_reason'] == 'infeasible': # the node is infeasible
                 colors.append('red')
-            elif node_data['prune_reason'] == 'suboptimal':
+            elif node_data['prune_reason'] == 'suboptimal': # i.e. the objective value is less than the global lower bound
                 colors.append('orange')
             elif node_data.get('color') == 'green':  # Optimal node
                 colors.append('green')
@@ -706,6 +651,7 @@ class ILPSolver:
         for node in self.enumeration_tree.nodes:
             node_data = self.enumeration_tree.nodes[node]
             label = f"{node}\n"
+            
             # Add objective value to label if available
             if 'relaxed_obj_value' in node_data:
                 value = node_data['relaxed_obj_value']
@@ -716,14 +662,16 @@ class ILPSolver:
             else:
                 label += "Value: N/A\n"
 
-            
+            # Add node type and constraint information
             if node_data.get('color') == 'blue':
                 label += "Root Node"
-            # Add branching information to label if available
-            elif node_data['branch_variable'] is not None:
-                label += f"Branch Var: X{node_data['branch_variable']}\n"
-                label += f"Branch Val: {node_data['branch_value']:.2f}\n"
-                label += f"Direction: {node_data['branch_direction']}"
+            elif node_data['branch_direction'] is not None:
+                if node_data['branch_direction'] == 'floor':
+                    label += f"Floor Branch:\nX{node_data['branch_variable']} <= {node_data['branch_value']}"
+                elif node_data['branch_direction'] == 'ceil':
+                    label += f"Ceil Branch:\nX{node_data['branch_variable']} >= {node_data['branch_value']}"
+                elif node_data['branch_direction'] == 'gomory':
+                    label += "Gomory Cut"
 
             labels[node] = label
 
@@ -731,12 +679,6 @@ class ILPSolver:
         nx.draw(self.enumeration_tree, pos, with_labels=True, labels=labels,
                 node_color=colors, node_size=4000, font_size=6, ax=ax,
                 arrows=True, arrowsize=10)
-
-        # Add edge labels for branch directions
-        edge_labels = {(u, v): self.enumeration_tree.nodes[v]['branch_direction'] 
-                       for (u, v) in self.enumeration_tree.edges()
-                       if 'branch_direction' in self.enumeration_tree.nodes[v]}
-        nx.draw_networkx_edge_labels(self.enumeration_tree, pos, edge_labels=edge_labels, font_size=6)
 
         # Add legend
         legend_elements = [
@@ -798,6 +740,136 @@ class ILPSolver:
         # Save the graph
         torch.save(data, f'saved_graphs/{graph_name}.pt')
         print(f"Graph saved as {graph_name}.pt")
+
+    def branch(self, current_node, c, priority_queue):
+        """
+        Create two new nodes by branching on a fractional variable.
+        
+        Args:
+            current_node (Node): Current node to branch from
+            c (np.ndarray): Objective coefficients
+            priority_queue (list): Priority queue of nodes
+            
+        Returns:
+            None (modifies priority queue in place)
+        """
+        print("Branching on a fractional variable...")
+        fractional_vars = [i for i, x in enumerate(current_node.relaxed_soln) 
+                         if abs(x - round(x)) > 1e-6]
+        branch_var = random.choice(fractional_vars)
+        branch_val = current_node.relaxed_soln[branch_var]
+        print(f"Branching on variable X{branch_var} which has value {branch_val}")
+
+        for direction in ['floor', 'ceil']:
+            new_A_ub = current_node.A_ub.copy()
+            new_b_ub = current_node.b_ub.copy()
+            
+            if direction == 'floor':
+                new_val = np.floor(branch_val)
+                print(f"Creating {direction} branch (adding constraint X{branch_var} <= {new_val})...")
+                new_constraint = np.zeros(len(c))
+                new_constraint[branch_var] = 1
+                new_A_ub = np.vstack([new_A_ub, new_constraint])
+                new_b_ub = np.append(new_b_ub, new_val)
+            else:
+                new_val = -np.ceil(branch_val)
+                print(f"Creating {direction} branch (adding constraint -X{branch_var} <= -{new_val})...")
+                new_constraint = np.zeros(len(c))
+                new_constraint[branch_var] = -1
+                new_A_ub = np.vstack([new_A_ub, new_constraint])
+                new_b_ub = np.append(new_b_ub, -np.ceil(branch_val))
+                new_val = np.ceil(branch_val)
+
+            self._add_node_with_new_constraints(current_node, c, new_A_ub, new_b_ub, 
+                                              branch_var, new_val, direction, priority_queue)
+
+    def gomory_cut(self, current_node, c, priority_queue):
+        """
+        Add Gomory cuts to create a new node (placeholder implementation).
+        
+        Args:
+            current_node (Node): Current node to add cuts to
+            c (np.ndarray): Objective coefficients
+            priority_queue (list): Priority queue of nodes
+            
+        Returns:
+            None (modifies priority queue in place)
+        """
+        print("Adding Gomory cut (placeholder implementation)...")
+        # Placeholder: Add a simple constraint
+        new_A_ub = current_node.A_ub.copy()
+        new_b_ub = current_node.b_ub.copy()
+        
+        # Add a simple cut (this should be replaced with actual Gomory cut logic)
+        new_constraint = np.ones(len(c))
+        new_A_ub = np.vstack([new_A_ub, new_constraint])
+        new_b_ub = np.append(new_b_ub, np.sum(current_node.relaxed_soln))
+        
+        self._add_node_with_new_constraints(current_node, c, new_A_ub, new_b_ub, 
+                                          None, None, "gomory", priority_queue)
+
+    def add_constraints(self, current_node, c, priority_queue):
+        """
+        Randomly choose between branching and adding Gomory cuts.
+        
+        Args:
+            current_node (Node): Current node to process
+            c (np.ndarray): Objective coefficients
+            priority_queue (list): Priority queue of nodes
+            
+        Returns:
+            None (modifies priority queue in place)
+        """
+        if random.random() < self.cut_probability:
+            self.gomory_cut(current_node, c, priority_queue)
+        else:
+            self.branch(current_node, c, priority_queue)
+
+    def _add_node_with_new_constraints(self, parent_node, c, new_A_ub, new_b_ub, 
+                                     branch_var, branch_val, direction, priority_queue):
+        """
+        Create and add a new node with the given constraints.
+        
+        Args:
+            parent_node (Node): Parent node
+            c (np.ndarray): Objective coefficients
+            new_A_ub (np.ndarray): New constraint matrix
+            new_b_ub (np.ndarray): New RHS vector
+            branch_var (int): Variable used for branching (None for cuts)
+            branch_val (float): Value used for branching (None for cuts)
+            direction (str): Branch direction or cut type
+            priority_queue (list): Priority queue of nodes
+        """
+        new_node = Node(parent=parent_node, branch_var=branch_var, 
+                       branch_val=branch_val, branch_direction=direction)
+        new_node.id = self._get_next_node_id()
+        new_node.set_constraints(new_A_ub, new_b_ub)
+
+        result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
+        if result.success:
+            new_node.relaxed_soln = result.x
+            new_node.value = result.fun
+            new_node.local_upper_bound = new_node.value
+            print(f"New {direction} node value: {new_node.value}")
+            self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
+            self._update_node_attributes(new_node, {
+                'relaxed_obj_value': new_node.value
+            })
+            if new_node.local_upper_bound > self.global_lower_bound:
+                heapq.heappush(priority_queue, (new_node.value, new_node))
+                print(f"Added {direction} node to priority queue")
+                self._print_priority_queue(priority_queue)
+            else:
+                print(f"{direction} node pruned: suboptimal")
+                new_node.prune_reason = 'suboptimal'
+                self._update_node_attributes(new_node, {'color': 'orange', 
+                                                      'prune_reason': 'suboptimal'})
+        else:
+            print(f"{direction} node is infeasible")
+            new_node.prune_reason = 'infeasible'
+            self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
+            self._update_node_attributes(new_node, {'color': 'red', 
+                                                   'prune_reason': 'infeasible'})
 
 
 
