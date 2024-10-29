@@ -158,7 +158,7 @@ class ILPSolver:
         self.problem_counter = 0 # Number of problems solved by this instance
         self.root_relaxation_value = None # Objective value of root node relaxation
         self.n_cities = 0 # Number of cities (for TSP instances)
-        self.cut_probability = 0.5  # Probability of using Gomory cuts vs branching
+        self.cut_probability = random.random()  # Probability of using Gomory cuts vs branching
 
     def _print_priority_queue(self, priority_queue):
         print("Priority Queue Contents:")
@@ -672,7 +672,7 @@ class ILPSolver:
                 elif node_data['branch_direction'] == 'ceil':
                     label += f"Ceil Branch:\nX{node_data['branch_variable']} >= {node_data['branch_value']}"
                 elif node_data['branch_direction'] == 'gomory':
-                    label += "Gomory Cut"
+                    label += f"Gomory Cut:\n{node_data['branch_value']}"
 
             labels[node] = label
 
@@ -882,10 +882,13 @@ class ILPSolver:
         new_A_ub = np.vstack([current_node.A_ub, cut_coeffs])
         new_b_ub = np.append(current_node.b_ub, cut_rhs)
     
+        # Store the cut details as a string for visualization
+        cut_description = f"Cut: {' + '.join([f'{coeff:.2f}x{i}' for i, coeff in enumerate(cut_coeffs) if abs(coeff) > 1e-6])} ≤ {cut_rhs:.2f}"
+    
         # Create new node with the Gomory cut
         self._add_node_with_new_constraints(
-        current_node, c, new_A_ub, new_b_ub, 
-            None, None, "gomory", priority_queue
+            current_node, c, new_A_ub, new_b_ub, 
+            None, cut_description, "gomory", priority_queue  # Pass cut_description instead of None
         )
 
     def add_constraints(self, current_node, c, priority_queue):

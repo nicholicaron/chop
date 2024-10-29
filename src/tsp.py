@@ -56,7 +56,7 @@ def visualize_points(coordinates, edges, distances, title="TSP Instance", filena
         plt.close()
         print(f"TSP instance plot saved as {filename}")
 
-def visualize_tour(coordinates, tour, edges, title, filename=None):
+def visualize_tour(coordinates, tour, edges, distances, title, filename=None):
     G = nx.Graph()
     G.add_nodes_from(range(len(coordinates)))
     G.add_edges_from(edges)
@@ -68,18 +68,30 @@ def visualize_tour(coordinates, tour, edges, title, filename=None):
     # Draw all edges in light gray
     nx.draw_networkx_edges(G, pos, edge_color='lightgray', width=1)
     
-    # Draw the tour edges in red
+    # Draw the tour edges in red and add distance labels
     tour_edges = list(zip(tour, tour[1:] + [tour[0]]))
     nx.draw_networkx_edges(G, pos, edgelist=tour_edges, edge_color='red', width=2)
+    
+    # Add distance labels for tour edges
+    total_distance = 0
+    for i, j in tour_edges:
+        dist = distances[min(i, j), max(i, j)]
+        total_distance += dist
+        mid_x = (coordinates[i][0] + coordinates[j][0]) / 2
+        mid_y = (coordinates[i][1] + coordinates[j][1]) / 2
+        plt.annotate(f"{dist:.1f}", (mid_x, mid_y), 
+                    bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+                    ha='center', va='center')
     
     # Draw nodes
     nx.draw_networkx_nodes(G, pos, node_size=300, node_color='lightblue')
     
-    # Add node labels
-    labels = {i: f"{i}" for i in range(len(coordinates))}
+    # Add node labels with coordinates
+    labels = {i: f"{i}\n({coordinates[i][0]:.1f}, {coordinates[i][1]:.1f})" 
+             for i in range(len(coordinates))}
     nx.draw_networkx_labels(G, pos, labels, font_size=10)
 
-    plt.title(title)
+    plt.title(f"{title}\nTotal Distance: {total_distance:.1f}")
     plt.axis('off')
     
     if filename:
@@ -174,7 +186,8 @@ def solve_tsp(n, problem_name="TSP", visualize=True):
 
     if visualize:
         solution_filename = f"plots/{problem_name}_solution_{timestamp}.png"
-        visualize_tour(coordinates, tour, edges, f"{problem_name} Solution (Total Distance: {objective_value:.2f})", filename=solution_filename)
+        visualize_tour(coordinates, tour, edges, distances, 
+                      f"{problem_name} Solution", filename=solution_filename)
 
     return tour, objective_value
 
