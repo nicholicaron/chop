@@ -166,10 +166,15 @@ class ILPSolver:
             print(f"  {i+1}. Value: {value:.4f}, Node ID: {node.id}")
         print()
 
-    def solve(self, c, A_ub, b_ub, A_eq=None, b_eq=None, problem_name="default_name", visualize=False):
+    def solve(self, c, A_ub, b_ub, A_eq=None, b_eq=None, problem_name="default_name", 
+          visualize=False, callback=None, tsp_instance=None):
         """
-        Solve an Integer Linear Program using branch-and-bound.
+        Solve an Integer Linear Program using branch-and-bound, with special handling for TSP.
         
+        This method implements a best-first search strategy for solving ILPs, with specific
+        optimizations for the Traveling Salesman Problem (TSP). It handles both general ILPs
+        and TSP-specific constraints and cuts.
+    
         Args:
             c (np.ndarray): Objective function coefficients
             A_ub (np.ndarray): Inequality constraint matrix
@@ -178,6 +183,8 @@ class ILPSolver:
             b_eq (np.ndarray, optional): Equality constraint RHS
             problem_name (str, optional): Name for visualization/logging
             visualize (bool, optional): Whether to generate visualizations
+            callback (callable, optional): Function to call when integer solutions are found
+            tsp_instance (TSPInstance, optional): Instance of TSP problem for subtour elimination
         
         Returns:
             tuple: (optimal_solution, optimal_value, node_count, optimal_node)
@@ -186,29 +193,53 @@ class ILPSolver:
                 - node_count (int): Number of nodes explored
                 - optimal_node (Node): Node containing optimal solution
         """
-        
         print(f"\nStarting to solve problem: {problem_name}")
         self._reset()
         self._set_global_attributes(c, A_ub, b_ub)
-        # Calculate number of cities
-        # Assumes that the TSP is of the standard formulation, i.e. c contains only the binary edge variables
-        # len(c) = n_cities * (n_cities - 1) / 2, so we solve for n_cities using the quadratic equation 
-        self.n_cities = round((1 + np.sqrt(1 + 8 * len(c))) / 2) 
-        print(f"Number of cities: {self.n_cities}")
 
-        self.processed_nodes = set() # Track processed nodes to avoid reprocessing
+        self.callback = callback
+        self.tsp_instance = tsp_instance
 
+        # Handle TSP-specific initialization
+        if tsp_instance is not None:
+            self.n_cities = tsp_instance.n_cities
+            print(f"TSP instance detected with {self.n_cities} cities")
+        else:
+            # For non-TSP problems, calculate n_cities for consistency
+            self.n_cities = int((-1 + np.sqrt(1 + 8 * len(c))) / 2) if len(c) > 0 else 0
+
+        self.processed_nodes = set()  # Track processed nodes to avoid reprocessing
+
+        # Initialize root node
         root_node = Node()
         root_node.id = self._get_next_node_id()
-        root_node.set_constraints(A_ub, b_ub)
-        
+
+        # Handle equality constraints for TSP and other problems
+        if A_eq is not None and b_eq is not None:
+            # Convert equality constraints to inequality pairs
+            A_ub_from_eq = np.vstack([A_eq, -A_eq])
+            b_ub_from_eq = np.concatenate([b_eq, -b_eq])
+            
+            # Combine with any existing inequality constraints
+            if A_ub.size > 0:
+                root_A_ub = np.vstack([A_ub_from_eq, A_ub])
+                root_b_ub = np.concatenate([b_ub_from_eq, b_ub])
+            else:
+                root_A_ub = A_ub_from_eq
+                root_b_ub = b_ub_from_eq
+            
+            root_node.set_constraints(root_A_ub, root_b_ub)
+        else:
+            root_node.set_constraints(A_ub, b_ub)
+
         # Solve LP relaxation for root node
         print("Solving LP relaxation for root node...")
         result = self._solve_lp_relaxation(c, root_node.A_ub, root_node.b_ub)
         if not result.success:
             print("Root node LP relaxation failed.")
-            return SimplexResult(None, None, None, False, 2, 0, None)
-        
+            return None, None, self.node_counter, None
+
+        # Store root node information
         root_node.relaxed_soln = result.x
         root_node.value = result.fun
         root_node.local_upper_bound = root_node.value
@@ -216,18 +247,23 @@ class ILPSolver:
         self.root_relaxation_value = root_node.value
         print(f"Root node relaxation value: {self.root_relaxation_value}")
 
-        self._add_node_to_tree(root_node, c, A_ub, b_ub)
+        # Initialize the branch-and-bound tree
+        self._add_node_to_tree(root_node, c, root_node.A_ub, root_node.b_ub)
         self._update_node_attributes(root_node, {'color': 'blue'})
 
+        # Initialize priority queue with root node
         priority_queue = [(root_node.value, root_node)]
         print("Starting branch and bound process...")
         self._print_priority_queue(priority_queue)
 
+        # Main branch-and-bound loop
         while priority_queue:
+            # Get next node from priority queue
             _, current_node = heapq.heappop(priority_queue)
             print(f"Popped node {current_node.id} from priority queue")
             self._print_priority_queue(priority_queue)
 
+            # Skip if node already processed
             if current_node.id in self.processed_nodes:
                 print(f"Node {current_node.id} already processed. Skipping...")
                 continue
@@ -235,94 +271,114 @@ class ILPSolver:
             print(f"\nProcessing node {current_node.id}")
             self.processed_nodes.add(current_node.id)
 
-            # Use stored solution if available
+            # Verify node has a solution
             if current_node.relaxed_soln is None:
                 print("Warning: Node has no stored solution")
                 continue
-            
 
             print(f"Current node value: {current_node.value}")
             print(f"Global lower bound: {self.global_lower_bound}")
 
+            # Check if node can be pruned by bound
             if current_node.local_upper_bound <= self.global_lower_bound:
                 print("Node pruned: suboptimal")
                 current_node.prune_reason = 'suboptimal'
-                self._update_node_attributes(current_node, {'color': 'orange', 'prune_reason': 'suboptimal'})
+                self._update_node_attributes(current_node, {
+                    'color': 'orange', 
+                    'prune_reason': 'suboptimal'
+                })
                 continue
 
-            is_integer_solution = all(abs(x - round(x)) < 1e-6 for x in current_node.relaxed_soln)
+            # Check for integer solution
+            is_integer_solution = all(abs(x - round(x)) < 1e-6 
+                                    for x in current_node.relaxed_soln)
             print(f"Is integer solution: {is_integer_solution}")
 
             if is_integer_solution:
+                # Handle TSP-specific subtour elimination
+                if self.tsp_instance is not None:
+                    subtours = self.tsp_instance.find_subtours(current_node.relaxed_soln)
+                    if len(subtours) > 1:
+                        print(f"Found {len(subtours)} subtours")
+                        # Add constraints for each subtour
+                        for subtour in subtours:
+                            constraint, rhs = self.tsp_instance.generate_subtour_constraint(subtour)
+                            new_A_ub = np.vstack([current_node.A_ub, constraint])
+                            new_b_ub = np.append(current_node.b_ub, rhs)
+
+                            # Create new node with subtour elimination constraint
+                            new_node = Node(parent=current_node)
+                            new_node.id = self._get_next_node_id()
+                            new_node.set_constraints(new_A_ub, new_b_ub)
+
+                            # Solve new LP relaxation
+                            result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
+                            if result.success:
+                                new_node.relaxed_soln = result.x
+                                new_node.value = result.fun
+                                new_node.local_upper_bound = new_node.value
+                                new_node.tableau = result.tableau
+                                self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
+                                heapq.heappush(priority_queue, (new_node.value, new_node))
+                                print(f"Added node with subtour elimination constraint")
+                            else:
+                                print(f"Warning: LP relaxation with new subtour constraint is infeasible")
+                                new_node.prune_reason = 'infeasible'
+                                self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
+                                self._update_node_attributes(new_node, {
+                                    'color': 'red', 
+                                    'prune_reason': 'infeasible'
+                                })
+
+                        # Call callback to visualize the subtours if provided
+                        if self.callback is not None:
+                            self.callback(current_node.relaxed_soln, False, problem_name)
+                        
+                        continue  # Continue to next iteration
+
+                # Process integer solution (either non-TSP or TSP without subtours)
                 if current_node.value > self.global_lower_bound:
                     print("New best integer solution found!")
-                    # Reset the color of the previous optimal node
+                    # Reset color of previous optimal node
                     if self.optimal_node is not None:
                         self._update_node_attributes(self.optimal_node, {'color': 'lightblue'})
-                    
+
+                    # Update global bounds and optimal solution
                     self.global_lower_bound = current_node.value
                     self.optimal_obj_value = current_node.value
                     self.optimal_solution = current_node.relaxed_soln
                     self.optimal_node = current_node
                     self._update_node_attributes(current_node, {
-                        'color': 'green', 
+                        'color': 'green',
                         'relaxed_obj_value': current_node.value
                     })
+
+                    # Call callback if provided
+                    if self.callback is not None:
+                        self.callback(current_node.relaxed_soln, True, problem_name)
                 else:
                     print("Integer solution found but not better than current best.")
                     self._update_node_attributes(current_node, {'color': 'lightblue'})
+                    # Call callback for non-optimal integer solutions
+                    if self.callback is not None:
+                        self.callback(current_node.relaxed_soln, False, problem_name)
             else:
+                # Handle fractional solution through branching or cutting
                 self.add_constraints(current_node, c, priority_queue)
 
         print("\nBranch and bound process completed.")
         print(f"Optimal objective value: {self.optimal_obj_value}")
         print(f"Number of nodes explored: {self.node_counter}")
 
+        # Generate visualization if requested
         if visualize:
             self._visualize_tree(problem_name)
-        self._save_graph_to_disk(problem_name)
-        return self.optimal_solution, self.optimal_obj_value, self.node_counter, self.optimal_node
-    
-    def _find_violated_subtour_constraints(self, solution):
-        """
-        Find violated subtour elimination constraints for TSP.
-        
-        Identifies connected components in the current solution that violate
-        the TSP requirement of a single tour. Returns constraints that
-        eliminate these subtours.
-        
-        Args:
-            solution (np.ndarray): Current solution vector
-            
-        Returns:
-            list: List of violated subtour elimination constraints
-        """
-        # Create edges from solution variables
-        edges = [(i, j) for i in range(self.n_cities) for j in range(i+1, self.n_cities) 
-                 if solution[i*(self.n_cities-1) - i*(i+1)//2 + j - 1] > 0.5]
-        # Create graph from edges
-        G = nx.Graph(edges)
-        
-        # Find violated subtour elimination constraints
-        violated_constraints = []
-        # Check all subsets of cities of size r >= 2
-        for r in range(2, self.n_cities):
-            for subset in combinations(range(self.n_cities), r):
-                subgraph = G.subgraph(subset)
-                # Check if subgraph is connected and if the sum of the solution variables for the edges in the subgraph is greater than the number of edges in the subgraph minus 1
-                if nx.is_connected(subgraph) and sum(solution[i*(self.n_cities-1) - i*(i+1)//2 + j - 1] 
-                                                     for i, j in combinations(subset, 2)) > len(subset) - 1 + 1e-6:
-                    # If violated, add the corresponding constraint to the list
-                    constraint = [0] * (self.n_cities * (self.n_cities - 1) // 2)
-                    for i, j in combinations(subset, 2):
-                        if i < j:
-                            idx = i*(self.n_cities-1) - i*(i+1)//2 + j - 1
-                        else:
-                            idx = j*(self.n_cities-1) - j*(j+1)//2 + i - 1
-                        constraint[idx] = 1
-                    violated_constraints.append(constraint)
-        
-        return violated_constraints
+
+        # Save the final graph
+        #self._save_graph_to_disk(problem_name)
+
+        return (self.optimal_solution, self.optimal_obj_value, 
+                self.node_counter, self.optimal_node)
 
     def _reset(self):
         """
@@ -957,29 +1013,41 @@ class ILPSolver:
 
 
 
-def solve_and_print_results(solver, c, A_ub, b_ub, problem_name, visualize=False):
+def solve_and_print_results(solver, c, A_ub, b_ub, A_eq=None, b_eq=None, 
+                          problem_name="unnamed", visualize=False, 
+                          callback=None, tsp_instance=None):
     """
     Helper function to solve ILP and display results.
-    
-    Solves the given ILP problem and prints detailed results including the
-    optimal solution, objective value, and search statistics.
     
     Args:
         solver (ILPSolver): Instance of ILP solver
         c (np.ndarray): Objective coefficients
-        A_ub (np.ndarray): Constraint matrix
-        b_ub (np.ndarray): RHS vector
+        A_ub (np.ndarray): Inequality constraint matrix
+        b_ub (np.ndarray): Inequality RHS vector
+        A_eq (np.ndarray, optional): Equality constraint matrix
+        b_eq (np.ndarray, optional): Equality RHS vector
         problem_name (str): Name for the problem
         visualize (bool): Whether to generate visualization
+        callback (callable): Optional callback function for solution visualization
+        tsp_instance (TSPInstance): Optional TSP instance for subtour elimination
     """
-
-    result = solver.solve(c, A_ub, b_ub, problem_name=problem_name, visualize=visualize)
+    result = solver.solve(
+        c=c,
+        A_ub=A_ub,
+        b_ub=b_ub,
+        A_eq=A_eq,
+        b_eq=b_eq,
+        problem_name=problem_name,
+        visualize=visualize,
+        callback=callback,
+        tsp_instance=tsp_instance
+    )
     
     # Unpack the result
-    solution = result[0] # Optimal solution vector
-    value = result[1] # Optimal objective value
-    num_nodes_explored = result[2] if len(result) > 2 else None # Number of nodes explored
-    optimal_node = result[3] if len(result) > 3 else None # Optimal node
+    solution = result[0]  # Optimal solution vector
+    value = result[1]    # Optimal objective value
+    num_nodes_explored = result[2] if len(result) > 2 else None
+    optimal_node = result[3] if len(result) > 3 else None
     
     print(f"\nResults for {problem_name}:")
     print(f"Optimal solution: {solution}")
@@ -1029,7 +1097,14 @@ def main(visualize):
     c1 = np.array([1, 1])
     A_ub1 = np.array([[-1, 1], [8, 2]])
     b_ub1 = np.array([2, 19])
-    solve_and_print_results(solver, c1, A_ub1, b_ub1, "Example 1 (2 var, 2 cons)", visualize=visualize)
+    solve_and_print_results(
+        solver=solver,
+        c=c1,
+        A_ub=A_ub1,
+        b_ub=b_ub1,
+        problem_name="Example 1 (2 var, 2 cons)",
+        visualize=visualize
+    )
 
     # Example 2: 5 variables, 3 constraints
     c2 = np.array([3, 2, 5, 4, 1])
@@ -1039,7 +1114,14 @@ def main(visualize):
         [1, 1, 2, 3, 1]
     ])
     b_ub2 = np.array([10, 8, 15])
-    solve_and_print_results(solver, c2, A_ub2, b_ub2, "Example 2 (5 var, 3 cons)", visualize=visualize)
+    solve_and_print_results(
+        solver=solver,
+        c=c2,
+        A_ub=A_ub2,
+        b_ub=b_ub2,
+        problem_name="Example 2 (5 var, 3 cons)",
+        visualize=visualize
+    )
 
     # Example 3: 8 variables, 5 constraints
     c3 = np.array([5, 7, 3, 2, 6, 4, 8, 1])
@@ -1051,7 +1133,14 @@ def main(visualize):
         [1, 2, 3, 4, 2, 1, 3, 2]
     ])
     b_ub3 = np.array([20, 25, 30, 22, 18])
-    solve_and_print_results(solver, c3, A_ub3, b_ub3, "Example 3 (8 var, 5 cons)", visualize=visualize)
+    solve_and_print_results(
+        solver=solver,
+        c=c3,
+        A_ub=A_ub3,
+        b_ub=b_ub3,
+        problem_name="Example 3 (8 var, 5 cons)",
+        visualize=visualize
+    )
 
     # Example 4: 10 variables, 7 constraints
     c4 = np.array([4, 6, 2, 3, 7, 5, 8, 1, 9, 3])
@@ -1065,7 +1154,14 @@ def main(visualize):
         [3, 2, 4, 1, 3, 5, 2, 1, 4, 2]
     ])
     b_ub4 = np.array([30, 25, 35, 40, 20, 28, 32])
-    solve_and_print_results(solver, c4, A_ub4, b_ub4, "Example 4 (10 var, 7 cons)", visualize=visualize)
+    solve_and_print_results(
+        solver=solver,
+        c=c4,
+        A_ub=A_ub4,
+        b_ub=b_ub4,
+        problem_name="Example 4 (10 var, 7 cons)",
+        visualize=visualize
+    )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ILP Solver with Branch and Bound")

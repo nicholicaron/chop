@@ -1,205 +1,376 @@
 import numpy as np
+import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import combinations
-from branch_and_bound import solve_and_print_results, ILPSolver
-import os
-import time
 import random
-import networkx as nx
+from typing import Tuple, List, Dict, Set
+import sys
+import os
+sys.path.append('.')
+from branch_and_bound import solve_and_print_results, ILPSolver
 
-def generate_random_tsp(n, x_range=(0, 100), y_range=(0, 100)):
-    coordinates = [(random.uniform(*x_range), random.uniform(*y_range)) for _ in range(n)]
-    edges = set()
-    for i in range(n):
-        degree = random.randint(2, 5)
-        possible_neighbors = list(set(range(n)) - {i} - set(j for j, _ in edges if i == _) - set(_ for _, j in edges if i == j))
-        neighbors = random.sample(possible_neighbors, min(degree, len(possible_neighbors)))
-        for j in neighbors:
-            if i < j:
-                edges.add((i, j))
-            else:
-                edges.add((j, i))
-    return coordinates, edges
-
-def calculate_distances(coordinates, edges):
-    n = len(coordinates)
-    distances = {}
-    for i, j in edges:
-        dist = np.linalg.norm(np.array(coordinates[i]) - np.array(coordinates[j]))
-        distances[i, j] = distances[j, i] = dist
-    return distances
-
-def visualize_points(coordinates, edges, distances, title="TSP Instance", filename=None):
-    x, y = zip(*coordinates)
-    plt.figure(figsize=(12, 12))
+class TSPInstance:
+    """
+    Represents a Traveling Salesman Problem instance.
     
-    # Plot edges
-    for i, j in edges:
-        plt.plot([x[i], x[j]], [y[i], y[j]], 'gray', alpha=0.5)
-        mid_x = (x[i] + x[j]) / 2
-        mid_y = (y[i] + y[j]) / 2
-        plt.annotate(f"{distances[i, j]:.1f}", (mid_x, mid_y), alpha=0.5, fontsize=8)
-
-    # Plot points
-    plt.scatter(x, y, c='blue', zorder=5)
-    for i, (x, y) in enumerate(coordinates):
-        plt.annotate(f"{i}", (x, y), xytext=(5, 5), textcoords='offset points', zorder=5)
+    Attributes:
+        n_cities (int): Number of cities
+        coordinates (dict): Dictionary mapping city index to (x,y) coordinates
+        distances (dict): Dictionary mapping city pairs to distances
+        graph (nx.Graph): NetworkX graph representation
+        plot_counter (int): Counter for naming plot files
+    """
     
-    plt.title(title)
-    plt.xlabel("X coordinate")
-    plt.ylabel("Y coordinate")
-    plt.grid(True)
-    
-    if filename:
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        plt.savefig(filename)
-        plt.close()
-        print(f"TSP instance plot saved as {filename}")
-
-def visualize_tour(coordinates, tour, edges, distances, title, filename=None):
-    G = nx.Graph()
-    G.add_nodes_from(range(len(coordinates)))
-    G.add_edges_from(edges)
-
-    pos = {i: coord for i, coord in enumerate(coordinates)}
-    
-    plt.figure(figsize=(12, 8))
-    
-    # Draw all edges in light gray
-    nx.draw_networkx_edges(G, pos, edge_color='lightgray', width=1)
-    
-    # Draw the tour edges in red and add distance labels
-    tour_edges = list(zip(tour, tour[1:] + [tour[0]]))
-    nx.draw_networkx_edges(G, pos, edgelist=tour_edges, edge_color='red', width=2)
-    
-    # Add distance labels for tour edges
-    total_distance = 0
-    for i, j in tour_edges:
-        dist = distances[min(i, j), max(i, j)]
-        total_distance += dist
-        mid_x = (coordinates[i][0] + coordinates[j][0]) / 2
-        mid_y = (coordinates[i][1] + coordinates[j][1]) / 2
-        plt.annotate(f"{dist:.1f}", (mid_x, mid_y), 
-                    bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
-                    ha='center', va='center')
-    
-    # Draw nodes
-    nx.draw_networkx_nodes(G, pos, node_size=300, node_color='lightblue')
-    
-    # Add node labels with coordinates
-    labels = {i: f"{i}\n({coordinates[i][0]:.1f}, {coordinates[i][1]:.1f})" 
-             for i in range(len(coordinates))}
-    nx.draw_networkx_labels(G, pos, labels, font_size=10)
-
-    plt.title(f"{title}\nTotal Distance: {total_distance:.1f}")
-    plt.axis('off')
-    
-    if filename:
-        plt.savefig(filename, dpi=300, bbox_inches='tight')
-        print(f"Tour visualization saved as {filename}")
-    else:
-        plt.show()
-    plt.close()
-
-def create_tsp_ilp(distances, edges):
-    n = max(max(i, j) for i, j in edges) + 1
-    edge_to_index = {(min(i, j), max(i, j)): idx for idx, (i, j) in enumerate(edges)}
-    
-    # Objective function coefficients (we'll minimize distances)
-    c = [distances[i, j] for i, j in edges]
-
-    # Constraints matrix and right-hand side
-    A_ub = []
-    b_ub = []
-
-    # Degree constraints
-    for i in range(n):
-        row = [0] * len(edges)
-        for j in range(n):
-            if (min(i, j), max(i, j)) in edge_to_index:
-                row[edge_to_index[min(i, j), max(i, j)]] = 1
-        A_ub.append(row)
-        b_ub.append(2)
-        A_ub.append([-x for x in row])
-        b_ub.append(-2)
-
-    # Subtour elimination constraints (for small instances)
-    if n <= 5:
-        for r in range(2, n):
-            for subset in combinations(range(n), r):
-                row = [0] * len(edges)
-                for i, j in combinations(subset, 2):
-                    if (min(i, j), max(i, j)) in edge_to_index:
-                        row[edge_to_index[min(i, j), max(i, j)]] = 1
-                A_ub.append(row)
-                b_ub.append(len(subset) - 1)
-
-    # Convert to numpy arrays
-    c = np.array(c)
-    A_ub = np.array(A_ub)
-    b_ub = np.array(b_ub)
-
-    return c, A_ub, b_ub, edge_to_index
-
-def extract_tour(solution, edge_to_index, n):
-    edges = [(i, j) for (i, j), idx in edge_to_index.items() if solution[idx] > 0.5]
-    if not edges:
-        return None
-    
-    tour = [edges[0][0]]
-    while len(tour) < n:
-        for edge in edges:
-            if edge[0] == tour[-1] and edge[1] not in tour:
-                tour.append(edge[1])
-                break
-            elif edge[1] == tour[-1] and edge[0] not in tour:
-                tour.append(edge[0])
-                break
+    def __init__(self, n_cities: int, coordinates: Dict[int, Tuple[float, float]] = None):
+        self.n_cities = n_cities
+        if coordinates is None:
+            self.coordinates = {i: (random.uniform(0, 100), random.uniform(0, 100)) 
+                              for i in range(n_cities)}
         else:
-            # If we can't find the next city, the tour is incomplete
-            return None
-    return tour
+            self.coordinates = coordinates
+            
+        self.distances = {}
+        for i, j in combinations(range(n_cities), 2):
+            x1, y1 = self.coordinates[i]
+            x2, y2 = self.coordinates[j]
+            dist = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+            self.distances[(i, j)] = dist
+            self.distances[(j, i)] = dist
+            
+        self.graph = nx.Graph()
+        for i in range(n_cities):
+            self.graph.add_node(i, pos=self.coordinates[i])
+        for (i, j), dist in self.distances.items():
+            if i < j:
+                self.graph.add_edge(i, j, weight=dist)
+        
+        self.plot_counter = 0
+        os.makedirs('plots', exist_ok=True)
 
-def solve_tsp(n, problem_name="TSP", visualize=True):
-    timestamp = int(time.time() * 1000)
-    coordinates, edges = generate_random_tsp(n)
-    distances = calculate_distances(coordinates, edges)
+
+    def to_ilp(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Convert TSP to ILP formulation with proper degree constraints.
+        
+        Returns:
+            Tuple containing:
+            - c: Objective coefficients (maximizing negative distances)
+            - A_eq: Equality constraint matrix (degree constraints)
+            - b_eq: Equality constraint RHS
+            - A_ub: Inequality constraint matrix (initial empty)
+            - b_ub: Inequality constraint RHS (initial empty)
+        """
+        n = self.n_cities
+        num_vars = n * (n - 1) // 2
+        
+        # Objective: Minimize distances (maximize negative distances)
+        c = np.zeros(num_vars)
+        for i, j in combinations(range(n), 2):
+            idx = self._get_variable_index(i, j)
+            c[idx] = -self.distances[(i, j)]
+        
+        # Degree constraints: Each city must have exactly 2 edges
+        A_eq = []
+        b_eq = []
+        
+        for i in range(n):
+            row = np.zeros(num_vars)
+            for j in range(n):
+                if i != j:
+                    idx = self._get_variable_index(min(i, j), max(i, j))
+                    row[idx] = 1
+            A_eq.append(row)
+            b_eq.append(2)  # Exactly 2 edges per vertex
+        
+        # Initialize empty inequality constraints (will be added during B&B)
+        A_ub = np.zeros((0, num_vars))
+        b_ub = np.zeros(0)
+        
+        return np.array(c), np.array(A_eq), np.array(b_eq), np.array(A_ub), np.array(b_ub)
+
     
-    if visualize:
-        instance_filename = f"plots/{problem_name}_instance_{timestamp}.png"
-        visualize_points(coordinates, edges, distances, f"{problem_name} Instance", filename=instance_filename)
+    def find_subtours(self, solution: np.ndarray) -> List[Set[int]]:
+        """
+        Find all subtours in the current solution with improved edge detection.
+        
+        Args:
+            solution: Binary solution vector
+            
+        Returns:
+            List of sets, where each set contains the cities in a subtour
+        """
+        # Create a graph from the solution
+        G = nx.Graph()
+        for i in range(self.n_cities):
+            G.add_node(i)
+        
+        # Use a more lenient tolerance for binary values
+        EDGE_TOLERANCE = 1e-4
+        
+        # Debug information
+        print("\nAnalyzing solution for subtours:")
+        print(f"Solution vector: {solution}")
+        
+        edge_count = 0
+        for i, j in combinations(range(self.n_cities), 2):
+            idx = self._get_variable_index(i, j)
+            # Print debug info for values close to 1
+            if solution[idx] > 0.5:  # Check any significant values
+                print(f"Edge ({i},{j}) has value {solution[idx]}")
+            
+            # More lenient check for edges
+            if solution[idx] > 1 - EDGE_TOLERANCE:
+                G.add_edge(i, j)
+                edge_count += 1
+        
+        print(f"Total edges found: {edge_count}")
+        
+        # Find and print connected components (subtours)
+        subtours = list(nx.connected_components(G))
+        print(f"Found {len(subtours)} subtours:")
+        for idx, subtour in enumerate(subtours):
+            print(f"Subtour {idx + 1}: {subtour}")
+        
+        # Validate degree constraints
+        self._validate_degrees(G)
+        
+        return subtours
 
-    c, A_ub, b_ub, edge_to_index = create_tsp_ilp(distances, edges)
+    def generate_subtour_constraint(self, subtour: Set[int]) -> Tuple[np.ndarray, float]:
+        """
+        Generate subtour elimination constraint for a given subtour.
+        
+        For a subtour S, the constraint is:
+        sum(x[i,j] for i,j in S) <= |S| - 1
+        
+        This ensures that any subset of k cities cannot have k edges
+        between them, preventing isolated subtours.
+        
+        Args:
+            subtour: Set of cities forming a subtour
+            
+        Returns:
+            Tuple of (constraint_coefficients, rhs)
+        """
+        n = self.n_cities
+        constraint = np.zeros(n * (n - 1) // 2)
+        
+        # For each pair of cities in the subtour
+        for i, j in combinations(subtour, 2):
+            idx = self._get_variable_index(min(i, j), max(i, j))
+            constraint[idx] = 1
+        
+        # RHS: |S| - 1 ensures we can't have a complete subtour
+        rhs = len(subtour) - 1
+        
+        return constraint, rhs
     
-    solver = ILPSolver()
-    solution, objective_value, _, _ = solver.solve(c, A_ub, b_ub, problem_name=problem_name, visualize=visualize)
-
-    if solution is None:
-        print("Failed to find a valid solution.")
-        return None, None
-
-    tour = extract_tour(solution, edge_to_index, n)
+    def _validate_degrees(self, G: nx.Graph) -> None:
+        """
+        Validate that the graph satisfies degree constraints.
+        
+        Args:
+            G: NetworkX graph of the current solution
+        """
+        print("\nValidating degree constraints:")
+        for node in G.nodes():
+            degree = G.degree(node)
+            print(f"City {node} has degree {degree}")
+            if degree != 2 and G.number_of_edges() > 0:
+                print(f"Warning: City {node} has irregular degree {degree}")
     
-    if tour is None:
-        print("Failed to extract a valid tour from the solution.")
-        return None, None
+    def _get_variable_index(self, i: int, j: int) -> int:
+        """
+        Get the index of the decision variable for edge (i,j) in the ILP formulation.
+    
+        For a TSP with n cities, we create n*(n-1)/2 binary variables, one for each
+        possible undirected edge. This method converts a city pair (i,j) to the
+        corresponding variable index in our flattened representation.
+    
+        Args:
+            i (int): First city index
+            j (int): Second city index
+        
+        Returns:
+            int: Index in the flattened variable array
+        
+        Example:
+            For a 4-city problem, the mapping would be:
+            (0,1) -> 0
+            (0,2) -> 1
+            (0,3) -> 2
+            (1,2) -> 3
+            (1,3) -> 4
+            (2,3) -> 5
+        """
+        # Ensure i < j for consistent indexing
+        if i > j:
+            i, j = j, i
+        
+        # Calculate index using combinatorial formula
+        # For city i, we skip all combinations of smaller cities:
+        # i*(n-1) - i*(i+1)/2
+        # Then add the offset for current j: + (j-1)
+        return i * (self.n_cities - 1) - i * (i + 1) // 2 + j - 1
 
-    if visualize:
-        solution_filename = f"plots/{problem_name}_solution_{timestamp}.png"
-        visualize_tour(coordinates, tour, edges, distances, 
-                      f"{problem_name} Solution", filename=solution_filename)
+    def plot_instance(self, title: str = "TSP Instance"):
+        """
+        Plot the TSP instance and save to disk.
+        """
+        plt.figure(figsize=(10, 10))
+        pos = nx.get_node_attributes(self.graph, 'pos')
+        
+        # Draw nodes
+        nx.draw_networkx_nodes(self.graph, pos, node_color='lightblue', 
+                             node_size=500)
+        
+        # Draw edges with weights
+        edge_labels = nx.get_edge_attributes(self.graph, 'weight')
+        edge_labels = {k: f"{v:.1f}" for k, v in edge_labels.items()}
+        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels)
+        nx.draw_networkx_edges(self.graph, pos)
+        
+        # Draw labels
+        labels = {i: f"City {i}" for i in range(self.n_cities)}
+        nx.draw_networkx_labels(self.graph, pos, labels)
+        
+        plt.title(title)
+        plt.axis('equal')
+        
+        # Save plot
+        filename = f"plots/tsp_instance_{title.lower().replace(' ', '_')}.png"
+        plt.savefig(filename, bbox_inches='tight', dpi=300)
+        plt.close()
 
-    return tour, objective_value
+    def plot_solution(self, solution: np.ndarray, is_optimal: bool = False, problem_name: str = "unknown"):
+        """Plot TSP solution with improved edge detection and validation."""
+        plt.figure(figsize=(10, 10))
+        pos = nx.get_node_attributes(self.graph, 'pos')
+        
+        # Create a new graph for the solution
+        solution_graph = nx.Graph()
+        solution_graph.add_nodes_from(self.graph.nodes(data=True))
+        
+        # Use same tolerance as find_subtours
+        EDGE_TOLERANCE = 1e-4
+        
+        # Add edges from solution
+        total_distance = 0
+        edge_count = 0
+        for i, j in combinations(range(self.n_cities), 2):
+            idx = self._get_variable_index(i, j)
+            if solution[idx] > 1 - EDGE_TOLERANCE:
+                solution_graph.add_edge(i, j)
+                total_distance += self.distances[(i, j)]
+                edge_count += 1
+        
+        print(f"\nPlotting solution:")
+        print(f"Number of edges: {edge_count}")
+        print(f"Total distance: {total_distance:.2f}")
+        
+        # Draw nodes
+        nx.draw_networkx_nodes(solution_graph, pos, node_color='lightblue', 
+                             node_size=500)
+        
+        # Draw edges (highlighted for solution)
+        nx.draw_networkx_edges(solution_graph, pos, edge_color='r', width=2)
+        
+        # Draw labels
+        labels = {i: f"City {i}" for i in range(self.n_cities)}
+        nx.draw_networkx_labels(solution_graph, pos, labels)
+        
+        status = "Optimal" if is_optimal else "Candidate"
+        plt.title(f"{status} Solution - Total Distance: {total_distance:.2f}")
+        plt.axis('equal')
+        
+        # Save plot with incrementing counter
+        self.plot_counter += 1
+        filename = f"plots/{problem_name}_solution_{self.plot_counter:03d}_{status.lower()}.png"
+        plt.savefig(filename, bbox_inches='tight', dpi=300)
+        plt.close()
+        
+        # If there are subtours, plot them separately
+        subtours = self.find_subtours(solution)
+        if len(subtours) > 1 or edge_count > 0:  # Only plot if we have edges or multiple subtours
+            print(f"Found {len(subtours)} subtours")
+            
+            plt.figure(figsize=(10, 10))
+            colors = ['r', 'b', 'g', 'y', 'm', 'c']
+            
+            for idx, subtour in enumerate(subtours):
+                subtour_graph = solution_graph.subgraph(subtour)
+                nx.draw_networkx_nodes(subtour_graph, pos, node_color=colors[idx % len(colors)],
+                                     node_size=500)
+                nx.draw_networkx_edges(subtour_graph, pos, edge_color=colors[idx % len(colors)],
+                                     width=2)
+                nx.draw_networkx_labels(subtour_graph, pos, 
+                                      {i: f"City {i}" for i in subtour})
+            
+            plt.title(f"Subtours in Solution - {len(subtours)} components")
+            plt.axis('equal')
+            
+            filename = f"plots/{problem_name}_subtours_{self.plot_counter:03d}.png"
+            plt.savefig(filename, bbox_inches='tight', dpi=300)
+            plt.close()
+
+def solution_callback(solution: np.ndarray, is_optimal: bool, tsp_instance: TSPInstance, problem_name: str):
+    """Callback function for visualizing solutions during branch and bound."""
+    tsp_instance.plot_solution(solution, is_optimal, problem_name)
 
 def main():
-    n = 5  # Number of cities
-    print(f"Solving TSP with {n} cities...")
-    tour, distance = solve_tsp(n, f"TSP_{n}_Cities")
-    if tour and distance:
-        print(f"Optimal tour: {tour}")
-        print(f"Total distance: {distance:.2f}")
-    else:
-        print("Failed to solve the TSP instance.")
-
+    """Generate and solve example TSP instances."""
+    # Example 1: 4 cities in a square
+    coords1 = {
+        0: (0, 0),
+        1: (0, 10),
+        2: (10, 10),
+        3: (10, 0)
+    }
+    tsp1 = TSPInstance(4, coords1)
+    tsp1.plot_instance("Square TSP - 4 Cities")
+    
+    # Example 2: 5 cities in a pentagon
+    coords2 = {
+        0: (50, 0),
+        1: (15.45, 47.55),
+        2: (80.9, 58.78),
+        3: (97.55, 15.45),
+        4: (32.45, 15.45)
+    }
+    tsp2 = TSPInstance(5, coords2)
+    tsp2.plot_instance("Pentagon TSP - 5 Cities")
+    
+    # Example 3: 6 random cities
+    tsp3 = TSPInstance(6)
+    tsp3.plot_instance("Random TSP - 6 Cities")
+    
+    # Solve each instance
+    solver = ILPSolver()
+    
+    for i, tsp in enumerate([tsp1, tsp2, tsp3], 1):
+        problem_name = f"TSP_{i}"
+        print(f"\nSolving {problem_name}")
+        
+        # Get all constraint matrices including equality constraints
+        c, A_eq, b_eq, A_ub, b_ub = tsp.to_ilp()
+        
+        # Create a callback closure that includes the TSP instance and problem name
+        callback = lambda solution, is_optimal, problem_name=problem_name: solution_callback(
+            solution, is_optimal, tsp, problem_name)
+        
+        # Solve with both equality and inequality constraints
+        solve_and_print_results(
+            solver=solver,
+            c=c,
+            A_ub=A_ub,
+            b_ub=b_ub,
+            A_eq=A_eq,
+            b_eq=b_eq,
+            problem_name=problem_name,
+            callback=callback,
+            visualize=True,
+            tsp_instance=tsp
+        )
+        
 if __name__ == "__main__":
     main()
