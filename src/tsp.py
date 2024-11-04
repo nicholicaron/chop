@@ -8,6 +8,10 @@ import sys
 import os
 sys.path.append('.')
 from branch_and_bound import solve_and_print_results, ILPSolver
+import requests, tarfile, os, gzip, shutil
+from tqdm.auto import tqdm
+from tsplib95.loaders import load_problem, load_solution
+
 
 class TSPInstance:
     """
@@ -313,52 +317,142 @@ class TSPInstance:
             plt.savefig(filename, bbox_inches='tight', dpi=300)
             plt.close()
 
+def download_and_extract_tsplib(url, directory="tsplib_95_data", delete_after_unzip=True):
+    os.makedirs(directory, exist_ok=True)
+    
+    # Download with progress bar
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        total_size = int(r.headers.get('content-length', 0))
+        with open("tsplib.tar.gz", 'wb') as f, tqdm(total=total_size, unit='B', unit_scale=True) as pbar:
+            for chunk in r.iter_content(8192):
+                f.write(chunk)
+                pbar.update(len(chunk))
+
+    # Extract tar.gz
+    with tarfile.open("tsplib.tar.gz", 'r:gz') as tar:
+        tar.extractall(directory)
+
+    # Decompress .gz files inside directory
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".gz"):
+                path = os.path.join(root, file)
+                with gzip.open(path, 'rb') as f_in, open(path[:-3], 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+                os.remove(path)
+
+    if delete_after_unzip:
+        os.remove("tsplib.tar.gz")
+
+# # Utils function: we will normalize the coordinates of the VRP instances
+# def normalize_coord(coord:torch.Tensor) -> torch.Tensor:
+#     x, y = coord[:, 0], coord[:, 1]
+#     x_min, x_max = x.min(), x.max()
+#     y_min, y_max = y.min(), y.max()
+#     x_scaled = (x - x_min) / (x_max - x_min) 
+#     y_scaled = (y - y_min) / (y_max - y_min)
+#     coord_scaled = torch.stack([x_scaled, y_scaled], dim=1)
+#     return coord_scaled 
+
+# def tsplib_to_td(problem, normalize=True):
+#     coords = torch.tensor(problem['node_coords']).float()
+#     coords_norm = normalize_coord(coords) if normalize else coords
+#     td = TensorDict({
+#         'locs': coords_norm,
+#     })
+#     td = td[None] # add batch dimension, in this case just 1
+#     return td
+
+
 def solution_callback(solution: np.ndarray, is_optimal: bool, tsp_instance: TSPInstance, problem_name: str):
     """Callback function for visualizing solutions during branch and bound."""
     tsp_instance.plot_solution(solution, is_optimal, problem_name)
 
 def main():
-    """Generate and solve example TSP instances."""
-    # Example 1: 4 cities in a square
-    coords1 = {
-        0: (0, 0),
-        1: (0, 10),
-        2: (10, 10),
-        3: (10, 0)
-    }
-    tsp1 = TSPInstance(4, coords1)
-    tsp1.plot_instance("Square TSP - 4 Cities")
+    # Only download and extract if directory is empty or doesn't exist
+    if not os.path.exists('tsplib_95_data') or not os.listdir('tsplib_95_data'):
+        print("Downloading and extracting TSPLIB instances...")
+        download_and_extract_tsplib("http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/ALL_tsp.tar.gz")
     
-    # Example 2: 5 cities in a pentagon
-    coords2 = {
-        0: (50, 0),
-        1: (15.45, 47.55),
-        2: (80.9, 58.78),
-        3: (97.55, 15.45),
-        4: (32.45, 15.45)
-    }
-    tsp2 = TSPInstance(5, coords2)
-    tsp2.plot_instance("Pentagon TSP - 5 Cities")
+    # Load the problems from TSPLib
+    tsplib_dir = './tsplib_95_data'
+    solution_files = [f for f in os.listdir(tsplib_dir) if f.endswith('.opt.tour')]
     
-    # Example 3: 6 random cities
-    tsp3 = TSPInstance(6)
-    tsp3.plot_instance("Random TSP - 6 Cities")
+    problems = []
+    # Load only problems with solution files
+    for sol_file in solution_files:
+        prob_file = sol_file.replace('.opt.tour', '.tsp')
+        problem = load_problem(os.path.join(tsplib_dir, prob_file))
+
+        # Skip problems without node coordinates
+        if not len(problem.node_coords):
+            continue
+        
+        node_coords = [v for v in problem.node_coords.values()]
+        solution = load_solution(os.path.join(tsplib_dir, sol_file))
+        
+        problems.append({
+            "name": sol_file.replace('.opt.tour', ''),
+            "node_coords": node_coords,
+            "solution": solution.tours[0],
+            "dimension": problem.dimension
+        })
     
-    # Solve each instance
+    # Sort problems by dimension
+    problems = sorted(problems, key=lambda x: x['dimension'])
+    
+    # Get the smallest problem
+    smallest_problem = problems[0]
+    print(f"\nSolving smallest TSP instance: {smallest_problem['name']} with dimension {smallest_problem['dimension']}")
+    
+    # Create TSP instance from the problem
+    coordinates = {i: tuple(coord) for i, coord in enumerate(smallest_problem['node_coords'])}
+    tsp_instance = TSPInstance(smallest_problem['dimension'], coordinates)
+    
+    # Initialize solver
     solver = ILPSolver()
     
-    for i, tsp in enumerate([tsp1, tsp2, tsp3], 1):
-        problem_name = f"TSP_{i}"
-        print(f"\nSolving {problem_name}")
+    # Get all constraint matrices
+    c, A_eq, b_eq, A_ub, b_ub = tsp_instance.to_ilp()
+    
+    # Create callback closure
+    callback = lambda solution, is_optimal, problem_name: solution_callback(
+        solution, is_optimal, tsp_instance, problem_name
+    )
+    
+    # Solve the instance
+    solve_and_print_results(
+        solver=solver,
+        c=c,
+        A_ub=A_ub,
+        b_ub=b_ub,
+        A_eq=A_eq,
+        b_eq=b_eq,
+        problem_name=smallest_problem['name'],
+        callback=callback,
+        visualize=True,
+        tsp_instance=tsp_instance
+    )
+
+    # Code to solve all problems
+    """
+    for problem in problems:
+        print(f"\nSolving TSP instance: {problem['name']} with dimension {problem['dimension']}")
         
-        # Get all constraint matrices including equality constraints
-        c, A_eq, b_eq, A_ub, b_ub = tsp.to_ilp()
+        # Create TSP instance
+        coordinates = {i: tuple(coord) for i, coord in enumerate(problem['node_coords'])}
+        tsp_instance = TSPInstance(problem['dimension'], coordinates)
         
-        # Create a callback closure that includes the TSP instance and problem name
-        callback = lambda solution, is_optimal, problem_name=problem_name: solution_callback(
-            solution, is_optimal, tsp, problem_name)
+        # Get constraints
+        c, A_eq, b_eq, A_ub, b_ub = tsp_instance.to_ilp()
         
-        # Solve with both equality and inequality constraints
+        # Create callback
+        callback = lambda solution, is_optimal: solution_callback(
+            solution, is_optimal, tsp_instance, problem['name']
+        )
+        
+        # Solve
         solve_and_print_results(
             solver=solver,
             c=c,
@@ -366,11 +460,12 @@ def main():
             b_ub=b_ub,
             A_eq=A_eq,
             b_eq=b_eq,
-            problem_name=problem_name,
+            problem_name=problem['name'],
             callback=callback,
             visualize=True,
-            tsp_instance=tsp
+            tsp_instance=tsp_instance
         )
+    """
         
 if __name__ == "__main__":
     main()

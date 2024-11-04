@@ -1,6 +1,9 @@
 # Ignore saved graphs directory
 saved_graphs/
 
+# Ignore TSP data directory
+tsplib_95_data/
+
 # Ignore Python cache files
 __pycache__/
 *.py[cod]
