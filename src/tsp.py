@@ -257,24 +257,19 @@ class TSPInstance:
         
         # Use same tolerance as find_subtours
         EDGE_TOLERANCE = 1e-4
-        
-        # Add edges from solution
-        total_distance = 0
-        edge_count = 0
+                
         for i, j in combinations(range(self.n_cities), 2):
             idx = self._get_variable_index(i, j)
             if solution[idx] > 1 - EDGE_TOLERANCE:
                 solution_graph.add_edge(i, j)
-                total_distance += self.distances[(i, j)]
-                edge_count += 1
-        
-        print(f"\nPlotting solution:")
-        print(f"Number of edges: {edge_count}")
-        print(f"Total distance: {total_distance:.2f}")
+                #total_distance += self.distances[(i, j)]
+
+        total_distance = -sum(solution[self._get_variable_index(i, j)] * self.distances[(i, j)]
+                         for i, j in combinations(range(self.n_cities), 2))
         
         # Draw nodes
         nx.draw_networkx_nodes(solution_graph, pos, node_color='lightblue', 
-                             node_size=500)
+                              node_size=500)
         
         # Draw edges (highlighted for solution)
         nx.draw_networkx_edges(solution_graph, pos, edge_color='r', width=2)
@@ -292,30 +287,6 @@ class TSPInstance:
         filename = f"plots/{problem_name}_solution_{self.plot_counter:03d}_{status.lower()}.png"
         plt.savefig(filename, bbox_inches='tight', dpi=300)
         plt.close()
-        
-        # If there are subtours, plot them separately
-        subtours = self.find_subtours(solution)
-        if len(subtours) > 1 or edge_count > 0:  # Only plot if we have edges or multiple subtours
-            print(f"Found {len(subtours)} subtours")
-            
-            plt.figure(figsize=(10, 10))
-            colors = ['r', 'b', 'g', 'y', 'm', 'c']
-            
-            for idx, subtour in enumerate(subtours):
-                subtour_graph = solution_graph.subgraph(subtour)
-                nx.draw_networkx_nodes(subtour_graph, pos, node_color=colors[idx % len(colors)],
-                                     node_size=500)
-                nx.draw_networkx_edges(subtour_graph, pos, edge_color=colors[idx % len(colors)],
-                                     width=2)
-                nx.draw_networkx_labels(subtour_graph, pos, 
-                                      {i: f"City {i}" for i in subtour})
-            
-            plt.title(f"Subtours in Solution - {len(subtours)} components")
-            plt.axis('equal')
-            
-            filename = f"plots/{problem_name}_subtours_{self.plot_counter:03d}.png"
-            plt.savefig(filename, bbox_inches='tight', dpi=300)
-            plt.close()
 
 def download_and_extract_tsplib(url, directory="tsplib_95_data", delete_after_unzip=True):
     os.makedirs(directory, exist_ok=True)
@@ -370,6 +341,69 @@ def solution_callback(solution: np.ndarray, is_optimal: bool, tsp_instance: TSPI
     tsp_instance.plot_solution(solution, is_optimal, problem_name)
 
 def main():
+
+    # Create and solve simple TSP instances
+    # Example 1: 3 cities in a triangle
+    coords_3 = {
+        0: (0, 0),
+        1: (0, 1),
+        2: (1, 0)
+    }
+    tsp_3 = TSPInstance(3, coords_3)
+    tsp_3.plot_instance("Triangle TSP")
+    
+    # Example 2: 4 cities in a square
+    coords_4 = {
+        0: (0, 0),
+        1: (0, 1),
+        2: (1, 1),
+        3: (1, 0)
+    }
+    tsp_4 = TSPInstance(4, coords_4)
+    tsp_4.plot_instance("Square TSP")
+    
+    # Example 3: 5 cities in a star pattern
+    coords_5 = {
+        0: (0, 0),    # center
+        1: (1, 1),    # top right
+        2: (-1, 1),   # top left
+        3: (-1, -1),  # bottom left
+        4: (1, -1)    # bottom right
+    }
+    tsp_5 = TSPInstance(5, coords_5)
+    tsp_5.plot_instance("Star TSP")
+    
+    # Initialize solver
+    solver = ILPSolver()
+    
+    # Solve each instance
+    for instance, name in [(tsp_3, "Triangle"), (tsp_4, "Square"), (tsp_5, "Star")]:
+        print(f"\nSolving {name} TSP instance with {instance.n_cities} cities")
+        
+        # Get all constraint matrices
+        c, A_eq, b_eq, A_ub, b_ub = instance.to_ilp()
+        
+        # Create callback closure
+        callback = lambda solution, is_optimal, problem_name: solution_callback(
+            solution, is_optimal, instance, problem_name
+        )
+        
+        # Solve the instance
+        solve_and_print_results(
+            solver=solver,
+            c=c,
+            A_ub=A_ub,
+            b_ub=b_ub,
+            A_eq=A_eq,
+            b_eq=b_eq,
+            problem_name=f"{name}_TSP",
+            callback=callback,
+            visualize=True,
+            tsp_instance=instance
+        )
+
+
+    """
     # Only download and extract if directory is empty or doesn't exist
     if not os.path.exists('tsplib_95_data') or not os.listdir('tsplib_95_data'):
         print("Downloading and extracting TSPLIB instances...")
@@ -434,6 +468,7 @@ def main():
         visualize=True,
         tsp_instance=tsp_instance
     )
+    """
 
     # Code to solve all problems
     """

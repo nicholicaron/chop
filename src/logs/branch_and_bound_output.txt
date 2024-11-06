@@ -33,348 +33,17 @@ Current node value: 5.0
 Global lower bound: -inf
 Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 3
-
-Popped node Node 3 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 3
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 4
-
-Popped node Node 4 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 4
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 5
-
-Popped node Node 5 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 5
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 6
-
-Popped node Node 6 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 6
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 7
-
-Popped node Node 7 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 7
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 8
-
-Popped node Node 8 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 8
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 9
-
-Popped node Node 9 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 9
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 10
-
-Popped node Node 10 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 10
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 11
-
-Popped node Node 11 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 11
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0. 0.]
-Cut RHS: 0.5
-Cut violation: 0.5
-New gomory node value: 5.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 5.0000, Node ID: Node 12
-
-Popped node Node 12 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 12
-Current node value: 5.0
-Global lower bound: -inf
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X1 which has value 3.5
-Creating floor branch (adding constraint X1 <= 3.0)...
-New floor node value: 4.625
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 4.6250, Node ID: Node 13
-
-Creating ceil branch (adding constraint -X1 <= --4.0)...
-ceil node is infeasible
-Popped node Node 13 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 13
-Current node value: 4.625
-Global lower bound: -inf
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X0 which has value 1.625
-Creating floor branch (adding constraint X0 <= 1.0)...
-New floor node value: 4.0
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 4.0000, Node ID: Node 15
-
-Creating ceil branch (adding constraint -X0 <= --2.0)...
-New ceil node value: 3.5
-Added ceil node to priority queue
-Priority Queue Contents:
-  1. Value: 3.5000, Node ID: Node 16
-  2. Value: 4.0000, Node ID: Node 15
-
-Popped node Node 16 from priority queue
-Priority Queue Contents:
-  1. Value: 4.0000, Node ID: Node 15
-
-
-Processing node Node 16
-Current node value: 3.5
-Global lower bound: -inf
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X1 which has value 1.5
-Creating floor branch (adding constraint X1 <= 1.0)...
-New floor node value: 3.125
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 3.1250, Node ID: Node 17
-  2. Value: 4.0000, Node ID: Node 15
-
-Creating ceil branch (adding constraint -X1 <= --2.0)...
-ceil node is infeasible
-Popped node Node 17 from priority queue
-Priority Queue Contents:
-  1. Value: 4.0000, Node ID: Node 15
-
-
-Processing node Node 17
-Current node value: 3.125
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 14
-Cut coefficients: [0. 0.]
-Cut RHS: 0.125
-Cut violation: 0.125
-New gomory node value: 3.125
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 3.1250, Node ID: Node 19
-  2. Value: 4.0000, Node ID: Node 15
-
-Popped node Node 19 from priority queue
-Priority Queue Contents:
-  1. Value: 4.0000, Node ID: Node 15
-
-
-Processing node Node 19
-Current node value: 3.125
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 14
-Cut coefficients: [0. 0.]
-Cut RHS: 0.125
-Cut violation: 0.125
-New gomory node value: 3.125
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 3.1250, Node ID: Node 20
-  2. Value: 4.0000, Node ID: Node 15
-
-Popped node Node 20 from priority queue
-Priority Queue Contents:
-  1. Value: 4.0000, Node ID: Node 15
-
-
-Processing node Node 20
-Current node value: 3.125
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 14
-Cut coefficients: [0. 0.]
-Cut RHS: 0.125
-Cut violation: 0.125
-New gomory node value: 3.125
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 3.1250, Node ID: Node 21
-  2. Value: 4.0000, Node ID: Node 15
-
-Popped node Node 21 from priority queue
-Priority Queue Contents:
-  1. Value: 4.0000, Node ID: Node 15
-
-
-Processing node Node 21
-Current node value: 3.125
-Global lower bound: -inf
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X0 which has value 2.125
-Creating floor branch (adding constraint X0 <= 2.0)...
-New floor node value: 3.0
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 3.0000, Node ID: Node 22
-  2. Value: 4.0000, Node ID: Node 15
-
-Creating ceil branch (adding constraint -X0 <= --3.0)...
-ceil node is infeasible
-Popped node Node 22 from priority queue
-Priority Queue Contents:
-  1. Value: 4.0000, Node ID: Node 15
-
-
-Processing node Node 22
-Current node value: 3.0
-Global lower bound: -inf
-Is integer solution: True
-New best integer solution found!
-Popped node Node 15 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 15
-Current node value: 4.0
-Global lower bound: 3.0
-Is integer solution: True
-New best integer solution found!
+No suitable rows found for Gomory cut generation
 
 Branch and bound process completed.
-Optimal objective value: 4.0
-Number of nodes explored: 23
+Optimal objective value: -inf
+Number of nodes explored: 2
 Plot saved as plots/example_1_(2_var,_2_cons)_tree.png
 
 Results for Example 1 (2 var, 2 cons):
-Optimal solution: [1. 3.]
-Optimal objective value: 4.0
-Number of nodes explored: 23
-Optimal node ID: Node 15
+Optimal solution: None
+Optimal objective value: -inf
+Number of nodes explored: 2
 
 ==================================================
 
@@ -425,801 +94,236 @@ Processing node Node 1
 Current node value: 59.36363636363637
 Global lower bound: -inf
 Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [1.11022302e-16 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 0.00000000e+00 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.363636363636364
-Cut violation: 0.363636363636364
-New gomory node value: 59.36363636363635
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 59.3636, Node ID: Node 2
-
-Popped node Node 2 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 2
-Current node value: 59.36363636363635
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [1.11022302e-16 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 0.00000000e+00 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.36363636363636376
-Cut violation: 0.36363636363636376
-New gomory node value: 59.36363636363637
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 59.3636, Node ID: Node 3
-
-Popped node Node 3 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 3
-Current node value: 59.36363636363637
-Global lower bound: -inf
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [1.11022302e-16 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 0.00000000e+00 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.3636363636363631
-Cut violation: 0.3636363636363631
-New gomory node value: 59.36363636363637
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 59.3636, Node ID: Node 4
-
-Popped node Node 4 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 4
-Current node value: 59.36363636363637
-Global lower bound: -inf
-Is integer solution: False
 Branching on a fractional variable...
-Branching on variable X1 which has value 5.7272727272727275
+Branching on variable X1 which has value 5.727272727272727
 Creating floor branch (adding constraint X1 <= 5.0)...
 New floor node value: 59.0
 Added floor node to priority queue
 Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 5
+  1. Value: 59.0000, Node ID: Node 2
 
 Creating ceil branch (adding constraint -X1 <= --6.0)...
 New ceil node value: 57.99999999999999
 Added ceil node to priority queue
 Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 6
-  2. Value: 59.0000, Node ID: Node 5
+  1. Value: 58.0000, Node ID: Node 3
+  2. Value: 59.0000, Node ID: Node 2
 
-Popped node Node 6 from priority queue
+Popped node Node 3 from priority queue
 Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 5
+  1. Value: 59.0000, Node ID: Node 2
 
 
-Processing node Node 6
+Processing node Node 3
 Current node value: 57.99999999999999
 Global lower bound: -inf
 Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X5 which has value 1.3333333333333328
-Creating floor branch (adding constraint X5 <= 1.0)...
-New floor node value: 58.0
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 7
-  2. Value: 59.0000, Node ID: Node 5
-
-Creating ceil branch (adding constraint -X5 <= --2.0)...
-ceil node is infeasible
-Popped node Node 7 from priority queue
-Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 7
-Current node value: 58.0
-Global lower bound: -inf
-Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 4
-Cut coefficients: [1.  0.  0.  0.5 0.5 0.  0.  1. ]
-Cut RHS: 0.5000000000000004
-Cut violation: 0.5000000000000004
+Generated Gomory cut from row 0
+Cut coefficients: [0.22222222 0.         0.         0.77777778 0.11111111 0.
+ 0.         0.22222222]
+Cut RHS: 0.3333333333333337
+Cut violation: 0.3333333333333337
 New gomory node value: 58.0
 Added gomory node to priority queue
 Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 9
-  2. Value: 59.0000, Node ID: Node 5
+  1. Value: 58.0000, Node ID: Node 4
+  2. Value: 59.0000, Node ID: Node 2
 
-Popped node Node 9 from priority queue
+Popped node Node 4 from priority queue
 Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 5
+  1. Value: 59.0000, Node ID: Node 2
 
 
-Processing node Node 9
+Processing node Node 4
 Current node value: 58.0
 Global lower bound: -inf
 Is integer solution: False
+Generating Gomory cut...
+No suitable rows found for Gomory cut generation
+Popped node Node 2 from priority queue
+Priority Queue Contents:
+
+
+Processing node Node 2
+Current node value: 59.0
+Global lower bound: -inf
+Is integer solution: False
 Branching on a fractional variable...
-Branching on variable X6 which has value 1.5000000000000002
-Creating floor branch (adding constraint X6 <= 1.0)...
-New floor node value: 56.333333333333336
+Branching on variable X5 which has value 1.363636363636364
+Creating floor branch (adding constraint X5 <= 1.0)...
+New floor node value: 58.599999999999994
 Added floor node to priority queue
 Priority Queue Contents:
-  1. Value: 56.3333, Node ID: Node 10
-  2. Value: 59.0000, Node ID: Node 5
+  1. Value: 58.6000, Node ID: Node 5
 
-Creating ceil branch (adding constraint -X6 <= --2.0)...
-New ceil node value: 58.0
+Creating ceil branch (adding constraint -X5 <= --2.0)...
+New ceil node value: 56.5
 Added ceil node to priority queue
 Priority Queue Contents:
-  1. Value: 56.3333, Node ID: Node 10
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
+  1. Value: 56.5000, Node ID: Node 6
+  2. Value: 58.6000, Node ID: Node 5
 
-Popped node Node 10 from priority queue
+Popped node Node 6 from priority queue
 Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
+  1. Value: 58.6000, Node ID: Node 5
 
 
-Processing node Node 10
-Current node value: 56.333333333333336
+Processing node Node 6
+Current node value: 56.5
 Global lower bound: -inf
 Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 8
-Cut coefficients: [0.33333333 0.         0.66666667 0.33333333 0.         0.
- 0.         0.33333333]
-Cut RHS: 0.33333333333333304
-Cut violation: 0.33333333333333304
-New gomory node value: 56.333333333333336
+Generated Gomory cut from row 5
+Cut coefficients: [0.   0.   0.   0.   0.   0.   0.   0.75]
+Cut RHS: 0.5
+Cut violation: 0.5
+New gomory node value: 56.5
 Added gomory node to priority queue
 Priority Queue Contents:
-  1. Value: 56.3333, Node ID: Node 12
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
+  1. Value: 56.5000, Node ID: Node 7
+  2. Value: 58.6000, Node ID: Node 5
 
-Popped node Node 12 from priority queue
+Popped node Node 7 from priority queue
 Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
+  1. Value: 58.6000, Node ID: Node 5
 
 
-Processing node Node 12
-Current node value: 56.333333333333336
+Processing node Node 7
+Current node value: 56.5
 Global lower bound: -inf
 Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X1 which has value 6.333333333333333
-Creating floor branch (adding constraint X1 <= 6.0)...
-New floor node value: 56.00000000000001
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 56.0000, Node ID: Node 13
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Creating ceil branch (adding constraint -X1 <= --7.0)...
-New ceil node value: 53.00000000000001
-Added ceil node to priority queue
-Priority Queue Contents:
-  1. Value: 53.0000, Node ID: Node 14
-  2. Value: 56.0000, Node ID: Node 13
-  3. Value: 58.0000, Node ID: Node 11
-  4. Value: 59.0000, Node ID: Node 5
-
-Popped node Node 14 from priority queue
-Priority Queue Contents:
-  1. Value: 56.0000, Node ID: Node 13
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-
-Processing node Node 14
-Current node value: 53.00000000000001
-Global lower bound: -inf
-Is integer solution: True
-New best integer solution found!
-Popped node Node 13 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 13
-Current node value: 56.00000000000001
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X4 which has value 0.20000000000000037
-Creating floor branch (adding constraint X4 <= 0.0)...
-New floor node value: 55.6
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 55.6000, Node ID: Node 15
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Creating ceil branch (adding constraint -X4 <= --1.0)...
-New ceil node value: 52.00000000000001
-ceil node pruned: suboptimal
-Popped node Node 15 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 15
-Current node value: 55.6
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X0 which has value 0.09999999999999999
-Creating floor branch (adding constraint X0 <= 0.0)...
-New floor node value: 55.599999999999994
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 55.6000, Node ID: Node 17
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Creating ceil branch (adding constraint -X0 <= --1.0)...
-ceil node is infeasible
-Popped node Node 17 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 17
-Current node value: 55.599999999999994
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X3 which has value 0.20000000000000048
-Creating floor branch (adding constraint X3 <= 0.0)...
-New floor node value: 55.5
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 55.5000, Node ID: Node 19
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Creating ceil branch (adding constraint -X3 <= --1.0)...
-ceil node is infeasible
-Popped node Node 19 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 19
-Current node value: 55.5
-Global lower bound: 53.00000000000001
-Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 12
-Cut coefficients: [0.  0.  0.  0.  0.  0.  0.  0.5]
-Cut RHS: 0.4999999999999996
-Cut violation: 0.4999999999999996
-New gomory node value: 55.5
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 55.5000, Node ID: Node 21
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Popped node Node 21 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 21
-Current node value: 55.5
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 12
-Cut coefficients: [0.  0.  0.  0.  0.  0.  0.  0.5]
-Cut RHS: 0.4999999999999996
-Cut violation: 0.4999999999999996
-New gomory node value: 55.5
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 55.5000, Node ID: Node 22
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Popped node Node 22 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 22
-Current node value: 55.5
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 12
-Cut coefficients: [0.  0.  0.  0.  0.  0.  0.  0.5]
-Cut RHS: 0.4999999999999996
-Cut violation: 0.4999999999999996
-New gomory node value: 55.5
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 55.5000, Node ID: Node 23
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Popped node Node 23 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 23
-Current node value: 55.5
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 12
-Cut coefficients: [0.  0.  0.  0.  0.  0.  0.  0.5]
-Cut RHS: 0.4999999999999996
-Cut violation: 0.4999999999999996
-New gomory node value: 55.5
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 55.5000, Node ID: Node 24
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Popped node Node 24 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 24
-Current node value: 55.5
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 12
-Cut coefficients: [0.  0.  0.  0.  0.  0.  0.  0.5]
-Cut RHS: 0.49999999999999967
-Cut violation: 0.49999999999999967
-New gomory node value: 55.5
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 55.5000, Node ID: Node 25
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Popped node Node 25 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 25
-Current node value: 55.5
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X2 which has value 0.49999999999999967
-Creating floor branch (adding constraint X2 <= 0.0)...
-New floor node value: 54.25
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 54.2500, Node ID: Node 26
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Creating ceil branch (adding constraint -X2 <= --1.0)...
-ceil node is infeasible
-Popped node Node 26 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 26
-Current node value: 54.25
-Global lower bound: 53.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X7 which has value 0.2499999999999999
-Creating floor branch (adding constraint X7 <= 0.0)...
-New floor node value: 54.0
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 54.0000, Node ID: Node 28
-  2. Value: 59.0000, Node ID: Node 5
-  3. Value: 58.0000, Node ID: Node 11
-
-Creating ceil branch (adding constraint -X7 <= --1.0)...
-ceil node is infeasible
-Popped node Node 28 from priority queue
-Priority Queue Contents:
-  1. Value: 58.0000, Node ID: Node 11
-  2. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 28
-Current node value: 54.0
-Global lower bound: 53.00000000000001
-Is integer solution: True
-New best integer solution found!
-Popped node Node 11 from priority queue
-Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 5
-
-
-Processing node Node 11
-Current node value: 58.0
-Global lower bound: 54.0
-Is integer solution: True
-New best integer solution found!
+No suitable rows found for Gomory cut generation
 Popped node Node 5 from priority queue
 Priority Queue Contents:
 
 
 Processing node Node 5
-Current node value: 59.0
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 3
-Cut coefficients: [ 0.          0.          0.         -0.59090909  0.5         0.
-  0.          0.79545455]
-Cut RHS: 0.36363636363636376
-Cut violation: 0.36363636363636376
-New gomory node value: 59.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 30
-
-Popped node Node 30 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 30
-Current node value: 59.0
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 3
-Cut coefficients: [ 0.          0.          0.         -0.59090909  0.5         0.
-  0.          0.79545455]
-Cut RHS: 0.363636363636364
-Cut violation: 0.363636363636364
-New gomory node value: 59.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 31
-
-Popped node Node 31 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 31
-Current node value: 59.0
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 3
-Cut coefficients: [ 0.          0.          0.         -0.59090909  0.5         0.
-  0.          0.79545455]
-Cut RHS: 0.36363636363636376
-Cut violation: 0.36363636363636376
-New gomory node value: 59.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 32
-
-Popped node Node 32 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 32
-Current node value: 59.0
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 11
-Cut coefficients: [ 0.          0.          0.         -0.59090909  0.5         0.
-  0.          0.79545455]
-Cut RHS: 0.36363636363636376
-Cut violation: 0.36363636363636376
-New gomory node value: 59.0
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 59.0000, Node ID: Node 33
-
-Popped node Node 33 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 33
-Current node value: 59.0
-Global lower bound: 58.0
+Current node value: 58.599999999999994
+Global lower bound: -inf
 Is integer solution: False
 Branching on a fractional variable...
-Branching on variable X0 which has value 0.36363636363636376
-Creating floor branch (adding constraint X0 <= 0.0)...
-New floor node value: 58.571428571428584
+Branching on variable X6 which has value 2.1999999999999993
+Creating floor branch (adding constraint X6 <= 2.0)...
+New floor node value: 58.39999999999999
 Added floor node to priority queue
 Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
+  1. Value: 58.4000, Node ID: Node 8
 
-Creating ceil branch (adding constraint -X0 <= --1.0)...
-New ceil node value: 58.36363636363637
+Creating ceil branch (adding constraint -X6 <= --3.0)...
+New ceil node value: 57.8
 Added ceil node to priority queue
 Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 35
-  2. Value: 58.5714, Node ID: Node 34
+  1. Value: 57.8000, Node ID: Node 9
+  2. Value: 58.4000, Node ID: Node 8
 
-Popped node Node 35 from priority queue
+Popped node Node 9 from priority queue
 Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
+  1. Value: 58.4000, Node ID: Node 8
 
 
-Processing node Node 35
-Current node value: 58.36363636363637
-Global lower bound: 58.0
+Processing node Node 9
+Current node value: 57.8
+Global lower bound: -inf
+Is integer solution: False
+Branching on a fractional variable...
+Branching on variable X1 which has value 3.399999999999999
+Creating floor branch (adding constraint X1 <= 3.0)...
+New floor node value: 57.6
+Added floor node to priority queue
+Priority Queue Contents:
+  1. Value: 57.6000, Node ID: Node 10
+  2. Value: 58.4000, Node ID: Node 8
+
+Creating ceil branch (adding constraint -X1 <= --4.0)...
+New ceil node value: 57.0
+Added ceil node to priority queue
+Priority Queue Contents:
+  1. Value: 57.0000, Node ID: Node 11
+  2. Value: 58.4000, Node ID: Node 8
+  3. Value: 57.6000, Node ID: Node 10
+
+Popped node Node 11 from priority queue
+Priority Queue Contents:
+  1. Value: 57.6000, Node ID: Node 10
+  2. Value: 58.4000, Node ID: Node 8
+
+
+Processing node Node 11
+Current node value: 57.0
+Global lower bound: -inf
+Is integer solution: True
+New best integer solution found!
+Popped node Node 10 from priority queue
+Priority Queue Contents:
+  1. Value: 58.4000, Node ID: Node 8
+
+
+Processing node Node 10
+Current node value: 57.6
+Global lower bound: 57.0
 Is integer solution: False
 Generating Gomory cut...
 Generated Gomory cut from row 3
-Cut coefficients: [0.00000000e+00 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 8.48279780e-16 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.3636363636363633
-Cut violation: 0.3636363636363633
-New gomory node value: 58.36363636363635
+Cut coefficients: [ 0.   0.   0.  -0.5  0.5  0.   0.   0.8]
+Cut RHS: 0.40000000000000013
+Cut violation: 0.40000000000000013
+New gomory node value: 57.60000000000001
 Added gomory node to priority queue
 Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 36
-  2. Value: 58.5714, Node ID: Node 34
+  1. Value: 57.6000, Node ID: Node 12
+  2. Value: 58.4000, Node ID: Node 8
 
-Popped node Node 36 from priority queue
+Popped node Node 12 from priority queue
 Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
+  1. Value: 58.4000, Node ID: Node 8
 
 
-Processing node Node 36
-Current node value: 58.36363636363635
-Global lower bound: 58.0
+Processing node Node 12
+Current node value: 57.60000000000001
+Global lower bound: 57.0
 Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0.00000000e+00 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 5.72458747e-17 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.36363636363636287
-Cut violation: 0.36363636363636287
-New gomory node value: 58.363636363636374
-Added gomory node to priority queue
+No suitable rows found for Gomory cut generation
+Popped node Node 8 from priority queue
 Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 37
-  2. Value: 58.5714, Node ID: Node 34
-
-Popped node Node 37 from priority queue
-Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
 
 
-Processing node Node 37
-Current node value: 58.363636363636374
-Global lower bound: 58.0
+Processing node Node 8
+Current node value: 58.39999999999999
+Global lower bound: 57.0
 Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0.00000000e+00 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 9.28077060e-17 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.3636363636363633
-Cut violation: 0.3636363636363633
-New gomory node value: 58.36363636363638
+Generated Gomory cut from row 4
+Cut coefficients: [0.  0.  0.  0.  0.  0.  0.  0.8]
+Cut RHS: 0.3999999999999991
+Cut violation: 0.3999999999999991
+New gomory node value: 58.39999999999999
 Added gomory node to priority queue
 Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 38
-  2. Value: 58.5714, Node ID: Node 34
+  1. Value: 58.4000, Node ID: Node 13
 
-Popped node Node 38 from priority queue
+Popped node Node 13 from priority queue
 Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
 
 
-Processing node Node 38
-Current node value: 58.36363636363638
-Global lower bound: 58.0
+Processing node Node 13
+Current node value: 58.39999999999999
+Global lower bound: 57.0
 Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [ 0.00000000e+00  0.00000000e+00  0.00000000e+00  9.09090909e-01
- -3.46944695e-18  0.00000000e+00  0.00000000e+00  4.54545455e-02]
-Cut RHS: 0.36363636363636376
-Cut violation: 0.36363636363636376
-New gomory node value: 58.36363636363635
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 39
-  2. Value: 58.5714, Node ID: Node 34
-
-Popped node Node 39 from priority queue
-Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
-
-
-Processing node Node 39
-Current node value: 58.36363636363635
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0.00000000e+00 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 4.33680869e-17 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.36363636363636287
-Cut violation: 0.36363636363636287
-New gomory node value: 58.36363636363637
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 40
-  2. Value: 58.5714, Node ID: Node 34
-
-Popped node Node 40 from priority queue
-Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
-
-
-Processing node Node 40
-Current node value: 58.36363636363637
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [ 0.00000000e+00  0.00000000e+00  0.00000000e+00  9.09090909e-01
- -1.16699579e-17  0.00000000e+00  0.00000000e+00  4.54545455e-02]
-Cut RHS: 0.3636363636363633
-Cut violation: 0.3636363636363633
-New gomory node value: 58.36363636363637
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 41
-  2. Value: 58.5714, Node ID: Node 34
-
-Popped node Node 41 from priority queue
-Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
-
-
-Processing node Node 41
-Current node value: 58.36363636363637
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0.00000000e+00 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 4.98338744e-17 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.36363636363636354
-Cut violation: 0.36363636363636354
-New gomory node value: 58.36363636363637
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 42
-  2. Value: 58.5714, Node ID: Node 34
-
-Popped node Node 42 from priority queue
-Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
-
-
-Processing node Node 42
-Current node value: 58.36363636363637
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [ 0.00000000e+00  0.00000000e+00  0.00000000e+00  9.09090909e-01
- -1.86088518e-17  0.00000000e+00  0.00000000e+00  4.54545455e-02]
-Cut RHS: 0.36363636363636287
-Cut violation: 0.36363636363636287
-New gomory node value: 58.36363636363637
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 43
-  2. Value: 58.5714, Node ID: Node 34
-
-Popped node Node 43 from priority queue
-Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
-
-
-Processing node Node 43
-Current node value: 58.36363636363637
-Global lower bound: 58.0
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [0.00000000e+00 0.00000000e+00 0.00000000e+00 9.09090909e-01
- 4.74683424e-17 0.00000000e+00 0.00000000e+00 4.54545455e-02]
-Cut RHS: 0.3636363636363631
-Cut violation: 0.3636363636363631
-New gomory node value: 58.36363636363635
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 58.3636, Node ID: Node 44
-  2. Value: 58.5714, Node ID: Node 34
-
-Popped node Node 44 from priority queue
-Priority Queue Contents:
-  1. Value: 58.5714, Node ID: Node 34
-
-
-Processing node Node 44
-Current node value: 58.36363636363635
-Global lower bound: 58.0
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X1 which has value 3.7272727272727266
-Creating floor branch (adding constraint X1 <= 3.0)...
-New floor node value: 58.0
-floor node pruned: suboptimal
-Creating ceil branch (adding constraint -X1 <= --4.0)...
-New ceil node value: 57.00000000000001
-ceil node pruned: suboptimal
-Popped node Node 34 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 34
-Current node value: 58.571428571428584
-Global lower bound: 58.0
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X4 which has value 0.49999999999999867
-Creating floor branch (adding constraint X4 <= 0.0)...
-New floor node value: 58.428571428571416
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 58.4286, Node ID: Node 47
-
-Creating ceil branch (adding constraint -X4 <= --1.0)...
-New ceil node value: 56.36263736263738
-ceil node pruned: suboptimal
-Popped node Node 47 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 47
-Current node value: 58.428571428571416
-Global lower bound: 58.0
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X6 which has value 2.1428571428571423
-Creating floor branch (adding constraint X6 <= 2.0)...
-New floor node value: 57.71428571428571
-floor node pruned: suboptimal
-Creating ceil branch (adding constraint -X6 <= --3.0)...
-New ceil node value: 56.499999999999986
-ceil node pruned: suboptimal
+No suitable rows found for Gomory cut generation
 
 Branch and bound process completed.
-Optimal objective value: 58.0
-Number of nodes explored: 50
+Optimal objective value: 57.0
+Number of nodes explored: 13
 Plot saved as plots/example_3_(8_var,_5_cons)_tree.png
 
 Results for Example 3 (8 var, 5 cons):
-Optimal solution: [4.4408921e-16 6.0000000e+00 0.0000000e+00 0.0000000e+00 0.0000000e+00
- 0.0000000e+00 2.0000000e+00 0.0000000e+00]
-Optimal objective value: 58.0
-Number of nodes explored: 50
+Optimal solution: [1. 4. 0. 0. 0. 0. 3. 0.]
+Optimal objective value: 57.0
+Number of nodes explored: 13
 Optimal node ID: Node 11
 
 ==================================================
@@ -1240,376 +344,37 @@ Processing node Node 1
 Current node value: 77.27027027027027
 Global lower bound: -inf
 Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X4 which has value 2.540540540540544
-Creating floor branch (adding constraint X4 <= 2.0)...
-New floor node value: 77.00000000000001
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 77.0000, Node ID: Node 2
-
-Creating ceil branch (adding constraint -X4 <= --3.0)...
-New ceil node value: 75.37499999999999
-Added ceil node to priority queue
-Priority Queue Contents:
-  1. Value: 75.3750, Node ID: Node 3
-  2. Value: 77.0000, Node ID: Node 2
-
-Popped node Node 3 from priority queue
-Priority Queue Contents:
-  1. Value: 77.0000, Node ID: Node 2
-
-
-Processing node Node 3
-Current node value: 75.37499999999999
-Global lower bound: -inf
-Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [ 0.875  0.25   0.75   0.125  0.     0.375  0.     0.125  0.    -0.25 ]
-Cut RHS: 0.37499999999999467
-Cut violation: 0.37499999999999467
-New gomory node value: 75.37499999999999
+Generated Gomory cut from row 6
+Cut coefficients: [-0.13513514 -0.16216216  0.81081081 -0.2972973   0.          0.40540541
+  0.         -0.51351351  0.          0.24324324]
+Cut RHS: 0.5405405405405439
+Cut violation: 0.5405405405405439
+New gomory node value: 77.27027027027026
 Added gomory node to priority queue
 Priority Queue Contents:
-  1. Value: 75.3750, Node ID: Node 4
-  2. Value: 77.0000, Node ID: Node 2
+  1. Value: 77.2703, Node ID: Node 2
 
-Popped node Node 4 from priority queue
-Priority Queue Contents:
-  1. Value: 77.0000, Node ID: Node 2
-
-
-Processing node Node 4
-Current node value: 75.37499999999999
-Global lower bound: -inf
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X8 which has value 5.374999999999999
-Creating floor branch (adding constraint X8 <= 5.0)...
-New floor node value: 75.00000000000001
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 75.0000, Node ID: Node 5
-  2. Value: 77.0000, Node ID: Node 2
-
-Creating ceil branch (adding constraint -X8 <= --6.0)...
-ceil node is infeasible
-Popped node Node 5 from priority queue
-Priority Queue Contents:
-  1. Value: 77.0000, Node ID: Node 2
-
-
-Processing node Node 5
-Current node value: 75.00000000000001
-Global lower bound: -inf
-Is integer solution: True
-New best integer solution found!
 Popped node Node 2 from priority queue
 Priority Queue Contents:
 
 
 Processing node Node 2
-Current node value: 77.00000000000001
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X8 which has value 5.857142857142857
-Creating floor branch (adding constraint X8 <= 5.0)...
-New floor node value: 75.23880597014924
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 75.2388, Node ID: Node 7
-
-Creating ceil branch (adding constraint -X8 <= --6.0)...
-New ceil node value: 76.9090909090909
-Added ceil node to priority queue
-Priority Queue Contents:
-  1. Value: 75.2388, Node ID: Node 7
-  2. Value: 76.9091, Node ID: Node 8
-
-Popped node Node 7 from priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 8
-
-
-Processing node Node 7
-Current node value: 75.23880597014924
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X9 which has value 0.29850746268656986
-Creating floor branch (adding constraint X9 <= 0.0)...
-New floor node value: 75.17391304347824
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 75.1739, Node ID: Node 9
-  2. Value: 76.9091, Node ID: Node 8
-
-Creating ceil branch (adding constraint -X9 <= --1.0)...
-New ceil node value: 73.36363636363637
-ceil node pruned: suboptimal
-Popped node Node 9 from priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 8
-
-
-Processing node Node 9
-Current node value: 75.17391304347824
-Global lower bound: 75.00000000000001
+Current node value: 77.27027027027026
+Global lower bound: -inf
 Is integer solution: False
 Generating Gomory cut...
-Generated Gomory cut from row 0
-Cut coefficients: [ 0.47826087  0.08695652  0.7826087  -0.04347826  0.          0.
-  0.         -0.13043478  0.          0.        ]
-Cut RHS: 0.5217391304347802
-Cut violation: 0.5217391304347802
-New gomory node value: 75.1739130434783
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 75.1739, Node ID: Node 11
-  2. Value: 76.9091, Node ID: Node 8
-
-Popped node Node 11 from priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 8
-
-
-Processing node Node 11
-Current node value: 75.1739130434783
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 4
-Cut coefficients: [ 0.47826087  0.08695652  0.7826087  -0.04347826  0.          0.
-  0.         -0.13043478  0.          0.        ]
-Cut RHS: 0.5217391304347807
-Cut violation: 0.5217391304347807
-New gomory node value: 75.17391304347828
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 75.1739, Node ID: Node 12
-  2. Value: 76.9091, Node ID: Node 8
-
-Popped node Node 12 from priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 8
-
-
-Processing node Node 12
-Current node value: 75.17391304347828
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 4
-Cut coefficients: [ 0.47826087  0.08695652  0.7826087  -0.04347826  0.          0.
-  0.         -0.13043478  0.          0.        ]
-Cut RHS: 0.5217391304347828
-Cut violation: 0.5217391304347828
-New gomory node value: 75.17391304347828
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 75.1739, Node ID: Node 13
-  2. Value: 76.9091, Node ID: Node 8
-
-Popped node Node 13 from priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 8
-
-
-Processing node Node 13
-Current node value: 75.17391304347828
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 4
-Cut coefficients: [ 0.47826087  0.08695652  0.7826087  -0.04347826  0.          0.
-  0.         -0.13043478  0.          0.        ]
-Cut RHS: 0.5217391304347829
-Cut violation: 0.5217391304347829
-New gomory node value: 75.17391304347827
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 75.1739, Node ID: Node 14
-  2. Value: 76.9091, Node ID: Node 8
-
-Popped node Node 14 from priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 8
-
-
-Processing node Node 14
-Current node value: 75.17391304347827
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 4
-Cut coefficients: [ 0.47826087  0.08695652  0.7826087  -0.04347826  0.          0.
-  0.         -0.13043478  0.          0.        ]
-Cut RHS: 0.5217391304347817
-Cut violation: 0.5217391304347817
-New gomory node value: 75.17391304347824
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 75.1739, Node ID: Node 15
-  2. Value: 76.9091, Node ID: Node 8
-
-Popped node Node 15 from priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 8
-
-
-Processing node Node 15
-Current node value: 75.17391304347824
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X5 which has value 0.5217391304347826
-Creating floor branch (adding constraint X5 <= 0.0)...
-New floor node value: 74.2727272727273
-floor node pruned: suboptimal
-Creating ceil branch (adding constraint -X5 <= --1.0)...
-New ceil node value: 73.5
-ceil node pruned: suboptimal
-Popped node Node 8 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 8
-Current node value: 76.9090909090909
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 8
-Cut coefficients: [ 0.          0.72727273 -0.45454545  0.63636364  0.         -0.63636364
-  0.          0.90909091  0.         -0.09090909]
-Cut RHS: 0.2727272727272716
-Cut violation: 0.2727272727272716
-New gomory node value: 76.9090909090909
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 76.9091, Node ID: Node 18
-
-Popped node Node 18 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 18
-Current node value: 76.9090909090909
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X6 which has value 1.2727272727272738
-Creating floor branch (adding constraint X6 <= 1.0)...
-New floor node value: 76.50000000000001
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 76.5000, Node ID: Node 19
-
-Creating ceil branch (adding constraint -X6 <= --2.0)...
-New ceil node value: 70.00000000000003
-ceil node pruned: suboptimal
-Popped node Node 19 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 19
-Current node value: 76.50000000000001
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Generating Gomory cut...
-Generated Gomory cut from row 9
-Cut coefficients: [-9.71445147e-17  0.00000000e+00 -6.25000000e-01  8.75000000e-01
-  0.00000000e+00 -8.75000000e-01  0.00000000e+00  2.50000000e-01
-  0.00000000e+00 -1.25000000e-01]
-Cut RHS: 0.37499999999999767
-Cut violation: 0.37499999999999767
-New gomory node value: 76.49999999999999
-Added gomory node to priority queue
-Priority Queue Contents:
-  1. Value: 76.5000, Node ID: Node 21
-
-Popped node Node 21 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 21
-Current node value: 76.49999999999999
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X1 which has value 0.3749999999999999
-Creating floor branch (adding constraint X1 <= 0.0)...
-New floor node value: 76.28571428571428
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 76.2857, Node ID: Node 22
-
-Creating ceil branch (adding constraint -X1 <= --1.0)...
-New ceil node value: 72.57142857142854
-ceil node pruned: suboptimal
-Popped node Node 22 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 22
-Current node value: 76.28571428571428
-Global lower bound: 75.00000000000001
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X4 which has value 1.8571428571428563
-Creating floor branch (adding constraint X4 <= 1.0)...
-New floor node value: 76.0
-Added floor node to priority queue
-Priority Queue Contents:
-  1. Value: 76.0000, Node ID: Node 24
-
-Creating ceil branch (adding constraint -X4 <= --2.0)...
-New ceil node value: 75.99999999999999
-Added ceil node to priority queue
-Priority Queue Contents:
-  1. Value: 76.0000, Node ID: Node 25
-  2. Value: 76.0000, Node ID: Node 24
-
-Popped node Node 25 from priority queue
-Priority Queue Contents:
-  1. Value: 76.0000, Node ID: Node 24
-
-
-Processing node Node 25
-Current node value: 75.99999999999999
-Global lower bound: 75.00000000000001
-Is integer solution: True
-New best integer solution found!
-Popped node Node 24 from priority queue
-Priority Queue Contents:
-
-
-Processing node Node 24
-Current node value: 76.0
-Global lower bound: 75.99999999999999
-Is integer solution: False
-Branching on a fractional variable...
-Branching on variable X3 which has value 0.3333333333333346
-Creating floor branch (adding constraint X3 <= 0.0)...
-New floor node value: 75.75
-floor node pruned: suboptimal
-Creating ceil branch (adding constraint -X3 <= --1.0)...
-New ceil node value: 72.85714285714285
-ceil node pruned: suboptimal
+No suitable rows found for Gomory cut generation
 
 Branch and bound process completed.
-Optimal objective value: 75.99999999999999
-Number of nodes explored: 27
+Optimal objective value: -inf
+Number of nodes explored: 2
 Plot saved as plots/example_4_(10_var,_7_cons)_tree.png
 
 Results for Example 4 (10 var, 7 cons):
-Optimal solution: [ 0.00000000e+00  0.00000000e+00  0.00000000e+00 -4.05231404e-15
-  2.00000000e+00  0.00000000e+00  1.00000000e+00  0.00000000e+00
-  6.00000000e+00  0.00000000e+00]
-Optimal objective value: 75.99999999999999
-Number of nodes explored: 27
-Optimal node ID: Node 25
+Optimal solution: None
+Optimal objective value: -inf
+Number of nodes explored: 2
 
 ==================================================
 

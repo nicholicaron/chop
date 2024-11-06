@@ -111,19 +111,22 @@ class Node:
         self.b_ub = None  # Node-specific RHS vector
         self.processed = False  # Processing status flag
 
-    def set_constraints(self, A_ub: np.ndarray, b_ub: np.ndarray) -> None:
+    def set_constraints(self, A_ub: np.ndarray, b_ub: np.ndarray, tableau: np.ndarray = None) -> None:
         """
-        Store the node-specific constraints.
+        Store the node-specific constraints and tableau.
         
-        Makes deep copies of the constraint matrix and RHS vector to ensure
+        Makes deep copies of the constraint matrix, RHS vector, and tableau to ensure
         node independence in the branch-and-bound tree.
         
         Args:
             A_ub (np.ndarray): Inequality constraint matrix
             b_ub (np.ndarray): Inequality RHS vector
+            tableau (np.ndarray, optional): Current tableau if available
         """
         self.A_ub = A_ub.copy()
         self.b_ub = b_ub.copy()
+        if tableau is not None:
+            self.tableau = tableau.copy()
 
     def __lt__(self, other: 'Node') -> bool:
         """
@@ -843,35 +846,9 @@ class ILPSolver:
     def gomory_cut(self, current_node, c, priority_queue):
         """
         Add Gomory cuts to create a new node.
-
-        To generate a Gomory Cut we will do the following:
-        Separate the optimal tableau of the LP relaxation of the current node into A and b 
-        (b is the last column). Choose some rhs value from b such that b is not an integer, 
-        record its index b[i]. Then, use the i'th row in the constraints to create the cut 
-        constraint. For each entry a in the i'th row of A, set a = a - floor(a), then set 
-        b = b - floor(b). The constraint is then the a'th row >= b. Since our convention is <=
-        constraints, negate this to get -a <= -b. Create a deep copy of the node's A_ub and 
-        b_ub to add this constraint to, then use the self._add_node_with_new_constraints() 
-        method to add this constraint. 
-        
-        Args:
-            current_node (Node): Current node to add cuts to
-            c (np.ndarray): Objective coefficients
-            priority_queue (list): Priority queue of nodes
-            
-        Returns:
-            None (modifies priority queue in place)
-
-        Note: Since we are using the lexicographic simplex method, we are guaranteed
-        to converge to the optimal solution in a finite number of steps using Gomory cuts.
-
-        Assumptions:
-        1. The tableau is from an optimal solution
-        2. The original problem has integer coefficients
-        3. The basic variables can be identified from the tableau
         """
         print("Generating Gomory cut...")
-    
+
         # Check if we have a valid tableau
         if not hasattr(current_node, 'tableau') or current_node.tableau is None:
             print("No tableau available for Gomory cut generation")
@@ -879,12 +856,11 @@ class ILPSolver:
 
         # Use a small tolerance for numerical stability
         FRAC_TOL = 1e-6
-    
+
         tableau = current_node.tableau
         n_vars = len(c)
-    
+
         # Get basic variables from the tableau
-        # The tableau should have slack variables after the original variables
         basis_indices = []
         for i in range(tableau.shape[0]):
             # Find which variable is basic in this row
@@ -896,7 +872,7 @@ class ILPSolver:
                     break
             if basic_col >= 0 and basic_col < n_vars:  # Only consider original variables
                 basis_indices.append((i, basic_col))
-    
+
         # Find rows with fractional RHS that correspond to basic variables
         fractional_rows = []
         for row_idx, basic_var in basis_indices:
@@ -904,47 +880,65 @@ class ILPSolver:
             frac_part = rhs_val - np.floor(rhs_val)
             if FRAC_TOL < frac_part < 1.0 - FRAC_TOL:
                 fractional_rows.append((row_idx, frac_part))
-    
+
         if not fractional_rows:
             print("No suitable rows found for Gomory cut generation")
             return
-    
+
         # Choose the row with the most fractional RHS
         cut_row_idx = max(fractional_rows, key=lambda x: min(x[1], 1.0 - x[1]))[0]
-    
+
         # Generate the Gomory cut
         cut_coeffs = tableau[cut_row_idx, :n_vars].copy()  # Only use original variables
         cut_rhs = tableau[cut_row_idx, -1]
-    
+
         # Apply the fractional part operation with numerical stability
         def frac_part(x):
             return x - np.floor(x) if x >= 0 else x - np.ceil(x)
-    
+
         cut_coeffs = np.array([frac_part(coeff) for coeff in cut_coeffs])
         cut_rhs = frac_part(cut_rhs)
-    
+
         # Validate that the cut is violated by the current solution
         violation = abs(np.dot(cut_coeffs, current_node.relaxed_soln) - cut_rhs)
         if violation < FRAC_TOL:
             print("Generated cut is not violated by current solution")
             return
-    
+
         print(f"Generated Gomory cut from row {cut_row_idx}")
         print(f"Cut coefficients: {cut_coeffs}")
         print(f"Cut RHS: {cut_rhs}")
         print(f"Cut violation: {violation}")
-    
+
         # Add the cut to the current constraints
         new_A_ub = np.vstack([current_node.A_ub, cut_coeffs])
         new_b_ub = np.append(current_node.b_ub, cut_rhs)
-    
+
+        # Update the tableau with the new cut
+        # Add a new row to the tableau for the cut
+        n_slack = current_node.tableau.shape[1] - len(c) - 1  # number of slack variables
+        new_tableau_row = np.zeros(current_node.tableau.shape[1])
+        new_tableau_row[:len(c)] = cut_coeffs
+        new_tableau_row[-1] = cut_rhs
+        
+        # Add a new slack variable for the new constraint
+        slack_col = np.zeros((current_node.tableau.shape[0] + 1, 1))
+        slack_col[-1] = 1  # The new slack variable is basic in the new row
+        
+        # Construct the new tableau
+        new_tableau = np.vstack([
+            np.hstack([current_node.tableau, np.zeros((current_node.tableau.shape[0], 1))]),
+            np.hstack([new_tableau_row, slack_col[-1]])
+        ])
+
         # Store the cut details as a string for visualization
         cut_description = f"Cut: {' + '.join([f'{coeff:.2f}x{i}' for i, coeff in enumerate(cut_coeffs) if abs(coeff) > 1e-6])} ≤ {cut_rhs:.2f}"
-    
-        # Create new node with the Gomory cut
+
+        # Create new node with the Gomory cut and updated tableau
         self._add_node_with_new_constraints(
             current_node, c, new_A_ub, new_b_ub, 
-            None, cut_description, "gomory", priority_queue  # Pass cut_description instead of None
+            None, cut_description, "gomory", priority_queue,
+            new_tableau
         )
 
     def add_constraints(self, current_node, c, priority_queue):
@@ -965,7 +959,8 @@ class ILPSolver:
             self.branch(current_node, c, priority_queue)
 
     def _add_node_with_new_constraints(self, parent_node, c, new_A_ub, new_b_ub, 
-                                     branch_var, branch_val, direction, priority_queue):
+                                     branch_var, branch_val, direction, priority_queue,
+                                     tableau=None):
         """
         Create and add a new node with the given constraints.
         
@@ -978,18 +973,19 @@ class ILPSolver:
             branch_val (float): Value used for branching (None for cuts)
             direction (str): Branch direction or cut type
             priority_queue (list): Priority queue of nodes
+            tableau (np.ndarray, optional): Updated tableau if available
         """
         new_node = Node(parent=parent_node, branch_var=branch_var, 
                        branch_val=branch_val, branch_direction=direction)
         new_node.id = self._get_next_node_id()
-        new_node.set_constraints(new_A_ub, new_b_ub)
+        new_node.set_constraints(new_A_ub, new_b_ub, tableau)
 
         result = self._solve_lp_relaxation(c, new_A_ub, new_b_ub)
         if result.success:
             new_node.relaxed_soln = result.x
             new_node.value = result.fun
             new_node.local_upper_bound = new_node.value
-            new_node.tableau = result.tableau
+            new_node.tableau = result.tableau if tableau is None else tableau
             print(f"New {direction} node value: {new_node.value}")
             self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
             self._update_node_attributes(new_node, {
