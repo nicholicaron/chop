@@ -12,6 +12,7 @@ import heapq
 import argparse
 from itertools import combinations
 import sys
+import math
 
 
 """
@@ -133,6 +134,12 @@ class Node:
         Compare nodes for priority queue ordering.
         
         Implements '>' for maximization (max-queue ordering -- highest values prioritized first).
+        To calculate value, we will combine the node's LP relaxation value multiplicatively with 
+        the depth of the node using exponential decay. (Note: we prioritize shallower nodes over deeper ones.)
+        
+        f(node) = lp_relaxation_value * e ^ (-B * depth)
+            + Parameters:
+                - B: Decay factor controlling the influence of depth (chosen arbitrarily)
         
         Args:
             other (Node): Node to compare against
@@ -140,8 +147,27 @@ class Node:
         Returns:
             bool: True if this node's value > other node's value
         """
-        return self.value > other.value  # Changed to '>' for maximization
+        # Option 0: Use simple maximization
+        # return self.value > other.value  # Changed to '>' for maximization
+
+        # Option 1: Use exponential decay of depth
+        beta = random.uniform(0.001, 0.075) # Decay factor randomly chosen between 0.001 and 0.075
+        return (self.value * math.exp(-beta * self.depth)) > (other.value * math.exp(-beta * other.depth))
     
+        # Option 2: Lexicographic ordering of depth and value
+        # return (self.depth, self.value) > (other.depth, other.value)
+
+        # Option 3: Normalized weighted sum
+        # Note: Requires extra overhead for tracking max values
+        #alpha = 0.5  # Example weight
+        #norm_lp_self = self.value / solver.max_lp if solver.max_lp > 0 else 0
+        #norm_depth_self = self.depth / solver.max_depth if solver.max_depth > 0 else 0
+              
+        #norm_lp_other = other.value / solver.max_lp if solver.max_lp > 0 else 0
+        #norm_depth_other = other.depth / solver.max_depth if solver.max_depth > 0 else 0
+              
+        #return (norm_lp_self + alpha * norm_depth_self) > (norm_lp_other + alpha * norm_depth_other)
+        
 
 class ILPSolver:
     """
@@ -272,6 +298,20 @@ class ILPSolver:
                 continue
 
             print(f"\nProcessing node {current_node.id}")
+            print(f"Node upper bound: {current_node.value}")
+            print(f"Current best integer solution: {self.global_lower_bound}")
+            
+            # Check if node can be pruned by bound
+            # For maximization: if node's upper bound ≤ best known solution, prune
+            if current_node.value <= self.global_lower_bound:
+                print(f"Node {current_node.id} pruned: upper bound {current_node.value} ≤ best known solution {self.global_lower_bound}")
+                current_node.prune_reason = 'suboptimal'
+                self._update_node_attributes(current_node, {
+                    'color': 'orange', 
+                    'prune_reason': 'suboptimal'
+                })
+                continue
+
             self.processed_nodes.add(current_node.id)
 
             # Verify node has a solution
@@ -279,18 +319,14 @@ class ILPSolver:
                 print("Warning: Node has no stored solution")
                 continue
 
-            print(f"Current node value: {current_node.value}")
-            print(f"Global lower bound: {self.global_lower_bound}")
+            # Early stopping check - if gap is within tolerance of 1e-4, we can stop
+            #if (self.global_lower_bound > -np.inf and  # Ensure we have a feasible solution
+            #    abs(current_node.local_upper_bound - self.global_lower_bound) <= 
+            #    1e-4 * (1 + abs(self.global_lower_bound))):
+            #    print(f"Early stopping: gap {abs(current_node.local_upper_bound - self.global_lower_bound):.2e} within tolerance {1e-4}")
+            #    break
 
-            # Check if node can be pruned by bound
-            if current_node.local_upper_bound <= self.global_lower_bound:
-                print("Node pruned: suboptimal")
-                current_node.prune_reason = 'suboptimal'
-                self._update_node_attributes(current_node, {
-                    'color': 'orange', 
-                    'prune_reason': 'suboptimal'
-                })
-                continue
+        
 
             # Check for integer solution
             is_integer_solution = all(abs(x - round(x)) < 1e-6 
@@ -883,6 +919,7 @@ class ILPSolver:
 
         if not fractional_rows:
             print("No suitable rows found for Gomory cut generation")
+            self.branch(current_node, c, priority_queue)
             return
 
         # Choose the row with the most fractional RHS
