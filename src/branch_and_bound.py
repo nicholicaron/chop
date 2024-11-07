@@ -147,12 +147,14 @@ class Node:
         Returns:
             bool: True if this node's value > other node's value
         """
+        return self.id < other.id
+
         # Option 0: Use simple maximization
         # return self.value > other.value  # Changed to '>' for maximization
 
         # Option 1: Use exponential decay of depth
-        beta = random.uniform(0.001, 0.075) # Decay factor randomly chosen between 0.001 and 0.075
-        return (self.value * math.exp(-beta * self.depth)) > (other.value * math.exp(-beta * other.depth))
+        #beta = 0.05 # random.uniform(0.001, 0.075) # Decay factor randomly chosen between 0.001 and 0.075
+        #return -(self.value * math.exp(-beta * self.depth)) < -(other.value * math.exp(-beta * other.depth))
     
         # Option 2: Lexicographic ordering of depth and value
         # return (self.depth, self.value) > (other.depth, other.value)
@@ -326,8 +328,6 @@ class ILPSolver:
             #    print(f"Early stopping: gap {abs(current_node.local_upper_bound - self.global_lower_bound):.2e} within tolerance {1e-4}")
             #    break
 
-        
-
             # Check for integer solution
             is_integer_solution = all(abs(x - round(x)) < 1e-6 
                                     for x in current_node.relaxed_soln)
@@ -358,7 +358,7 @@ class ILPSolver:
                                 new_node.local_upper_bound = new_node.value
                                 new_node.tableau = result.tableau
                                 self._add_node_to_tree(new_node, c, new_A_ub, new_b_ub)
-                                heapq.heappush(priority_queue, (new_node.value, new_node))
+                                heapq.heappush(priority_queue, (-(new_node.value) * math.exp(-0.05 * new_node.depth), new_node))
                                 print(f"Added node with subtour elimination constraint")
                             else:
                                 print(f"Warning: LP relaxation with new subtour constraint is infeasible")
@@ -1029,7 +1029,7 @@ class ILPSolver:
                 'relaxed_obj_value': new_node.value
             })
             if new_node.local_upper_bound > self.global_lower_bound:
-                heapq.heappush(priority_queue, (new_node.value, new_node))
+                heapq.heappush(priority_queue, (-(new_node.value * math.exp(-0.05 * new_node.depth)), new_node))
                 print(f"Added {direction} node to priority queue")
                 self._print_priority_queue(priority_queue)
             else:
