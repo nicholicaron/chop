@@ -1,13 +1,6 @@
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -59,6 +52,7 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in 
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#project-structure">Project Structure</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -71,9 +65,13 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in which we explore ways to solve Combinatorial Optimization problems faster by using Graph Neural Networks to learn better heuristics in Mixed-Integer Linear Program solvers.
+CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project focused on applying Deep Reinforcement Learning (DRL) and Graph Neural Networks (GNNs) to improve Integer Linear Programming (ILP) solvers. The core idea is to learn heuristics for branch-and-bound algorithms that can accelerate convergence to optimal solutions.
 
-
+Key features of this project:
+* Modular Branch-and-Bound implementation with pluggable strategies
+* Various node selection and branching heuristics
+* Visualization tools for tree exploration and solution analysis
+* Framework for integrating RL-based heuristics and GNNs
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -82,69 +80,160 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in 
 ### Built With
 
 * [![Python][python]][python-url]
+* [![NumPy][numpy]][numpy-url]
+* [![PyTorch][pytorch]][pytorch-url]
+* [![NetworkX][networkx]][networkx-url]
+* [![Matplotlib][matplotlib]][matplotlib-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running follow these simple example steps.
+To set up the project locally, follow these steps:
 
 ### Dependencies
 
-1. Python version 3.7 or greater
-2. NumPy
-3. Numba
-4. NetworkX
-5. Matplotlib
-6. PyTorch
-7. PyTorch Geometric
+This project relies on several Python packages:
+* Python 3.8+
+* NumPy
+* Numba
+* NetworkX
+* Matplotlib
+* PyTorch
+* PyTorch Geometric
+* Jupyter Notebook (optional, for examples)
 
 ### Installation
 
-1. Clone the repo
+1. Clone the repository
    ```sh
    git clone https://github.com/nicholicaron/chop.git
+   cd chop
    ```
-2. Install the dependencies
+
+2. Create a virtual environment
    ```sh
-   pip install numpy numba networkx matplotlib torch torch_geometric
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
+
+3. Install the package and dependencies
+   ```sh
+   pip install -e .
+   ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-To run the ILP solver with branch and bound:
-
-```sh
-python src/branch_and_bound.py [--visualize]
-```
-
-The `--visualize` flag is optional and will generate and save plots of the branch and bound tree.
-
-For more detailed usage:
+### Basic ILP Example
 
 ```python
-from src.branch_and_bound import ILPSolver
+from src.core import BranchAndBoundSolver
+from src.strategies import BestBoundPrioritizer, MostFractionalBranching
+import numpy as np
 
-# Initialize the solver
-solver = ILPSolver()
+# Create a solver with chosen strategies
+solver = BranchAndBoundSolver(
+    prioritizer=BestBoundPrioritizer(),
+    branching_strategy=MostFractionalBranching()
+)
 
-# Define your problem
-c = np.array([...])  # Objective coefficients
-A_ub = np.array([...])  # Inequality constraint coefficients
-b_ub = np.array([...])  # Inequality constraint right-hand sides
-A_eq = np.array([...])  # Equality constraint coefficients (optional)
-b_eq = np.array([...])  # Equality constraint right-hand sides (optional)
+# Define a simple ILP problem
+c = np.array([1, 2])  # Objective coefficients
+A_ub = np.array([[-1, 1], [1, 1]])  # Inequality constraints
+b_ub = np.array([1, 2])  # RHS values
 
 # Solve the problem
-solution, value, num_nodes, optimal_node = solver.solve(c, A_ub, b_ub, A_eq, b_eq, problem_name="My Problem", visualize=True)
+solution, value, nodes, _ = solver.solve(c, A_ub, b_ub, problem_name="Simple Example")
 
 print(f"Optimal solution: {solution}")
-print(f"Optimal value: {value}")
-print(f"Number of nodes explored: {num_nodes}")
+print(f"Objective value: {value}")
+print(f"Nodes explored: {nodes}")
 ```
+
+### Running Examples
+
+The repository includes several example scripts in the `examples/` directory:
+
+1. Simple ILP examples
+   ```sh
+   python examples/simple_ilp.py --visualize
+   ```
+
+2. Traveling Salesman Problem (TSP) examples
+   ```sh
+   python examples/tsp_example.py --visualize
+   ```
+
+The `--visualize` flag generates branch-and-bound tree visualizations.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- PROJECT STRUCTURE -->
+## Project Structure
+
+The project is organized into the following modules:
+
+```
+chop/
+├── examples/               # Example scripts demonstrating usage
+│   ├── simple_ilp.py       # Simple ILP problems
+│   └── tsp_example.py      # TSP examples
+│
+├── src/                    # Source code
+│   ├── core/               # Core B&B components
+│   │   ├── node.py         # B&B tree node representation
+│   │   ├── priority_queue.py  # Priority queue implementation
+│   │   └── solver.py       # Main B&B solver
+│   │
+│   ├── strategies/         # Pluggable strategies
+│   │   ├── branching.py    # Variable selection strategies
+│   │   └── priority_queue.py  # Node selection strategies
+│   │
+│   ├── utils/              # Utility functions
+│   │   └── logging.py      # Logging and performance tracking
+│   │
+│   ├── simplex.py          # Simplex LP solver
+│   ├── pivoting.py         # Pivoting operations for simplex
+│   └── tsp.py              # TSP problem generator
+│
+├── logs/                   # Log files (not tracked in git)
+├── plots/                  # Generated visualizations (not tracked in git)
+├── pyproject.toml          # Project metadata and dependencies
+└── README.md               # This file
+```
+
+### Core Components
+
+1. **Node**: Represents a node in the branch-and-bound tree, tracking constraints, bounds, and solution information.
+
+2. **Priority Queue**: Customizable priority queue that supports different node ordering strategies.
+
+3. **Solver**: Main branch-and-bound algorithm that integrates all components and implements the search process.
+
+### Strategies
+
+1. **Branching Strategies**: 
+   - Most Fractional: Branches on the variable with value closest to 0.5
+   - Pseudo Cost: Uses historical performance to guide branching
+   - Strong Branching: Evaluates multiple variables by solving child LPs
+   - Reliability Branching: Hybrid of pseudo cost and strong branching
+
+2. **Priority Queue Strategies**:
+   - Best Bound: Prioritizes nodes with best objective bounds
+   - Depth First: Prioritizes nodes with greatest depth
+   - Breadth First: Prioritizes nodes with smallest depth
+   - Hybrid: Weighted combination of bound and depth
+   - Decaying Best Bound: Best bound with exponential depth decay
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -153,32 +242,53 @@ print(f"Number of nodes explored: {num_nodes}")
 <!-- ROADMAP -->
 ## Roadmap
 
-### 1. Implement Basic Linear Programming Solver:
-  - [x] Implement core Simplex algorithm components:
-    + [x] Initialize solution
-    + [x] Choose entering variable
-    + [x] Choose leaving variable
-    + [x] Perform pivot operation
-    + [x] Implement solution extraction and result reporting
-### 2. Enhance Solver Capabilities:
-  - [ ] Add support for minimization problems
-### 3. Improve Numerical Stability:
-  - [ ] Implement techniques to handle degeneracy
-  - [ ] Add safeguards against cycling
-  - [ ] Incorporate techniques for improving numerical precision
-### 4. Extend Solver Functionality:
-  - [x] Implement support for integer programming (branch and bound)
-    + [ ] Implement more sophisticated branching variable selection strategies.
-    + [ ] Add cutting plane techniques to tighten the LP relaxations.
-  - [ ] Add functionality for mixed integer linear programming
-### 5. Advanced Features and Research:
-  - [ ] Explore and implement cutting-edge LP solving techniques
-  - [ ] Investigate machine learning approaches for improving solver performance
+### 1. Core Functionality
+- [x] Implement basic Branch-and-Bound algorithm
+- [x] Create modular structure with pluggable components
+- [x] Develop visualization capabilities
+- [x] Integrate performance monitoring and logging
 
+### 2. Branching Strategies
+- [x] Most fractional variable selection
+- [x] Pseudo-cost branching
+- [x] Strong branching
+- [x] Reliability branching
+- [ ] Full strong branching
+- [ ] Gradient-based branching
 
-See the [open issues](https://github.com/nicholicaron/chop/issues) for a full list of proposed features (and known issues).
+### 3. Node Selection Strategies
+- [x] Best-bound search
+- [x] Depth-first search
+- [x] Breadth-first search
+- [x] Hybrid approaches
+- [ ] Estimated value with look-ahead
+
+### 4. Cutting Planes
+- [x] Basic Gomory cuts
+- [ ] Mixed-integer rounding cuts
+- [ ] Lift-and-project cuts
+- [ ] Clique cuts for set covering problems
+
+### 5. Problem Library
+- [x] General ILP solver
+- [x] Traveling Salesman Problem
+- [ ] Knapsack Problem
+- [ ] Set Covering
+- [ ] Bin Packing
+- [ ] Job Shop Scheduling
+
+### 6. RL Integration
+- [ ] State representation for B&B nodes
+- [ ] Action spaces for node and variable selection
+- [ ] Reward functions balancing quality and efficiency
+- [ ] Training pipeline for RL agents
+- [ ] GNN integration for learning tree structures
+
+See the [open issues](https://github.com/nicholicaron/chop/issues) for a full list of proposed features and known issues.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -195,16 +305,6 @@ Don't forget to give the project a star! Thanks again!
 5. Open a Pull Request
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- LICENSE -->
-<!-- ## License -->
-
-<!-- Distributed under the MIT License. See `LICENSE.txt` for more information. -->
-
-<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
-
 
 
 
@@ -243,3 +343,11 @@ Nicholi Caron - nmooreca@students.kennesaw.edu
 [product-screenshot]: images/screenshot.png
 [python]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
 [python-url]: https://www.python.org/
+[numpy]: https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white
+[numpy-url]: https://numpy.org/
+[pytorch]: https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white
+[pytorch-url]: https://pytorch.org/
+[networkx]: https://img.shields.io/badge/NetworkX-2C3E50?style=for-the-badge&logo=python&logoColor=white
+[networkx-url]: https://networkx.org/
+[matplotlib]: https://img.shields.io/badge/Matplotlib-11557c?style=for-the-badge&logo=python&logoColor=white
+[matplotlib-url]: https://matplotlib.org/

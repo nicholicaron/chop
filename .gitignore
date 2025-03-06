@@ -65,3 +65,15 @@ htmlcov/
 
 # Ignore environment variables file
 .env
+
+# Project specific files
+CLAUDE.md
+.venv/
+logs/
+
+# Numba cache files
+*.nbc
+*.nbi
+
+# Tensorboard logs
+runs/

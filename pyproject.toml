@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chop"
+version = "0.2.0"
+description = "Combinatorial Heuristic Optimization Powerhouse (CHOP)"
+readme = "README.md"
+authors = [
+    {name = "Nicholi Caron", email = "nmooreca@students.kennesaw.edu"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+keywords = ["integer programming", "reinforcement learning", "branch-and-bound", "optimization"]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+    "numba>=0.55.0",
+    "matplotlib>=3.5.0",
+    "networkx>=2.6.0",
+    "torch>=1.12.0",
+    "torch-geometric>=2.0.0",
+    "tqdm>=4.60.0",
+    "tsplib95>=0.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.3.0",
+    "isort>=5.10.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
