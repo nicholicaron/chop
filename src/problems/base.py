@@ -189,16 +189,18 @@ class OptimizationProblem(abc.ABC):
         Returns:
             float: The objective value of the LP relaxation
         """
-        from ..simplex import solve_lp
+        from ..simplex import linprog_simplex
         
         # Convert to ILP
-        ilp_model = self.to_ilp()
+        c, A_eq, b_eq, A_ub, b_ub = self.to_ilp()
         
         # Solve LP relaxation
-        result = solve_lp(
-            ilp_model, 
-            integrality_constraints=False,
-            early_stop_gap=0.0
+        result = linprog_simplex(
+            c=c,
+            A_ub=A_ub,
+            b_ub=b_ub,
+            A_eq=A_eq,
+            b_eq=b_eq
         )
         
-        return result.get('objective_value', float('inf'))
+        return result.fun if result.success else float('inf')

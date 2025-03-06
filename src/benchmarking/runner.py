@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
 
-from ..core.solver import BnBSolver
+from ..core.solver import BranchAndBoundSolver
 from ..problems.base import OptimizationProblem
 from .metrics import InstanceMetrics, SolverMetrics
 from .suite import BenchmarkSuite, BenchmarkResult, save_results
@@ -171,11 +171,9 @@ class BenchmarkRunner:
         ilp_model = instance.to_ilp()
         
         # Create solver
-        solver = BnBSolver(
-            ilp_model,
-            use_gomory_cuts=use_gomory_cuts,
-            early_stop_gap=early_stop_gap,
-            time_limit=time_limit
+        solver = BranchAndBoundSolver(
+            use_cuts=use_gomory_cuts,
+            early_stop_gap=early_stop_gap
         )
         
         # Apply additional configuration options
@@ -186,7 +184,8 @@ class BenchmarkRunner:
         
         # Solve the instance and measure time
         start_time = time.time()
-        solver.solve()
+        c, A_eq, b_eq, A_ub, b_ub = ilp_model
+        solver.solve(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq)
         duration = time.time() - start_time
         
         # Extract solver metrics

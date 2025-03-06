@@ -33,6 +33,53 @@ class SetCover(OptimizationProblem):
         problem_difficulty (str): Difficulty level of this instance
     """
     
+    def size_metrics(self) -> Dict[str, int]:
+        """
+        Get detailed size metrics for benchmarking purposes.
+        
+        Returns:
+            Dict[str, int]: Dictionary of size metrics specific to Set Cover
+        """
+        return {
+            'size_elements': self.n_elements,
+            'size_sets': self.n_sets,
+            'size_variables': self.n_sets,
+            'size_constraints': self.n_elements + 1  # Element coverage + one constraint for objective
+        }
+    
+    def get_specific_metrics(self) -> Dict[str, Any]:
+        """
+        Get problem-specific metrics for Set Cover benchmarking.
+        
+        Returns:
+            Dict[str, Any]: Dictionary of Set Cover-specific metrics
+        """
+        # Calculate metrics like density, redundancy, etc.
+        density = np.mean(self.coverage_matrix)
+        
+        # Calculate how many sets cover each element on average
+        sets_per_element = np.sum(self.coverage_matrix, axis=1).mean()
+        
+        # Calculate how many elements each set covers on average
+        elements_per_set = np.sum(self.coverage_matrix, axis=0).mean()
+        
+        # Calculate cost statistics
+        cost_mean = np.mean(self.set_costs) if hasattr(self, 'set_costs') and self.set_costs is not None else 1.0
+        cost_std = np.std(self.set_costs) if hasattr(self, 'set_costs') and self.set_costs is not None else 0.0
+        
+        # Min number of sets needed is a lower bound on the optimal solution
+        min_sets_required = min(self.n_sets, int(np.ceil(self.n_elements / elements_per_set)))
+        
+        return {
+            'density': density,
+            'sets_per_element': sets_per_element,
+            'elements_per_set': elements_per_set,
+            'cost_mean': cost_mean,
+            'cost_std': cost_std,
+            'min_sets_required': min_sets_required,
+            'is_minimization': True
+        }
+    
     def __init__(self, coverage_matrix: np.ndarray, set_costs: np.ndarray = None, 
                  name: str = None, difficulty: str = 'medium'):
         """

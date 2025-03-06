@@ -5,7 +5,7 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional, Tuple, Union
 
-from ..core.solver import BnBSolver
+from ..core.solver import BranchAndBoundSolver
 from ..problems.base import OptimizationProblem
 
 
@@ -68,15 +68,29 @@ class InstanceMetrics:
         lp_relaxation_time = time.time() - start_time
         
         # Get problem structure information
-        ilp_model = problem.to_ilp()
-        num_variables = len(ilp_model['variable_types'])
-        num_constraints = len(ilp_model['constraints'])
+        c, A_eq, b_eq, A_ub, b_ub = problem.to_ilp()
+        
+        # Get number of variables from objective function coefficients
+        num_variables = len(c)
+        
+        # Get number of constraints from constraint matrices
+        num_constraints = (0 if A_eq is None else A_eq.shape[0]) + (0 if A_ub is None else A_ub.shape[0])
         
         # Calculate constraint matrix density
-        total_cells = num_variables * num_constraints
-        non_zero_cells = sum(len(constraint.get('variables', [])) 
-                           for constraint in ilp_model['constraints'])
-        density = non_zero_cells / total_cells if total_cells > 0 else 0
+        density = 0.0
+        if num_variables > 0 and num_constraints > 0:
+            # Combine constraint matrices to calculate density
+            constraints = []
+            if A_eq is not None and A_eq.size > 0:
+                constraints.append(A_eq)
+            if A_ub is not None and A_ub.size > 0:
+                constraints.append(A_ub)
+                
+            if constraints:
+                combined = np.vstack(constraints) if len(constraints) > 1 else constraints[0]
+                total_cells = combined.size
+                non_zero_cells = np.count_nonzero(combined)
+                density = non_zero_cells / total_cells if total_cells > 0 else 0
         
         # Get problem-specific metrics
         specific_metrics = problem.get_specific_metrics()
@@ -125,44 +139,61 @@ class SolverMetrics:
     solver_specific: Dict[str, Any] = field(default_factory=dict)
     
     @classmethod
-    def from_solver(cls, solver: BnBSolver) -> 'SolverMetrics':
+    def from_solver(cls, solver: BranchAndBoundSolver) -> 'SolverMetrics':
         """Extract metrics from a solver after solving a problem."""
-        stats = solver.get_statistics()
+        # Get stats directly from the logger
+        stats = solver.logger.stats
         
         # Basic solution information
-        solution_found = solver.best_int_feasible_node is not None
+        solution_found = solver.optimal_solution is not None
         solution_value = solver.optimal_obj_value if solution_found else None
-        proven_optimal = solver.status == 'optimal'
+        
+        # We consider it optimal if the solver processed the entire tree
+        # or if the solver stopped with a gap within tolerance
+        proven_optimal = (not solver.priority_queue or 
+                          (solver.global_lower_bound > -np.inf and 
+                           solver.global_upper_bound < np.inf and
+                           solver.global_upper_bound - solver.global_lower_bound <= 
+                           solver.early_stop_gap * (1 + abs(solver.global_lower_bound))))
         
         # Calculate optimality gap
-        best_bound = solver.global_lower_bound
+        best_bound = solver.global_upper_bound
         optimality_gap = None
-        if solution_found and best_bound is not None:
+        if solution_found and best_bound is not None and best_bound < np.inf:
             # For minimization problems
             if abs(solution_value) < 1e-10:
                 optimality_gap = 0.0 if abs(best_bound) < 1e-10 else float('inf')
             else:
-                optimality_gap = (solution_value - best_bound) / abs(solution_value)
+                optimality_gap = (best_bound - solution_value) / abs(solution_value)
+        
+        # Extract available statistics from logger
+        nodes_created = stats['nodes']['created']
+        nodes_processed = stats['nodes']['processed']
+        nodes_pruned_bound = stats['nodes']['pruned_bound']
+        nodes_pruned_infeasible = stats['nodes']['pruned_infeasible']
+        
+        # Calculate solution time from available timers
+        solution_time = solver.logger.timers['total'].elapsed
         
         return cls(
             solution_found=solution_found,
             solution_value=solution_value,
-            solution_time=stats['times']['total'],
+            solution_time=solution_time,
             proven_optimal=proven_optimal,
-            nodes_created=stats['nodes']['created'],
-            nodes_processed=stats['nodes']['processed'],
-            nodes_pruned_bound=stats['nodes']['pruned_bound'],
-            nodes_pruned_infeasible=stats['nodes']['pruned_infeasible'],
+            nodes_created=nodes_created,
+            nodes_processed=nodes_processed,
+            nodes_pruned_bound=nodes_pruned_bound,
+            nodes_pruned_infeasible=nodes_pruned_infeasible,
             nodes_integer_feasible=stats['nodes']['integer_feasible'],
             lp_relaxations_solved=stats['lp_relaxations'],
-            lp_solving_time=stats['times']['lp_solving'],
-            branching_time=stats['times']['branching'],
-            node_processing_time=stats['times']['node_processing'],
+            lp_solving_time=solver.logger.timers['lp_solving'].elapsed,
+            branching_time=solver.logger.timers['branching'].elapsed,
+            node_processing_time=solver.logger.timers['node_processing'].elapsed,
             optimality_gap=optimality_gap,
             best_bound=best_bound,
             solver_specific={
-                'num_gomory_cuts': stats.get('cuts_added', 0),
-                'early_stopped': stats.get('early_stopped', False),
-                'status': solver.status
+                'num_gomory_cuts': stats['cuts_added'],
+                'early_stopped': False,
+                'status': 'optimal' if proven_optimal else 'suboptimal'
             }
         )

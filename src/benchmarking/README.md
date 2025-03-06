@@ -1,92 +1,140 @@
-# Benchmark Suite for CHOP
+# CHOP Benchmarking Framework
 
-This module provides a comprehensive framework for benchmarking optimization problems and solver configurations in CHOP. It includes tools for creating benchmark suites, running benchmarks, analyzing results, and visualizing performance metrics.
+This document provides an overview of how to use the benchmarking framework in CHOP to evaluate the performance of various solver configurations on different optimization problems.
 
-## Key Components
+## Overview
 
-### 1. Benchmark Metrics
+The CHOP benchmarking framework allows you to:
 
-- **InstanceMetrics**: Characterizes problem instances before solving
-  - Basic properties (problem type, size, difficulty)
-  - LP relaxation properties
-  - Theoretical complexity measures
-  - Problem-specific metrics
+1. Run benchmarks for different optimization problem types (TSP, Knapsack, Assignment, Bin Packing, Set Cover)
+2. Test various difficulty levels (easy, medium, hard)
+3. Compare multiple solver configurations
+4. Generate visualizations and statistical analyses of the results
 
-- **SolverMetrics**: Evaluates solver performance
-  - Solution quality (objective value, optimality gap)
-  - Computational efficiency (nodes, time)
-  - Branch-and-bound statistics
+## Quick Start
 
-### 2. Benchmark Suite
+To quickly run benchmarks, use the provided `benchmark.py` script at the root of the project:
 
-- **BenchmarkSuite**: Collection of problem instances for benchmarking
-  - Create from problem generators or predefined instances
-  - Access instances by problem type, difficulty
-  - Calculate instance metrics automatically
+```bash
+# Activate your Python environment
+source .venv/bin/activate
 
-- **BenchmarkResult**: Records results of running a solver on a problem instance
-  - Instance information
-  - Solver metrics
-  - Configuration details
+# Run a simple benchmark for all problem types at easy difficulty
+python benchmark.py
 
-### 3. Benchmark Runner
+# Run a benchmark for specific problem types
+python benchmark.py --problems tsp knapsack
 
-- **BenchmarkRunner**: Executes benchmarks and analyzes results
-  - Run benchmarks in parallel or sequentially
-  - Compare different solver configurations
-  - Analyze and visualize results
+# Run a benchmark with different difficulty levels
+python benchmark.py --problems tsp --difficulties easy medium
 
-## Usage Examples
+# Run a benchmark with a specific time limit per instance
+python benchmark.py --time-limit 30.0
 
-### Creating a Benchmark Suite
-
-```python
-from src.problems import TSP, Knapsack, Assignment
-from src.benchmarking import BenchmarkSuite
-
-# Create a suite from predefined instances
-suite = BenchmarkSuite.from_predefined_instances(
-    name="predefined_benchmark", 
-    problem_classes=[TSP, Knapsack, Assignment]
-)
-
-# Create a suite from generated instances
-suite = BenchmarkSuite.from_problem_generators(
-    name="generated_benchmark",
-    problem_classes=[TSP, Knapsack, Assignment],
-    difficulties=['easy', 'medium', 'hard']
-)
+# Run benchmarks sequentially instead of in parallel
+python benchmark.py --sequential
 ```
 
-### Running Benchmarks
+## Command-Line Arguments
+
+- `--problems`: Problem types to benchmark (default: all)
+  - Choices: tsp, knapsack, assignment, bin_packing, set_cover
+  - Example: `--problems tsp knapsack`
+
+- `--difficulties`: Difficulty levels to benchmark (default: easy)
+  - Choices: easy, medium, hard
+  - Example: `--difficulties easy medium`
+
+- `--time-limit`: Time limit per instance in seconds (default: 60.0)
+  - Example: `--time-limit 120.0`
+
+- `--sequential`: Run benchmarks sequentially instead of in parallel
+  - Example: `--sequential`
+
+## Benchmark Outputs
+
+The benchmark script creates a timestamped directory (e.g., `benchmark_results_20250306_154605`) with the following structure:
+
+```
+benchmark_results_TIMESTAMP/
+├── benchmark_results_TIMESTAMP.json  # Raw results data
+├── plots/                           # Visualizations
+│   ├── benchmark_summary.txt        # Summary statistics
+│   ├── solution_time_distribution.png
+│   ├── nodes_processed_distribution.png
+│   └── ... other plots
+└── comparisons/                     # Solver configuration comparisons
+    ├── solver_comparison_summary.txt
+    ├── solution_time_by_solver.png
+    └── ... other comparison plots
+```
+
+## Solver Configurations
+
+The benchmarking framework tests multiple solver configurations:
+
+1. `default`: Basic solver without Gomory cuts and exact solution finding
+2. `with_cuts`: Solver using Gomory cutting planes
+3. `early_stop_5pct`: Solver with early stopping (5% optimality gap)
+4. `cuts_and_early_stop`: Solver with both Gomory cuts and early stopping
+
+## Adding Custom Problem Metrics
+
+To add custom metrics for a problem type, implement the following methods in your problem class:
 
 ```python
-from src.benchmarking import BenchmarkRunner
+def size_metrics(self) -> Dict[str, int]:
+    """Return a dictionary of size-related metrics"""
+    return {
+        'size_custom_metric1': value1,
+        'size_custom_metric2': value2,
+        # ...
+    }
 
-# Define solver configurations to compare
+def get_specific_metrics(self) -> Dict[str, Any]:
+    """Return a dictionary of problem-specific metrics"""
+    return {
+        'metric1': value1,
+        'metric2': value2,
+        'is_minimization': True,  # Important for gap calculations
+        # ...
+    }
+```
+
+These metrics will automatically be incorporated into benchmark results and visualizations.
+
+## Programmatic Usage
+
+You can also use the benchmarking framework programmatically in your own scripts:
+
+```python
+from src.problems import TSP, Knapsack
+from src.benchmarking import BenchmarkSuite, BenchmarkRunner
+
+# Create a benchmark suite
+suite = BenchmarkSuite.from_problem_generators(
+    name="custom_benchmark",
+    problem_classes=[TSP, Knapsack],
+    difficulties=['easy']
+)
+
+# Define solver configurations
 solver_configs = [
     {'name': 'default', 'use_gomory_cuts': False, 'early_stop_gap': 0.0},
-    {'name': 'with_cuts', 'use_gomory_cuts': True, 'early_stop_gap': 0.0}
+    {'name': 'custom_config', 'use_gomory_cuts': True, 'early_stop_gap': 0.1}
 ]
 
-# Create the runner
+# Create the benchmark runner
 runner = BenchmarkRunner(
     suite=suite,
-    output_dir="benchmark_results",
-    time_limit=60.0,  # 1 minute per instance
+    output_dir="custom_results",
+    time_limit=30.0,
     solver_configs=solver_configs,
     parallel=True
 )
 
 # Run benchmarks
 results = runner.run_benchmark()
-```
-
-### Analyzing and Visualizing Results
-
-```python
-# Analyze results
-df = runner.analyze_results(results)
 
 # Visualize results
 runner.visualize_results(results)
@@ -95,49 +143,13 @@ runner.visualize_results(results)
 runner.compare_solvers(results)
 ```
 
-### Loading and Visualizing Saved Results
+## Extending the Framework
 
-```python
-from src.benchmarking import load_results, BenchmarkSuite, BenchmarkRunner
+To extend the benchmarking framework:
 
-# Load previously saved results
-results = load_results("benchmark_results/results_20240306_123456.json")
+1. Add new problem types by implementing the `OptimizationProblem` interface
+2. Add custom solver configurations by modifying the `solver_configs` list
+3. Create custom visualization methods in the `BenchmarkRunner` class
+4. Implement new metric calculations in the problem class methods
 
-# Create a dummy suite and runner for visualization
-suite = BenchmarkSuite("dummy")
-runner = BenchmarkRunner(suite, output_dir="visualizations")
-
-# Visualize the loaded results
-runner.visualize_results(results)
-```
-
-## Visualizations Generated
-
-The benchmark suite generates several visualizations to help analyze performance:
-
-1. **Solution Time Distribution**: Boxplots showing the distribution of solution times by problem type and difficulty
-
-2. **Nodes Processed Distribution**: Boxplots showing the distribution of nodes processed during branch-and-bound
-
-3. **LP Gap Distribution**: Boxplots showing the distribution of LP relaxation gaps
-
-4. **Solution Time Heatmap**: Heatmap showing average solution time by problem type and difficulty
-
-5. **Configuration Comparison**: Bar charts comparing different solver configurations
-
-6. **Metrics Correlation**: Heatmap showing correlation between instance metrics and solver performance
-
-7. **Speedup Analysis**: When comparing solver configurations, shows the relative speedup of each configuration
-
-## Extending the Benchmark Suite
-
-To add new problem-specific metrics:
-
-1. Add implementations of `size_metrics()` and `get_specific_metrics()` to your problem class
-2. The metrics will automatically be included in benchmark results and visualizations
-
-To add new solver configurations:
-
-1. Define the configuration parameters in the `solver_configs` list
-2. Run the benchmark with the new configurations
-3. Use `compare_solvers()` to analyze the performance difference
+For more detailed information, see the benchmarking module's README at `src/benchmarking/README.md`.

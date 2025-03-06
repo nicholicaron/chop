@@ -33,6 +33,55 @@ class BinPacking(OptimizationProblem):
         problem_difficulty (str): Difficulty level of this instance
     """
     
+    def size_metrics(self) -> Dict[str, int]:
+        """
+        Get detailed size metrics for benchmarking purposes.
+        
+        Returns:
+            Dict[str, int]: Dictionary of size metrics specific to Bin Packing
+        """
+        return {
+            'size_items': self.n_items,
+            'size_bins': self.max_bins,
+            'size_variables': self.n_items * self.max_bins + self.max_bins, # Item-bin assignment + bin usage
+            'size_constraints': self.n_items + self.max_bins + 1  # Item assignment, bin capacity, objective
+        }
+    
+    def get_specific_metrics(self) -> Dict[str, Any]:
+        """
+        Get problem-specific metrics for Bin Packing benchmarking.
+        
+        Returns:
+            Dict[str, Any]: Dictionary of Bin Packing-specific metrics
+        """
+        # Calculate metrics like item size statistics, bin utilization, etc.
+        item_size_mean = np.mean(self.item_sizes)
+        item_size_std = np.std(self.item_sizes)
+        item_size_min = np.min(self.item_sizes)
+        item_size_max = np.max(self.item_sizes)
+        
+        # Calculate the number of items that can fit in a bin
+        avg_items_per_bin = self.bin_capacity / item_size_mean if item_size_mean > 0 else float('inf')
+        
+        # Ratio of total item size to bin capacity
+        total_size = np.sum(self.item_sizes)
+        min_bins_required = np.ceil(total_size / self.bin_capacity)
+        
+        # Bin filling efficiency (theoretical perfect utilization)
+        perfect_utilization = total_size / (min_bins_required * self.bin_capacity)
+        
+        return {
+            'item_size_mean': item_size_mean,
+            'item_size_std': item_size_std,
+            'item_size_min': item_size_min,
+            'item_size_max': item_size_max,
+            'item_size_to_capacity_ratio': item_size_mean / self.bin_capacity,
+            'avg_items_per_bin': avg_items_per_bin,
+            'min_bins_required': min_bins_required,
+            'perfect_utilization': perfect_utilization,
+            'is_minimization': True
+        }
+    
     def __init__(self, item_sizes: np.ndarray, bin_capacity: float, 
                  max_bins: int = None, name: str = None, difficulty: str = 'medium'):
         """

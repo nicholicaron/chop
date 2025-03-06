@@ -30,6 +30,37 @@ class TSP(OptimizationProblem):
         problem_difficulty (str): Difficulty level of this instance
     """
     
+    def size_metrics(self) -> Dict[str, int]:
+        """
+        Get detailed size metrics for benchmarking purposes.
+        
+        Returns:
+            Dict[str, int]: Dictionary of size metrics specific to TSP
+        """
+        return {
+            'size_cities': self.n_cities,
+            'size_edges': self.n_cities * (self.n_cities - 1) // 2,
+            'size_variables': self.n_cities * (self.n_cities - 1),
+            'size_constraints': 2 * self.n_cities  # Degree constraints
+        }
+    
+    def get_specific_metrics(self) -> Dict[str, Any]:
+        """
+        Get problem-specific metrics for TSP benchmarking.
+        
+        Returns:
+            Dict[str, Any]: Dictionary of TSP-specific metrics
+        """
+        # Calculate metrics like average distance, distance variance, etc.
+        distances = list(self.distances.values())
+        return {
+            'avg_distance': np.mean(distances),
+            'min_distance': np.min(distances),
+            'max_distance': np.max(distances),
+            'std_distance': np.std(distances),
+            'distance_range': np.max(distances) - np.min(distances)
+        }
+    
     def __init__(self, n_cities: int, coordinates: Dict[int, Tuple[float, float]] = None, 
                  name: str = None, difficulty: str = 'medium'):
         """

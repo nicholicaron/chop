@@ -31,6 +31,55 @@ class Assignment(OptimizationProblem):
         problem_difficulty (str): Difficulty level of this instance
     """
     
+    def size_metrics(self) -> Dict[str, int]:
+        """
+        Get detailed size metrics for benchmarking purposes.
+        
+        Returns:
+            Dict[str, int]: Dictionary of size metrics specific to Assignment
+        """
+        return {
+            'size_agents': self.n_agents,
+            'size_tasks': self.n_tasks,
+            'size_variables': self.n_agents * self.n_tasks,
+            'size_constraints': self.n_agents + self.n_tasks  # Each agent must be assigned, each task must be assigned
+        }
+    
+    def get_specific_metrics(self) -> Dict[str, Any]:
+        """
+        Get problem-specific metrics for Assignment benchmarking.
+        
+        Returns:
+            Dict[str, Any]: Dictionary of Assignment-specific metrics
+        """
+        # Calculate metrics like cost statistics, etc.
+        cost_mean = np.mean(self.cost_matrix)
+        cost_std = np.std(self.cost_matrix)
+        cost_min = np.min(self.cost_matrix)
+        cost_max = np.max(self.cost_matrix)
+        cost_range = cost_max - cost_min
+        
+        # Calculate the minimum cost for each agent and task
+        min_agent_costs = np.min(self.cost_matrix, axis=1)
+        min_task_costs = np.min(self.cost_matrix, axis=0)
+        
+        # Lower bound on optimal solution
+        lower_bound = max(np.sum(min_agent_costs), np.sum(min_task_costs))
+        
+        # Cost matrix density (if using sparse representation)
+        density = np.count_nonzero(self.cost_matrix) / (self.n_agents * self.n_tasks)
+        
+        return {
+            'cost_mean': cost_mean,
+            'cost_std': cost_std,
+            'cost_min': cost_min,
+            'cost_max': cost_max,
+            'cost_range': cost_range,
+            'cost_lower_bound': lower_bound,
+            'cost_matrix_density': density,
+            'is_minimization': True
+        }
+    
     def __init__(self, cost_matrix: np.ndarray, name: str = None, difficulty: str = 'medium'):
         """
         Initialize an Assignment Problem instance.
