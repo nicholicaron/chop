@@ -135,8 +135,9 @@ This project relies on several Python packages:
 ### Basic ILP Example
 
 ```python
-from src.core import BranchAndBoundSolver
-from src.strategies import BestBoundPrioritizer, MostFractionalBranching
+from src.core.solver import BranchAndBoundSolver
+from src.strategies.priority_queue import BestBoundPrioritizer
+from src.strategies.branching import MostFractionalBranching
 import numpy as np
 
 # Create a solver with chosen strategies
@@ -158,18 +159,50 @@ print(f"Objective value: {value}")
 print(f"Nodes explored: {nodes}")
 ```
 
+### Using Problem Generation Framework
+
+The project provides a comprehensive framework for generating optimization problems:
+
+```python
+from src.problems import TSP, Knapsack, Assignment, BinPacking, SetCover
+
+# Create a TSP instance
+tsp = TSP.generate_random_instance(n_cities=10, seed=42)
+
+# Convert to ILP formulation
+c, A_eq, b_eq, A_ub, b_ub = tsp.to_ilp()
+
+# Solve with Branch-and-Bound
+solver = BranchAndBoundSolver()
+solution, obj_value, nodes, _ = solver.solve(
+    c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq
+)
+
+# Visualize solution
+tsp.visualize_solution(solution, is_optimal=True)
+```
+
 ### Running Examples
 
-The repository includes several example scripts in the `examples/` directory:
+The repository includes example scripts for each problem type in the `examples/` directory:
 
-1. Simple ILP examples
+1. General problem framework demonstration
    ```sh
-   python examples/simple_ilp.py --visualize
+   python examples/problem_instances.py
    ```
 
-2. Traveling Salesman Problem (TSP) examples
+2. Problem-specific examples
    ```sh
    python examples/tsp_example.py --visualize
+   python examples/knapsack_example.py
+   python examples/assignment_example.py
+   python examples/bin_packing_example.py
+   python examples/set_cover_example.py
+   ```
+
+3. Simple ILP examples without problem classes
+   ```sh
+   python examples/simple_ilp.py --visualize
    ```
 
 The `--visualize` flag generates branch-and-bound tree visualizations.
@@ -185,40 +218,92 @@ The project is organized into the following modules:
 
 ```
 chop/
-├── examples/               # Example scripts demonstrating usage
-│   ├── simple_ilp.py       # Simple ILP problems
-│   └── tsp_example.py      # TSP examples
+├── examples/                # Example scripts demonstrating usage
+│   ├── problem_instances.py # General problem framework demo
+│   ├── tsp_example.py       # TSP examples
+│   ├── knapsack_example.py  # Knapsack examples
+│   ├── assignment_example.py # Assignment examples
+│   ├── bin_packing_example.py # Bin Packing examples
+│   ├── set_cover_example.py  # Set Cover examples
+│   └── simple_ilp.py        # Simple ILP problems
 │
-├── src/                    # Source code
-│   ├── core/               # Core B&B components
-│   │   ├── node.py         # B&B tree node representation
-│   │   ├── priority_queue.py  # Priority queue implementation
-│   │   └── solver.py       # Main B&B solver
+├── src/                     # Source code
+│   ├── core/                # Core B&B components
+│   │   ├── node.py          # B&B tree node representation
+│   │   ├── priority_queue.py # Priority queue implementation
+│   │   └── solver.py        # Main B&B solver
 │   │
-│   ├── strategies/         # Pluggable strategies
-│   │   ├── branching.py    # Variable selection strategies
-│   │   └── priority_queue.py  # Node selection strategies
+│   ├── problems/            # Problem generation framework
+│   │   ├── base.py          # Abstract base class for all problems
+│   │   ├── tsp.py           # Traveling Salesman Problem
+│   │   ├── knapsack.py      # Knapsack Problem
+│   │   ├── assignment.py    # Assignment Problem
+│   │   ├── bin_packing.py   # Bin Packing Problem
+│   │   ├── set_cover.py     # Set Cover Problem
+│   │   └── README.md        # Documentation for problem framework
 │   │
-│   ├── utils/              # Utility functions
-│   │   └── logging.py      # Logging and performance tracking
+│   ├── strategies/          # Pluggable strategies
+│   │   ├── branching.py     # Variable selection strategies
+│   │   └── priority_queue.py # Node selection strategies
 │   │
-│   ├── simplex.py          # Simplex LP solver
-│   ├── pivoting.py         # Pivoting operations for simplex
-│   └── tsp.py              # TSP problem generator
+│   ├── utils/               # Utility functions
+│   │   └── logging.py       # Logging and performance tracking
+│   │
+│   ├── simplex.py           # Simplex LP solver
+│   └── pivoting.py          # Pivoting operations for simplex
 │
-├── logs/                   # Log files (not tracked in git)
-├── plots/                  # Generated visualizations (not tracked in git)
-├── pyproject.toml          # Project metadata and dependencies
-└── README.md               # This file
+├── logs/                    # Log files (not tracked in git)
+├── plots/                   # Generated visualizations (not tracked in git)
+├── pyproject.toml           # Project metadata and dependencies
+└── README.md                # This file
 ```
 
 ### Core Components
 
-1. **Node**: Represents a node in the branch-and-bound tree, tracking constraints, bounds, and solution information.
+1. **Branch-and-Bound Solver**: Modular implementation of the B&B algorithm with:
+   - Customizable node selection strategies
+   - Pluggable branching heuristics
+   - Visualization capabilities
+   - Performance tracking
 
-2. **Priority Queue**: Customizable priority queue that supports different node ordering strategies.
+2. **Problem Generation Framework**: Comprehensive framework for creating and solving optimization problems:
+   - Common interface for all problem types
+   - Random instance generation with configurable parameters
+   - Benchmark suite generation at different difficulty levels
+   - Problem-specific visualization tools
+   - Solution validation
 
-3. **Solver**: Main branch-and-bound algorithm that integrates all components and implements the search process.
+3. **Simplex Solver**: Custom implementation of the simplex algorithm for solving LP relaxations:
+   - Efficient pivoting operations
+   - Numerical stability improvements
+   - Tableau maintenance for cut generation
+
+### Problem Types
+
+1. **Traveling Salesman Problem (TSP)**:
+   - Find the shortest tour visiting all cities
+   - Subtour elimination via lazy constraints
+   - Network visualization of tours
+
+2. **Knapsack Problem**:
+   - Maximize value with limited capacity
+   - Capacity constraint handling
+   - Item visualization with value/weight ratios
+
+3. **Assignment Problem**:
+   - Minimize cost of agent-task assignments
+   - One-to-one matching constraints
+   - Bipartite graph visualization
+
+4. **Bin Packing Problem**:
+   - Minimize number of bins used
+   - Bin capacity constraints
+   - Visual representation of packed items
+
+5. **Set Cover Problem**:
+   - Minimize cost of selected sets to cover all elements
+   - Coverage constraints
+   - Visualization of coverage relationships
 
 ### Strategies
 
@@ -272,10 +357,10 @@ chop/
 ### 5. Problem Library
 - [x] General ILP solver
 - [x] Traveling Salesman Problem
-- [ ] Knapsack Problem
-- [ ] Set Covering
-- [ ] Bin Packing
-- [ ] Job Shop Scheduling
+- [x] Knapsack Problem
+- [x] Set Covering
+- [x] Bin Packing
+- [x] Assignment Scheduling
 
 ### 6. RL Integration
 - [ ] State representation for B&B nodes

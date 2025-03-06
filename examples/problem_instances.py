@@ -14,7 +14,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 sys.path.append(".")  # Add the project root to the path
 
-from src.problems import OptimizationProblem, TSP, Knapsack, get_predefined_instances
+from src.problems import (
+    OptimizationProblem, TSP, Knapsack, Assignment, BinPacking, SetCover, 
+    get_predefined_instances
+)
 from src.core.solver import BranchAndBoundSolver
 
 
@@ -55,7 +58,14 @@ def generate_and_solve_instance(problem_class, instance_params, solver_params=No
     c, A_eq, b_eq, A_ub, b_ub = instance.to_ilp()
     print("\nILP Formulation:")
     print(f"Variables: {len(c)}")
-    print(f"Objective: {c}")
+    
+    # Determine problem type (maximization or minimization)
+    if problem_class in [Assignment, BinPacking, SetCover]:
+        obj_type = "Minimize"
+    else:
+        obj_type = "Maximize"
+        
+    print(f"Objective function: {obj_type}")
     print(f"Equality constraints: {A_eq.shape if A_eq.size > 0 else '0'}")
     print(f"Inequality constraints: {A_ub.shape if A_ub.size > 0 else '0'}")
     
@@ -69,8 +79,16 @@ def generate_and_solve_instance(problem_class, instance_params, solver_params=No
     
     # Solve the instance
     print("\nSolving...")
+    
+    # Handle objective function direction (our solver maximizes by default)
+    # Note: BinPacking and SetCover already have negated costs in their implementations
+    objective = c
+    if problem_class == Assignment:
+        # For assignment problems, we minimize costs but solver maximizes
+        objective = -c
+    
     solution, obj_value, nodes, optimal_node = solver.solve(
-        c=c, 
+        c=objective, 
         A_ub=A_ub, 
         b_ub=b_ub, 
         A_eq=A_eq, 
@@ -85,7 +103,12 @@ def generate_and_solve_instance(problem_class, instance_params, solver_params=No
     if solution is None:
         print("No solution found.")
     else:
-        print(f"Objective value: {obj_value}")
+        # Adjust objective value display for minimization problems
+        display_obj = obj_value
+        if problem_class == Assignment:
+            display_obj = -obj_value  # Convert back to cost (positive)
+            
+        print(f"Objective value: {display_obj}")
         print(f"Nodes explored: {nodes}")
         
         # Validate the solution
@@ -109,15 +132,31 @@ def generate_benchmark_suite():
     # Dictionary to store all generated instances
     benchmarks = {}
     
+    # Generate benchmark suites for each problem type
+    print("\nGenerating benchmark suites...")
+    
+    # Only use 'easy' difficulty to keep the demo quick
+    difficulty = ['easy']
+    
     # Generate TSP benchmark suite
-    print("\nGenerating TSP benchmark suite...")
-    tsp_suite = TSP.generate_benchmark_suite(['easy', 'medium'])  # Skip 'hard' for quick demo
-    benchmarks['tsp'] = tsp_suite
+    print("  - TSP benchmark suite...")
+    benchmarks['tsp'] = TSP.generate_benchmark_suite(difficulty)
     
     # Generate Knapsack benchmark suite
-    print("\nGenerating Knapsack benchmark suite...")
-    knapsack_suite = Knapsack.generate_benchmark_suite(['easy', 'medium'])  # Skip 'hard'
-    benchmarks['knapsack'] = knapsack_suite
+    print("  - Knapsack benchmark suite...")
+    benchmarks['knapsack'] = Knapsack.generate_benchmark_suite(difficulty)
+    
+    # Generate Assignment benchmark suite
+    print("  - Assignment benchmark suite...")
+    benchmarks['assignment'] = Assignment.generate_benchmark_suite(difficulty)
+    
+    # Generate Bin Packing benchmark suite
+    print("  - Bin Packing benchmark suite...")
+    benchmarks['bin_packing'] = BinPacking.generate_benchmark_suite(difficulty)
+    
+    # Generate Set Cover benchmark suite
+    print("  - Set Cover benchmark suite...")
+    benchmarks['set_cover'] = SetCover.generate_benchmark_suite(difficulty)
     
     # Display information about generated instances
     for problem_type, suite in benchmarks.items():
@@ -144,7 +183,9 @@ def main():
     # Display available predefined instances
     visualize_predefined_instances()
     
-    # Generate and solve a small TSP instance
+    # Generate and solve a small instance of each problem type
+    
+    # TSP instance
     print("\n\n=== GENERATING AND SOLVING A TSP INSTANCE ===")
     tsp_params = {
         'n_cities': 6,
@@ -154,7 +195,7 @@ def main():
     }
     tsp_instance, tsp_solution, tsp_obj = generate_and_solve_instance(TSP, tsp_params)
     
-    # Generate and solve a small Knapsack instance
+    # Knapsack instance
     print("\n\n=== GENERATING AND SOLVING A KNAPSACK INSTANCE ===")
     knapsack_params = {
         'n_items': 8,
@@ -167,11 +208,59 @@ def main():
         Knapsack, knapsack_params
     )
     
+    # Assignment instance
+    print("\n\n=== GENERATING AND SOLVING AN ASSIGNMENT INSTANCE ===")
+    assignment_params = {
+        'n_agents': 5,
+        'cost_distribution': 'uniform',
+        'seed': 42,
+        'name': 'Demo_Assignment',
+        'difficulty': 'easy'
+    }
+    assignment_instance, assignment_solution, assignment_obj = generate_and_solve_instance(
+        Assignment, assignment_params
+    )
+    
+    # Bin Packing instance
+    print("\n\n=== GENERATING AND SOLVING A BIN PACKING INSTANCE ===")
+    bin_packing_params = {
+        'n_items': 10,
+        'bin_capacity': 50.0,
+        'min_size': 10.0,
+        'max_size': 30.0,
+        'seed': 42,
+        'name': 'Demo_BinPacking',
+        'difficulty': 'easy'
+    }
+    bin_packing_instance, bin_packing_solution, bin_packing_obj = generate_and_solve_instance(
+        BinPacking, bin_packing_params
+    )
+    
+    # Set Cover instance
+    print("\n\n=== GENERATING AND SOLVING A SET COVER INSTANCE ===")
+    set_cover_params = {
+        'n_elements': 8,
+        'n_sets': 5,
+        'density': 0.4,
+        'seed': 42,
+        'name': 'Demo_SetCover',
+        'difficulty': 'easy'
+    }
+    set_cover_instance, set_cover_solution, set_cover_obj = generate_and_solve_instance(
+        SetCover, set_cover_params
+    )
+    
     # Generate benchmark suites
     print("\n\n=== GENERATING BENCHMARK SUITES ===")
     benchmark_suites = generate_benchmark_suite()
     
     print("\nDemonstration completed. All visualizations have been saved to the 'plots' directory.")
+    print("For more details on each problem type, check the individual example scripts:")
+    print("  - tsp_example.py")
+    print("  - knapsack_example.py")
+    print("  - assignment_example.py")
+    print("  - bin_packing_example.py")
+    print("  - set_cover_example.py")
 
 
 if __name__ == "__main__":
