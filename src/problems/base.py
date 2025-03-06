@@ -142,6 +142,19 @@ class OptimizationProblem(abc.ABC):
         """
         raise NotImplementedError
     
+    @abc.abstractmethod
+    def size_metrics(self) -> Dict[str, int]:
+        """
+        Get detailed size metrics for benchmarking purposes.
+        
+        This should include problem-specific metrics like number of cities for TSP,
+        number of items for Knapsack, etc.
+        
+        Returns:
+            Dict[str, int]: Dictionary of size metrics
+        """
+        raise NotImplementedError
+    
     @property
     @abc.abstractmethod
     def difficulty(self) -> str:
@@ -152,3 +165,40 @@ class OptimizationProblem(abc.ABC):
             str: Difficulty level (e.g., 'easy', 'medium', 'hard')
         """
         raise NotImplementedError
+        
+    @abc.abstractmethod
+    def get_specific_metrics(self) -> Dict[str, Any]:
+        """
+        Get problem-specific metrics for benchmarking.
+        
+        These metrics should capture structural properties of the problem instance
+        that may correlate with difficulty, such as:
+        - For TSP: symmetry, clustering coefficient, etc.
+        - For Knapsack: correlation between weights and values, etc.
+        - For Assignment: cost distribution, etc.
+        
+        Returns:
+            Dict[str, Any]: Dictionary of problem-specific metrics
+        """
+        raise NotImplementedError
+        
+    def solve_lp_relaxation(self) -> float:
+        """
+        Solve the LP relaxation of the problem.
+        
+        Returns:
+            float: The objective value of the LP relaxation
+        """
+        from ..simplex import solve_lp
+        
+        # Convert to ILP
+        ilp_model = self.to_ilp()
+        
+        # Solve LP relaxation
+        result = solve_lp(
+            ilp_model, 
+            integrality_constraints=False,
+            early_stop_gap=0.0
+        )
+        
+        return result.get('objective_value', float('inf'))

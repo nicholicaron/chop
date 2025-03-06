@@ -205,7 +205,62 @@ The repository includes example scripts for each problem type in the `examples/`
    python examples/simple_ilp.py --visualize
    ```
 
+4. Benchmarking examples
+   ```sh
+   # Run the comprehensive benchmark example
+   python examples/benchmark_example.py
+   
+   # Visualize saved benchmark results
+   python examples/benchmark_visualization.py --results benchmark_results/some_results.json --compare
+   ```
+
 The `--visualize` flag generates branch-and-bound tree visualizations.
+
+### Using the Benchmarking Framework
+
+The benchmarking framework makes it easy to evaluate and compare solver performance:
+
+```python
+from src.problems import TSP, Knapsack
+from src.benchmarking import BenchmarkSuite, BenchmarkRunner
+
+# Create a benchmark suite with predefined instances
+suite = BenchmarkSuite.from_predefined_instances(
+    name="predefined_benchmark", 
+    problem_classes=[TSP, Knapsack]
+)
+
+# Define different solver configurations to compare
+solver_configs = [
+    {'name': 'default', 'use_gomory_cuts': False, 'early_stop_gap': 0.0},
+    {'name': 'with_cuts', 'use_gomory_cuts': True, 'early_stop_gap': 0.0},
+    {'name': 'early_stop', 'use_gomory_cuts': False, 'early_stop_gap': 0.05}
+]
+
+# Create and run the benchmark
+runner = BenchmarkRunner(
+    suite=suite,
+    output_dir="benchmark_results",
+    time_limit=60.0,  # 1 minute per instance
+    solver_configs=solver_configs,
+    parallel=True  # Run benchmarks in parallel
+)
+
+# Run the benchmark
+results = runner.run_benchmark()
+
+# Visualize the results
+runner.visualize_results(results)
+
+# Compare solver configurations
+runner.compare_solvers(results)
+```
+
+The framework generates detailed visualizations and statistics, helping identify:
+- Which problem characteristics affect solution difficulty
+- How solver configurations perform on different problem types
+- Where performance bottlenecks occur
+- The impact of cutting planes and early stopping criteria
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -225,9 +280,17 @@ chop/
 │   ├── assignment_example.py # Assignment examples
 │   ├── bin_packing_example.py # Bin Packing examples
 │   ├── set_cover_example.py  # Set Cover examples
-│   └── simple_ilp.py        # Simple ILP problems
+│   ├── simple_ilp.py        # Simple ILP problems
+│   ├── benchmark_example.py # Benchmark suite example
+│   └── benchmark_visualization.py # Visualize benchmark results
 │
 ├── src/                     # Source code
+│   ├── benchmarking/        # Benchmarking framework
+│   │   ├── metrics.py       # Instance and solver metrics
+│   │   ├── runner.py        # Benchmark execution and visualization
+│   │   ├── suite.py         # Benchmark suite management
+│   │   └── README.md        # Benchmarking documentation
+│   │
 │   ├── core/                # Core B&B components
 │   │   ├── node.py          # B&B tree node representation
 │   │   ├── priority_queue.py # Priority queue implementation
@@ -254,6 +317,7 @@ chop/
 │
 ├── logs/                    # Log files (not tracked in git)
 ├── plots/                   # Generated visualizations (not tracked in git)
+├── benchmark_results/       # Benchmark results and visualizations (not tracked in git)
 ├── pyproject.toml           # Project metadata and dependencies
 └── README.md                # This file
 ```
@@ -273,7 +337,15 @@ chop/
    - Problem-specific visualization tools
    - Solution validation
 
-3. **Simplex Solver**: Custom implementation of the simplex algorithm for solving LP relaxations:
+3. **Benchmarking Framework**: System for evaluating solver performance across problem types:
+   - Instance metrics for measuring problem characteristics
+   - Solver metrics for evaluating computational efficiency
+   - Benchmark suite management and execution
+   - Comprehensive visualization and statistical analysis
+   - Parallel execution for faster benchmarking
+   - Solver configuration comparison
+
+4. **Simplex Solver**: Custom implementation of the simplex algorithm for solving LP relaxations:
    - Efficient pivoting operations
    - Numerical stability improvements
    - Tableau maintenance for cut generation
@@ -362,7 +434,17 @@ chop/
 - [x] Bin Packing
 - [x] Assignment Scheduling
 
-### 6. RL Integration
+### 6. Benchmarking Framework
+- [x] Instance metrics for problem characterization
+- [x] Solver performance metrics
+- [x] Benchmark suite generation and management
+- [x] Visualization and statistical analysis
+- [x] Parallel benchmark execution
+- [x] Solver configuration comparison
+- [ ] Integration with external solvers (e.g., CPLEX, Gurobi)
+- [ ] Advanced problem-specific metrics
+
+### 7. RL Integration
 - [ ] State representation for B&B nodes
 - [ ] Action spaces for node and variable selection
 - [ ] Reward functions balancing quality and efficiency

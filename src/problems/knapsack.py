@@ -390,10 +390,77 @@ class Knapsack(OptimizationProblem):
             'constraints': 1  # Just the capacity constraint
         }
     
+    def size_metrics(self) -> Dict[str, int]:
+        """
+        Get detailed size metrics for benchmarking purposes.
+        
+        For Knapsack, this includes:
+        - Number of items
+        - Number of variables in the ILP formulation
+        - Number of constraints in the ILP formulation
+        - Capacity value
+        
+        Returns:
+            Dict[str, int]: Dictionary of size metrics
+        """
+        return {
+            'items': self.n_items,
+            'variables': self.n_items,  # One binary variable per item
+            'constraints': 1,  # Just the capacity constraint
+            'capacity': int(self.capacity),  # Integer version of capacity for metrics
+            'total_weight': int(np.sum(self.weights)),  # Sum of all weights
+            'total_value': int(np.sum(self.values))  # Sum of all values
+        }
+    
     @property
     def difficulty(self) -> str:
         """Get the difficulty level of this Knapsack instance."""
         return self._difficulty
+        
+    def get_specific_metrics(self) -> Dict[str, Any]:
+        """
+        Get problem-specific metrics for the Knapsack instance.
+        
+        These metrics capture structural properties that may correlate with difficulty:
+        - value_weight_correlation: Correlation between weights and values
+        - capacity_utilization_ratio: Capacity as a fraction of total weight
+        - value_density_stats: Statistics about value-to-weight ratios
+        - coefficient_of_variation: Measures dispersion in value/weight ratios
+        
+        Returns:
+            Dict[str, Any]: Dictionary of problem-specific metrics
+        """
+        # Calculate value-to-weight ratios
+        value_weight_ratios = self.values / self.weights
+        
+        # Calculate correlation between weights and values
+        value_weight_correlation = np.corrcoef(self.weights, self.values)[0, 1]
+        
+        # Calculate capacity utilization ratio
+        capacity_ratio = self.capacity / np.sum(self.weights)
+        
+        # Calculate stats about value densities
+        vw_mean = np.mean(value_weight_ratios)
+        vw_median = np.median(value_weight_ratios)
+        vw_min = np.min(value_weight_ratios)
+        vw_max = np.max(value_weight_ratios)
+        vw_std = np.std(value_weight_ratios)
+        
+        # Coefficient of variation (measure of dispersion)
+        cv = vw_std / vw_mean if vw_mean > 0 else 0
+        
+        # Add is_minimization flag (knapsack is a maximization problem)
+        return {
+            'is_minimization': False,  # Knapsack is a maximization problem
+            'value_weight_correlation': float(value_weight_correlation),
+            'capacity_utilization_ratio': float(capacity_ratio),
+            'value_density_mean': float(vw_mean),
+            'value_density_median': float(vw_median),
+            'value_density_min': float(vw_min),
+            'value_density_max': float(vw_max),
+            'value_density_std': float(vw_std),
+            'coefficient_of_variation': float(cv)
+        }
 
 
 def create_predefined_instances() -> Dict[str, Knapsack]:
