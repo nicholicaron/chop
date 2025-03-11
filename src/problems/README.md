@@ -5,7 +5,7 @@ This module provides a standardized interface for creating, solving, and visuali
 ## Key Components
 
 - **Base Interface**: Abstract class defining the required methods for all optimization problems
-- **Problem Implementations**: Current implementations include TSP and Knapsack
+- **Problem Implementations**: Current implementations include TSP, Knapsack, Assignment, Bin Packing, and Set Cover
 - **Benchmark Generators**: Utilities for creating problem instances at different difficulty levels
 - **Visualization**: Tools for visualizing problem instances and solutions
 
@@ -81,9 +81,26 @@ is_valid, actual_obj = problem.validate_solution(solution)
 # Visualize problem instance
 instance_image = problem.visualize_instance()
 
-# Visualize solution
+# Visualize solution (basic)
 solution_image = problem.visualize_solution(solution, is_optimal=True)
+
+# Enhanced visualization with extra information (e.g., for RL environments)
+rich_viz = problem.visualize_solution(
+    solution,
+    is_optimal=True,
+    step=42,                   # Current step in solving process
+    nodes_explored=156,        # Number of nodes explored
+    elapsed_time=10.5,         # Time spent solving
+    best_obj_value=568.7,      # Best objective value found
+    animated=True,             # Indicates this is part of a sequence
+    title="Custom Solution Visualization"
+)
 ```
+
+Each problem type has specialized visualizations:
+- **TSP**: Map-based display with subtour detection and tour validity information
+- **Knapsack**: Backpack representation with capacity utilization and item layout
+- **Bin Packing**: 3D visualization of bins with packed items and utilization metrics
 
 ## Example Scripts
 
@@ -92,7 +109,12 @@ Check the `examples` directory for demonstration scripts:
 - `problem_instances.py`: Shows how to use the problem generation framework
 - `tsp_example.py`: Demonstrates TSP instances and solutions
 - `knapsack_example.py`: Demonstrates Knapsack instances and solutions
+- `assignment_example.py`: Demonstrates Assignment problem instances and solutions
+- `bin_packing_example.py`: Demonstrates Bin Packing instances and solutions
+- `set_cover_example.py`: Demonstrates Set Cover instances and solutions
 - `simple_ilp.py`: Shows how to work with ILPs directly without problem classes
+- `rl_branch_and_bound_example.py`: Demonstrates the RL environment with different agents
+- `rl_environment_visualization_test.py`: Shows enhanced visualizations for all problem types
 
 ## Implementing New Problem Types
 

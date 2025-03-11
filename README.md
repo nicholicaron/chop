@@ -104,6 +104,7 @@ This project relies on several Python packages:
 * Matplotlib
 * PyTorch
 * PyTorch Geometric
+* Gymnasium (for RL environments)
 * Jupyter Notebook (optional, for examples)
 
 ### Installation
@@ -214,6 +215,15 @@ The repository includes example scripts for each problem type in the `examples/`
    python examples/benchmark_visualization.py --results benchmark_results/some_results.json --compare
    ```
 
+5. RL environment examples
+   ```sh
+   # Try the RL environment with different agents
+   python examples/rl_branch_and_bound_example.py
+   
+   # Test the enhanced problem visualizations
+   python examples/rl_environment_visualization_test.py
+   ```
+
 The `--visualize` flag generates branch-and-bound tree visualizations.
 
 ### Using the Benchmarking Framework
@@ -262,6 +272,64 @@ The framework generates detailed visualizations and statistics, helping identify
 - Where performance bottlenecks occur
 - The impact of cutting planes and early stopping criteria
 
+### Using the RL Environment
+
+The reinforcement learning environment provides a Gymnasium-compatible interface for training agents to optimize the Branch-and-Bound algorithm:
+
+```python
+import numpy as np
+import gymnasium as gym
+from src.problems import Knapsack
+from src.environments import BranchAndBoundEnv
+
+# Create a problem generator
+def knapsack_generator():
+    return Knapsack.generate_random_instance(n_items=20, difficulty='medium')
+
+# Create the environment
+env = BranchAndBoundEnv(
+    problem_generator=knapsack_generator,
+    max_steps=100,
+    reward_type='improvement',
+    observation_type='graph',  # Can be 'graph' or 'vector'
+    render_mode='human'
+)
+
+# Reset the environment to get initial state
+observation, info = env.reset(seed=42)
+
+# Agent interaction loop
+done = False
+total_reward = 0
+
+while not done:
+    # Agent selects an action to modify the priority queue
+    # Here we just use a random action for demonstration
+    action = np.random.uniform(-1.0, 1.0, size=(1,))
+    
+    # Environment step
+    observation, reward, terminated, truncated, info = env.step(action)
+    
+    # Render state (shows rich problem-specific visualization)
+    env.render()
+    
+    # Update tracking
+    total_reward += reward
+    done = terminated or truncated
+
+# Display results
+print(f"Total reward: {total_reward:.2f}")
+print(f"Objective value: {info['current_best_obj']:.2f}")
+print(f"Nodes explored: {info['nodes_explored']}")
+```
+
+The environment includes:
+- Rich state representations as graphs (PyTorch Geometric) or vectors
+- Action spaces for influencing the priority queue ordering
+- Multiple reward functions for different learning objectives
+- Enhanced visualizations specific to each problem type
+- Integration with all problem classes in the framework
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -282,7 +350,9 @@ chop/
 │   ├── set_cover_example.py  # Set Cover examples
 │   ├── simple_ilp.py        # Simple ILP problems
 │   ├── benchmark_example.py # Benchmark suite example
-│   └── benchmark_visualization.py # Visualize benchmark results
+│   ├── benchmark_visualization.py # Visualize benchmark results
+│   ├── rl_branch_and_bound_example.py # RL environment example
+│   └── rl_environment_visualization_test.py # Rich visualization examples
 │
 ├── src/                     # Source code
 │   ├── benchmarking/        # Benchmarking framework
@@ -295,6 +365,10 @@ chop/
 │   │   ├── node.py          # B&B tree node representation
 │   │   ├── priority_queue.py # Priority queue implementation
 │   │   └── solver.py        # Main B&B solver
+│   │
+│   ├── environments/        # RL environments
+│   │   ├── __init__.py      # Environment exports
+│   │   └── branch_and_bound_env.py # Gymnasium-compatible B&B environment
 │   │
 │   ├── problems/            # Problem generation framework
 │   │   ├── base.py          # Abstract base class for all problems
@@ -330,14 +404,21 @@ chop/
    - Visualization capabilities
    - Performance tracking
 
-2. **Problem Generation Framework**: Comprehensive framework for creating and solving optimization problems:
+2. **RL Environment**: Gymnasium-compatible environment for reinforcement learning:
+   - Graph and vector state representations
+   - Action space for priority queue reordering
+   - Multiple reward functions (time-based, improvement-based)
+   - Rich problem-specific visualizations
+   - Integration with PyTorch Geometric for GNN-based agents
+
+3. **Problem Generation Framework**: Comprehensive framework for creating and solving optimization problems:
    - Common interface for all problem types
    - Random instance generation with configurable parameters
    - Benchmark suite generation at different difficulty levels
    - Problem-specific visualization tools
    - Solution validation
 
-3. **Benchmarking Framework**: System for evaluating solver performance across problem types:
+4. **Benchmarking Framework**: System for evaluating solver performance across problem types:
    - Instance metrics for measuring problem characteristics
    - Solver metrics for evaluating computational efficiency
    - Benchmark suite management and execution
@@ -345,7 +426,7 @@ chop/
    - Parallel execution for faster benchmarking
    - Solver configuration comparison
 
-4. **Simplex Solver**: Custom implementation of the simplex algorithm for solving LP relaxations:
+5. **Simplex Solver**: Custom implementation of the simplex algorithm for solving LP relaxations:
    - Efficient pivoting operations
    - Numerical stability improvements
    - Tableau maintenance for cut generation
@@ -355,27 +436,35 @@ chop/
 1. **Traveling Salesman Problem (TSP)**:
    - Find the shortest tour visiting all cities
    - Subtour elimination via lazy constraints
-   - Network visualization of tours
+   - Map-based visualization with directional arrows
+   - Color-coded subtours with detailed statistics
+   - Tour validity tracking and visualization
 
 2. **Knapsack Problem**:
    - Maximize value with limited capacity
    - Capacity constraint handling
    - Item visualization with value/weight ratios
+   - Backpack representation showing selected items
+   - Dynamic tracking of capacity utilization
 
 3. **Assignment Problem**:
    - Minimize cost of agent-task assignments
    - One-to-one matching constraints
    - Bipartite graph visualization
+   - Assignment tracking and cost visualization
 
 4. **Bin Packing Problem**:
    - Minimize number of bins used
    - Bin capacity constraints
-   - Visual representation of packed items
+   - 3D visualization of bin packing with items as cubes
+   - Color-coded items with size representation
+   - Utilization statistics for each bin
 
 5. **Set Cover Problem**:
    - Minimize cost of selected sets to cover all elements
    - Coverage constraints
    - Visualization of coverage relationships
+   - Interactive coverage display
 
 ### Strategies
 
@@ -445,9 +534,11 @@ chop/
 - [ ] Advanced problem-specific metrics
 
 ### 7. RL Integration
-- [ ] State representation for B&B nodes
-- [ ] Action spaces for node and variable selection
-- [ ] Reward functions balancing quality and efficiency
+- [x] State representation for B&B nodes with graph and vector formats
+- [x] Action spaces for priority queue reordering
+- [x] Reward functions balancing quality and efficiency
+- [x] Gymnasium-compatible environment for training RL agents
+- [x] Enhanced visualizations for all problem types
 - [ ] Training pipeline for RL agents
 - [ ] GNN integration for learning tree structures
 

@@ -232,7 +232,7 @@ class TSP(OptimizationProblem):
    
     def visualize_solution(self, solution: np.ndarray, is_optimal: bool = False, **kwargs) -> str:
         """
-        Visualize a TSP solution and save to file.
+        Visualize a TSP solution with rich map-like representation.
         
         Args:
             solution: Binary solution vector
@@ -242,15 +242,25 @@ class TSP(OptimizationProblem):
         Returns:
             str: Path to the saved visualization file
         """
-        plt.figure(figsize=(10, 10))
+        # Get additional information from kwargs
+        step = kwargs.get('step', 0)
+        nodes_explored = kwargs.get('nodes_explored', 0)
+        elapsed_time = kwargs.get('elapsed_time', 0)
+        best_obj_value = kwargs.get('best_obj_value', 0)
+        title = kwargs.get('title', f"TSP Solution - {self.name}")
+        animated = kwargs.get('animated', False)
+        
+        # Create figure with two subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8), 
+                                    gridspec_kw={'width_ratios': [1.5, 1]})
         pos = nx.get_node_attributes(self.graph, 'pos')
+        
+        # Use tolerance for binary values
+        EDGE_TOLERANCE = 1e-4
         
         # Create a new graph for the solution
         solution_graph = nx.Graph()
         solution_graph.add_nodes_from(self.graph.nodes(data=True))
-        
-        # Use tolerance for binary values
-        EDGE_TOLERANCE = 1e-4
                 
         # Add edges from the solution
         for i, j in combinations(range(self.n_cities), 2):
@@ -261,26 +271,175 @@ class TSP(OptimizationProblem):
         # Calculate total distance
         total_distance = -sum(solution[self._get_variable_index(i, j)] * self.distances[(i, j)]
                          for i, j in combinations(range(self.n_cities), 2))
+                         
+        # Find subtours
+        subtours = self.find_subtours(solution)
         
-        # Draw nodes
-        nx.draw_networkx_nodes(solution_graph, pos, node_color='lightblue', 
-                              node_size=500)
+        # Main map visualization (left subplot)
+        # ----------------------------------
         
-        # Draw edges (highlighted for solution)
-        nx.draw_networkx_edges(solution_graph, pos, edge_color='r', width=2)
+        # Optional: Add a map background
+        map_image = kwargs.get('map_image', None)
+        if map_image:
+            try:
+                from PIL import Image
+                img = Image.open(map_image)
+                ax1.imshow(img, extent=[0, 100, 0, 100], alpha=0.3, zorder=0)
+            except:
+                # If map image loading fails, continue without it
+                pass
+        else:
+            # Draw light grid for map-like background
+            ax1.grid(True, linestyle='-', alpha=0.2, zorder=0)
+            
+        # Create dictionary of colors for subtours
+        subtour_colors = {}
+        color_cycle = plt.cm.tab10.colors
+        if len(subtours) > 1:
+            for i, subtour in enumerate(subtours):
+                color_idx = i % len(color_cycle)
+                for city in subtour:
+                    subtour_colors[city] = color_cycle[color_idx]
+                    
+        # Draw edges with arrows for tour direction
+        for i, j in solution_graph.edges():
+            x1, y1 = pos[i]
+            x2, y2 = pos[j]
+            
+            # Edge color based on subtour
+            if len(subtours) > 1:
+                # Use subtour color if cities belong to same subtour
+                same_subtour = any(i in subtour and j in subtour for subtour in subtours)
+                edge_color = 'r' if same_subtour else 'gray'
+            else:
+                edge_color = 'r'
+                
+            # Draw arrow
+            ax1.arrow(x1, y1, (x2-x1)*0.8, (y2-y1)*0.8, 
+                    head_width=2, head_length=3, 
+                    fc=edge_color, ec=edge_color, 
+                    length_includes_head=True, alpha=0.8, zorder=2)
         
-        # Draw labels
-        labels = {i: f"City {i}" for i in range(self.n_cities)}
-        nx.draw_networkx_labels(solution_graph, pos, labels)
+        # Draw cities as nodes
+        if len(subtours) > 1:
+            # If multiple subtours, color by subtour
+            for i in range(self.n_cities):
+                city_color = subtour_colors.get(i, 'lightblue')
+                ax1.scatter(pos[i][0], pos[i][1], s=300, color=city_color, 
+                           edgecolor='black', zorder=3)
+        else:
+            # Single tour, uniform color
+            ax1.scatter([pos[i][0] for i in range(self.n_cities)], 
+                       [pos[i][1] for i in range(self.n_cities)], 
+                       s=300, color='lightblue', edgecolor='black', zorder=3)
         
-        # Set title
+        # Add city labels
+        for i in range(self.n_cities):
+            ax1.text(pos[i][0], pos[i][1], f"{i}", fontsize=12, 
+                    ha='center', va='center', fontweight='bold', zorder=4)
+                    
+        # Add distance labels to edges
+        if self.n_cities <= 10:  # Only show for smaller instances to avoid clutter
+            for i, j in solution_graph.edges():
+                x1, y1 = pos[i]
+                x2, y2 = pos[j]
+                # Position label at midpoint of edge
+                ax1.text((x1+x2)/2, (y1+y2)/2, f"{self.distances[(i,j)]:.1f}", 
+                        bbox=dict(facecolor='white', alpha=0.7, boxstyle='round'),
+                        ha='center', va='center', fontsize=8, zorder=5)
+        
+        # Set title for map
+        ax1.set_title("Tour Map", fontsize=12)
+        ax1.set_xlim([min(p[0] for p in pos.values())-10, max(p[0] for p in pos.values())+10])
+        ax1.set_ylim([min(p[1] for p in pos.values())-10, max(p[1] for p in pos.values())+10])
+        ax1.set_xlabel("X Coordinate")
+        ax1.set_ylabel("Y Coordinate")
+        ax1.set_aspect('equal')
+        
+        # Information panel (right subplot)
+        # -------------------------------
+        ax2.axis('off')  # Turn off axes for info panel
+        
+        # Solution status
         status = "Optimal" if is_optimal else "Candidate"
-        plt.title(f"{status} Solution - Total Distance: {total_distance:.2f}")
-        plt.axis('equal')
         
-        # Save plot with incrementing counter
-        self.plot_counter += 1
-        filename = f"plots/{self.name}_solution_{self.plot_counter:03d}_{status.lower()}.png"
+        # Calculate tour validity
+        valid, _ = self.validate_solution(solution)
+        validity_text = "Valid Tour" if valid else "Invalid Tour"
+        if not valid:
+            if len(subtours) > 1:
+                validity_text += f" (Subtours: {len(subtours)})"
+            else:
+                validity_text += " (Degree constraints violated)"
+                
+        # Format tour
+        tour_str = "N/A"
+        if len(subtours) == 1:
+            # We have a valid tour, extract the order
+            tour = list(subtours)[0]
+            # Convert to a cycle by finding a Hamiltonian cycle
+            try:
+                cycle = list(nx.find_cycle(solution_graph, source=next(iter(tour))))
+                tour_str = " → ".join([str(u) for u, v in cycle]) + f" → {cycle[0][0]}"
+            except:
+                # Fallback if cycle finding fails
+                tour_str = ", ".join([str(c) for c in tour])
+        else:
+            # If multiple subtours, show them separately
+            tour_str = " | ".join([", ".join([str(c) for c in subtour]) for subtour in subtours])
+        
+        # Create information table
+        info_text = (
+            f"Status: {status}\n"
+            f"Validity: {validity_text}\n\n"
+            f"Total Distance: {total_distance:.2f}\n"
+            f"Number of Cities: {self.n_cities}\n"
+            f"Number of Subtours: {len(subtours)}\n\n"
+            f"Tour:\n{tour_str}\n"
+        )
+        
+        # Add exploration info if provided
+        if animated:
+            info_text += (
+                f"\nExploration Stats:\n"
+                f"Step: {step}\n"
+                f"Nodes Explored: {nodes_explored}\n"
+                f"Time: {elapsed_time:.2f}s\n"
+            )
+        
+        # Draw subtour legend if needed
+        if len(subtours) > 1:
+            legend_text = "Subtours:\n"
+            for i, subtour in enumerate(subtours):
+                color_idx = i % len(color_cycle)
+                legend_text += f"Subtour {i+1}: {', '.join([str(c) for c in subtour])}\n"
+                
+            info_text += f"\n{legend_text}"
+            
+            # Add visual subtour legend
+            legend_y = 0.4
+            for i, subtour in enumerate(subtours):
+                color_idx = i % len(color_cycle)
+                ax2.add_patch(plt.Rectangle((0.1, legend_y - i*0.05), 0.04, 0.04, 
+                                          facecolor=color_cycle[color_idx], 
+                                          edgecolor='black'))
+                ax2.text(0.16, legend_y - i*0.05, f"Subtour {i+1}", fontsize=10, va='center')
+        
+        # Add info text
+        ax2.text(0.1, 0.9, info_text, fontsize=10, va='top', 
+                family='monospace', linespacing=1.5,
+                bbox=dict(facecolor='white', edgecolor='gray', 
+                         boxstyle='round,pad=1.0', alpha=0.9))
+        
+        # Main title for the entire figure
+        fig.suptitle(title, fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        
+        # Save plot
+        counter = kwargs.get('counter', step if animated else self.plot_counter + 1)
+        self.plot_counter = counter
+        status_str = "optimal" if is_optimal else "candidate"
+        filename = f"plots/{self.name}_solution_{counter:03d}_{status_str}.png"
         plt.savefig(filename, bbox_inches='tight', dpi=300)
         plt.close()
         

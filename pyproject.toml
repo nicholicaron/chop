@@ -33,6 +33,7 @@ dependencies = [
     "torch-geometric>=2.0.0",
     "tqdm>=4.60.0",
     "tsplib95>=0.7.1",
+    "gymnasium>=0.29.0",
 ]
 
 [project.optional-dependencies]

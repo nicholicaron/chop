@@ -288,11 +288,11 @@ class BinPacking(OptimizationProblem):
         return filename
    
     def visualize_solution(self, solution: np.ndarray, is_optimal: bool = False, 
-                         figsize: Tuple[int, int] = (12, 8), **kwargs) -> str:
+                         figsize: Tuple[int, int] = (14, 10), **kwargs) -> str:
         """
-        Visualize a solution to the Bin Packing Problem.
+        Visualize a solution to the Bin Packing Problem with enhanced 3D representation.
         
-        Shows how items are packed into bins.
+        Creates a visualization with both 2D and 3D representations of how items are packed.
         
         Args:
             solution: Binary solution vector
@@ -303,7 +303,14 @@ class BinPacking(OptimizationProblem):
         Returns:
             str: Path to the saved visualization file
         """
-        plt.figure(figsize=figsize)
+        # Get additional information from kwargs
+        step = kwargs.get('step', 0)
+        nodes_explored = kwargs.get('nodes_explored', 0)
+        elapsed_time = kwargs.get('elapsed_time', 0)
+        best_obj_value = kwargs.get('best_obj_value', 0)
+        title = kwargs.get('title', f"Bin Packing Solution - {self.name}")
+        animated = kwargs.get('animated', False)
+        use_3d = kwargs.get('use_3d', True)  # Option to disable 3D view for performance
         
         # Extract x_ij and y_j variables
         n_items = self.n_items
@@ -314,22 +321,193 @@ class BinPacking(OptimizationProblem):
         # Count used bins
         used_bins = int(np.sum(y_vars > 0.5))
         
-        # Create a subplot for each used bin
-        fig, axes = plt.subplots(1, used_bins, figsize=figsize, 
-                                 squeeze=False, constrained_layout=True)
+        # Create main figure with specified dimensions
+        if use_3d:
+            fig = plt.figure(figsize=figsize)
+            gs = fig.add_gridspec(2, used_bins + 1, height_ratios=[2, 1],
+                                 width_ratios=[2] + [1] * used_bins)
+        else:
+            fig, axes = plt.subplots(1, used_bins, figsize=figsize, 
+                                   squeeze=False, constrained_layout=True)
         
         # Set up item colors
         colors = plt.cm.tab20(np.linspace(0, 1, self.n_items))
         
+        # Create dictionary to track bin assignments and statistics
+        bin_stats = {}
+        
+        # Process each bin to collect items and statistics
         bin_idx = 0
         for j in range(max_bins):
             if y_vars[j] < 0.5:  # Skip unused bins
                 continue
             
-            ax = axes[0, bin_idx]
-            
             # Get items in this bin
             bin_items = [i for i in range(n_items) if x_vars[i, j] > 0.5]
+            
+            # Calculate bin utilization
+            bin_load = sum(self.item_sizes[i] for i in bin_items)
+            utilization = bin_load / self.bin_capacity * 100
+            
+            # Store bin information
+            bin_stats[j] = {
+                'items': bin_items,
+                'load': bin_load,
+                'utilization': utilization,
+                'display_index': bin_idx
+            }
+            
+            bin_idx += 1
+        
+        # Part 1: Create 3D visualization if enabled
+        if use_3d:
+            from mpl_toolkits.mplot3d import Axes3D
+            from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+            
+            # Create 3D subplot for bin visualization
+            ax_3d = fig.add_subplot(gs[0, 0], projection='3d')
+            
+            # Set up 3D view parameters
+            ax_3d.view_init(elev=30, azim=45)
+            
+            # Calculate reasonable dimensions for visualization
+            bin_width = 1.0
+            bin_depth = 1.0
+            bin_height = self.bin_capacity
+            bin_spacing = 1.5
+            
+            # Function to create a cuboid for an item
+            def create_cuboid(x, y, z, width, depth, height, color):
+                vertices = [
+                    [x, y, z], [x+width, y, z], [x+width, y+depth, z], [x, y+depth, z],
+                    [x, y, z+height], [x+width, y, z+height], 
+                    [x+width, y+depth, z+height], [x, y+depth, z+height]
+                ]
+                
+                faces = [
+                    [vertices[0], vertices[1], vertices[2], vertices[3]],  # bottom
+                    [vertices[4], vertices[5], vertices[6], vertices[7]],  # top
+                    [vertices[0], vertices[3], vertices[7], vertices[4]],  # left
+                    [vertices[1], vertices[2], vertices[6], vertices[5]],  # right
+                    [vertices[0], vertices[1], vertices[5], vertices[4]],  # front
+                    [vertices[3], vertices[2], vertices[6], vertices[7]]   # back
+                ]
+                
+                collection = Poly3DCollection(faces, alpha=0.8, linewidths=1, edgecolor='black')
+                collection.set_facecolor(color)
+                return collection
+            
+            # Draw each bin and its items
+            for j, stats in bin_stats.items():
+                bin_x = stats['display_index'] * bin_spacing
+                
+                # Draw bin outline as wireframe
+                bin_edges = [
+                    [bin_x, 0, 0], [bin_x+bin_width, 0, 0],
+                    [bin_x+bin_width, bin_depth, 0], [bin_x, bin_depth, 0],
+                    [bin_x, 0, bin_height], [bin_x+bin_width, 0, bin_height],
+                    [bin_x+bin_width, bin_depth, bin_height], [bin_x, bin_depth, bin_height]
+                ]
+                
+                # Draw bin edges
+                for start, end in [
+                    (0, 1), (1, 2), (2, 3), (3, 0),  # bottom
+                    (4, 5), (5, 6), (6, 7), (7, 4),  # top
+                    (0, 4), (1, 5), (2, 6), (3, 7)   # sides
+                ]:
+                    ax_3d.plot3D(
+                        [bin_edges[start][0], bin_edges[end][0]],
+                        [bin_edges[start][1], bin_edges[end][1]],
+                        [bin_edges[start][2], bin_edges[end][2]],
+                        color='gray', linestyle='--', alpha=0.5
+                    )
+                
+                # Sort items by size for better packing visualization
+                sorted_items = sorted(stats['items'], key=lambda i: self.item_sizes[i], reverse=True)
+                
+                # Simple packing algorithm for visualization
+                # This is just for visual representation, not an optimal packing
+                current_height = 0
+                row_width = 0
+                row_items = []
+                
+                for i in sorted_items:
+                    item_size = self.item_sizes[i]
+                    # Normalize item size to be a cube proportion
+                    item_vol = item_size / self.bin_capacity
+                    item_dim = item_vol ** (1/3)  # Cube root for 3D scaling
+                    
+                    # Scale dimensions to fit bin
+                    item_width = bin_width * item_dim * 0.9  # 90% of bin width
+                    item_depth = bin_depth * item_dim * 0.9  # 90% of bin depth
+                    item_height = item_size * 0.8  # Keep height proportional to size
+                    
+                    # If items would exceed bin width, start a new row
+                    if row_width + item_width > bin_width:
+                        current_height += max(self.item_sizes[i] for i in row_items) * 0.8
+                        row_width = 0
+                        row_items = []
+                    
+                    # Position item
+                    item_x = bin_x + row_width
+                    item_y = 0.1  # Small offset from front of bin
+                    item_z = current_height
+                    
+                    # Add item to 3D plot
+                    item_color = colors[i]
+                    cuboid = create_cuboid(
+                        item_x, item_y, item_z, 
+                        item_width, item_depth, item_height, 
+                        item_color
+                    )
+                    ax_3d.add_collection3d(cuboid)
+                    
+                    # Add item label
+                    ax_3d.text(
+                        item_x + item_width/2, 
+                        item_y + item_depth/2, 
+                        item_z + item_height/2, 
+                        f"{i}", 
+                        color='black', 
+                        ha='center', va='center', 
+                        fontweight='bold'
+                    )
+                    
+                    # Update row information
+                    row_width += item_width
+                    row_items.append(i)
+                
+                # Add bin label
+                ax_3d.text(
+                    bin_x + bin_width/2, 
+                    bin_depth/2, 
+                    bin_height * 1.1, 
+                    f"Bin {j+1}\n{stats['utilization']:.1f}%", 
+                    color='black', 
+                    ha='center', va='bottom'
+                )
+            
+            # Set up 3D plot limits and labels
+            max_x = used_bins * bin_spacing + bin_width
+            ax_3d.set_xlim(0, max_x)
+            ax_3d.set_ylim(0, bin_depth * 1.5)
+            ax_3d.set_zlim(0, bin_height * 1.2)
+            ax_3d.set_xlabel('X')
+            ax_3d.set_ylabel('Y')
+            ax_3d.set_zlabel('Size')
+            ax_3d.set_title('3D Bin Packing Visualization')
+        
+        # Part 2: Create 2D bin visualizations
+        for j, stats in bin_stats.items():
+            if use_3d:
+                # Use gridspec for layout
+                ax = fig.add_subplot(gs[1, stats['display_index'] + 1])
+            else:
+                # Use the predefined subplot axes
+                ax = axes[0, stats['display_index']]
+            
+            # Get items in this bin
+            bin_items = stats['items']
             
             # Sort items by size for better visualization (largest at bottom)
             bin_items.sort(key=lambda i: self.item_sizes[i], reverse=True)
@@ -364,22 +542,57 @@ class BinPacking(OptimizationProblem):
             ax.axhline(y=self.bin_capacity, color='red', linestyle='--')
             
             # Add utilization information
-            bin_load = sum(self.item_sizes[i] for i in bin_items)
-            utilization = bin_load / self.bin_capacity * 100
             ax.text(0.5, self.bin_capacity * 1.02, 
-                   f"Utilization: {utilization:.1f}%", 
+                   f"{stats['utilization']:.1f}%", 
                    ha='center', va='bottom', fontsize=8)
+        
+        # Add information panel if using 3D view
+        if use_3d:
+            # Add information text in the remaining gridspec cell
+            ax_info = fig.add_subplot(gs[1, 0])
+            ax_info.axis('off')  # Hide axes
             
-            bin_idx += 1
+            # Calculate overall statistics
+            total_items = sum(len(stats['items']) for stats in bin_stats.values())
+            avg_utilization = np.mean([stats['utilization'] for stats in bin_stats.values()])
+            
+            # Create info text
+            status = "Optimal" if is_optimal else "Candidate"
+            info_text = (
+                f"Status: {status}\n\n"
+                f"Bins Used: {used_bins}/{self.max_bins}\n"
+                f"Items Packed: {total_items}/{self.n_items}\n"
+                f"Avg Utilization: {avg_utilization:.1f}%\n"
+                f"Bin Capacity: {self.bin_capacity}\n"
+            )
+            
+            # Add exploration info if provided
+            if animated:
+                info_text += (
+                    f"\nStep: {step}\n"
+                    f"Nodes Explored: {nodes_explored}\n"
+                    f"Time: {elapsed_time:.2f}s\n"
+                )
+                
+            # Draw text box
+            ax_info.text(0.5, 0.5, info_text, 
+                       ha='center', va='center', 
+                       fontsize=10, fontweight='normal',
+                       bbox=dict(facecolor='white', alpha=0.8, 
+                               boxstyle='round,pad=0.7', edgecolor='gray'),
+                       transform=ax_info.transAxes)
         
         # Add overall title
         status = "Optimal" if is_optimal else "Candidate"
-        bins_used = np.sum(y_vars > 0.5)
-        plt.suptitle(f"{status} Solution - Bins Used: {bins_used}/{self.max_bins}")
+        plt.suptitle(title, fontsize=14, fontweight='bold')
+        
+        # Adjust layout
+        plt.tight_layout()
         
         # Save plot
-        counter = kwargs.get('counter', 1)
-        filename = f"plots/{self.name}_solution_{counter:03d}_{status.lower()}.png"
+        counter = kwargs.get('counter', step if animated else 1)
+        status_str = "optimal" if is_optimal else "candidate"
+        filename = f"plots/{self.name}_solution_{counter:03d}_{status_str}.png"
         plt.savefig(filename, bbox_inches='tight', dpi=300)
         plt.close()
         

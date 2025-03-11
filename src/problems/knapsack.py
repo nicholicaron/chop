@@ -180,9 +180,9 @@ class Knapsack(OptimizationProblem):
         return filename
    
     def visualize_solution(self, solution: np.ndarray, is_optimal: bool = False, 
-                         figsize: Tuple[int, int] = (10, 6), **kwargs) -> str:
+                         figsize: Tuple[int, int] = (14, 8), **kwargs) -> str:
         """
-        Visualize a solution to the Knapsack Problem.
+        Visualize a solution to the Knapsack Problem with a backpack representation.
         
         Args:
             solution: Binary solution vector indicating which items are selected
@@ -193,11 +193,16 @@ class Knapsack(OptimizationProblem):
         Returns:
             str: Path to the saved visualization file
         """
-        plt.figure(figsize=figsize)
+        # Enhanced figure with two subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize, gridspec_kw={'width_ratios': [1.5, 1]})
         
-        # Calculate marker sizes based on weight % of capacity
-        max_size = 500
-        sizes = (self.weights / self.capacity) * max_size
+        # Get additional information from kwargs
+        step = kwargs.get('step', 0)
+        nodes_explored = kwargs.get('nodes_explored', 0)
+        elapsed_time = kwargs.get('elapsed_time', 0)
+        best_obj_value = kwargs.get('best_obj_value', 0)
+        title = kwargs.get('title', f"Knapsack Solution - {self.name}")
+        animated = kwargs.get('animated', False)
         
         # Determine selected items
         TOLERANCE = 1e-4
@@ -208,44 +213,172 @@ class Knapsack(OptimizationProblem):
         total_value = sum(self.values[i] for i in selected)
         total_weight = sum(self.weights[i] for i in selected)
         
+        # Part 1: Traditional scatter plot (left subplot)
+        # -----------------------------------------------
+        # Calculate marker sizes based on weight % of capacity
+        max_size = 500
+        sizes = (self.weights / self.capacity) * max_size
+        
         # Plot items
-        plt.scatter([self.weights[i] for i in not_selected], 
+        ax1.scatter([self.weights[i] for i in not_selected], 
                    [self.values[i] for i in not_selected], 
                    s=[sizes[i] for i in not_selected], 
                    alpha=0.3, c='gray', label='Not Selected')
         
-        plt.scatter([self.weights[i] for i in selected], 
+        ax1.scatter([self.weights[i] for i in selected], 
                    [self.values[i] for i in selected], 
                    s=[sizes[i] for i in selected], 
                    alpha=0.8, c='green', label='Selected')
         
         # Add labels
         for i in range(self.n_items):
-            plt.annotate(f"Item {i}", 
+            ax1.annotate(f"Item {i}", 
                         (self.weights[i], self.values[i]),
                         textcoords="offset points", 
                         xytext=(0, 5), 
-                        ha='center')
+                        ha='center',
+                        fontsize=8)
         
         # Add capacity line
-        plt.axvline(x=self.capacity, color='red', linestyle='-', alpha=0.5,
+        ax1.axvline(x=self.capacity, color='red', linestyle='-', alpha=0.5,
                    label=f"Capacity: {self.capacity}")
         
         # Add fill to show used capacity
-        plt.axvspan(0, total_weight, alpha=0.1, color='green', 
+        ax1.axvspan(0, total_weight, alpha=0.1, color='green', 
                    label=f"Used: {total_weight:.1f} ({total_weight/self.capacity*100:.1f}%)")
         
         # Set labels and title
-        plt.xlabel("Weight")
-        plt.ylabel("Value")
-        status = "Optimal" if is_optimal else "Candidate"
-        plt.title(f"{status} Solution - Total Value: {total_value:.1f}, Weight: {total_weight:.1f}/{self.capacity}")
-        plt.grid(True, alpha=0.3)
-        plt.legend()
+        ax1.set_xlabel("Weight")
+        ax1.set_ylabel("Value")
+        ax1.set_title("Item Distribution (Value vs Weight)")
+        ax1.grid(True, alpha=0.3)
+        ax1.legend(fontsize=9)
+        
+        # Part 2: Backpack visualization (right subplot)
+        # ----------------------------------------------
+        # Draw backpack outline
+        backpack_height = 10
+        backpack_width = 6
+        backpack_color = 'navy'
+        backpack_alpha = 0.2
+        
+        # Calculate capacity fill level
+        fill_level = (total_weight / self.capacity) * backpack_height
+        fill_level = min(fill_level, backpack_height)  # Cap at maximum
+        
+        # Draw backpack
+        ax2.add_patch(plt.Rectangle((2, 0), backpack_width, backpack_height, 
+                                   facecolor=backpack_color, alpha=backpack_alpha, 
+                                   edgecolor='black', linewidth=2))
+        
+        # Draw fill level
+        ax2.add_patch(plt.Rectangle((2, 0), backpack_width, fill_level, 
+                                   facecolor='green', alpha=0.3, 
+                                   edgecolor=None))
+        
+        # Draw straps
+        strap_width = 0.5
+        ax2.add_patch(plt.Rectangle((2, backpack_height), strap_width, 2, 
+                                   facecolor=backpack_color, alpha=backpack_alpha, 
+                                   edgecolor='black', linewidth=1))
+        ax2.add_patch(plt.Rectangle((2 + backpack_width - strap_width, backpack_height), strap_width, 2, 
+                                   facecolor=backpack_color, alpha=backpack_alpha, 
+                                   edgecolor='black', linewidth=1))
+        
+        # Arrange items inside the backpack
+        remaining_items = selected.copy()
+        placed_items = []
+        y_position = 0.5  # Start from bottom of backpack
+        x_position = 2.5  # Start from left side of backpack
+        
+        # Sort selected items by weight (largest first)
+        sorted_items = sorted(selected, key=lambda i: self.weights[i], reverse=True)
+        
+        for i in sorted_items:
+            item_height = (self.weights[i] / self.capacity) * backpack_height * 0.8
+            item_width = min(1.5, (self.values[i] / max(self.values)) * 3)
+            
+            # If we reach the top, start a new column
+            if y_position + item_height > fill_level:
+                y_position = 0.5
+                x_position += 2
+                
+                # If we've run out of horizontal space, stop placing items
+                if x_position > 2 + backpack_width - item_width:
+                    break
+            
+            # Draw item
+            item_color = plt.cm.viridis(i / self.n_items)  # Use colormap to make items distinct
+            ax2.add_patch(plt.Rectangle((x_position, y_position), item_width, item_height, 
+                                       facecolor=item_color, alpha=0.8, 
+                                       edgecolor='black', linewidth=1))
+            
+            # Add item label
+            ax2.text(x_position + item_width/2, y_position + item_height/2, f"{i}", 
+                    ha='center', va='center', fontsize=8, fontweight='bold')
+            
+            # Add to placed items and update position
+            placed_items.append(i)
+            y_position += item_height + 0.2  # Add a small gap
+        
+        # If some items couldn't be visualized, show a message
+        if len(placed_items) < len(selected):
+            ax2.text(5, backpack_height + 1, f"+{len(selected) - len(placed_items)} more items", 
+                    ha='center', va='center', fontsize=8)
+            
+        # Set axis limits and remove ticks
+        ax2.set_xlim(0, 12)
+        ax2.set_ylim(0, backpack_height + 3)
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+        
+        # Add capacity gauge
+        capacity_width = 0.5
+        ax2.add_patch(plt.Rectangle((1, 0), capacity_width, backpack_height, 
+                                   facecolor='lightgray', alpha=0.5, 
+                                   edgecolor='black', linewidth=1))
+        ax2.add_patch(plt.Rectangle((1, 0), capacity_width, fill_level, 
+                                   facecolor='green', alpha=0.5, 
+                                   edgecolor='black', linewidth=1))
+        
+        # Add labels for capacity gauge
+        ax2.text(1 + capacity_width/2, -0.5, "0", ha='center', va='center', fontsize=8)
+        ax2.text(1 + capacity_width/2, backpack_height + 0.5, f"{self.capacity:.1f}", ha='center', va='center', fontsize=8)
+        ax2.text(1 + capacity_width/2, fill_level, f"{total_weight:.1f}", ha='center', va='center', fontsize=8, fontweight='bold')
+        
+        # Add backpack title
+        status = "Optimal" if is_optimal else "Current Best"
+        ax2.set_title(f"Backpack Contents ({status})")
+        
+        # Add info box with solution details
+        info_text = (
+            f"Total Value: {total_value:.1f}\n"
+            f"Total Weight: {total_weight:.1f}/{self.capacity:.1f}\n"
+            f"Capacity Used: {total_weight/self.capacity*100:.1f}%\n"
+            f"Items Selected: {len(selected)}/{self.n_items}\n"
+        )
+        
+        # Add exploration info if provided
+        if animated:
+            info_text += (
+                f"\nStep: {step}\n"
+                f"Nodes Explored: {nodes_explored}\n"
+                f"Time: {elapsed_time:.2f}s"
+            )
+            
+        # Add a text box for the info
+        ax2.text(6, backpack_height/2, info_text, 
+                ha='left', va='center', fontsize=9,
+                bbox=dict(boxstyle="round,pad=0.5", facecolor='white', alpha=0.8))
+        
+        # Main title for the entire figure
+        fig.suptitle(title, fontsize=14, fontweight='bold')
+        plt.tight_layout()
         
         # Save plot
-        counter = kwargs.get('counter', 1)
-        filename = f"plots/{self.name}_solution_{counter:03d}_{status.lower()}.png"
+        counter = kwargs.get('counter', step if animated else 1)
+        status_str = "optimal" if is_optimal else "candidate"
+        filename = f"plots/{self.name}_solution_{counter:03d}_{status_str}.png"
         plt.savefig(filename, bbox_inches='tight', dpi=300)
         plt.close()
         
