@@ -34,21 +34,21 @@ def setcover_factory(n_elements: int, n_sets: int, density: float, max_steps: in
 
 
 def main():
-    print("Set Cover baselines (n_eval=8 per cell)\n")
+    print("Set Cover baselines (n_eval=20 per cell)\n")
     print(f"{'config':<28} {'best_bound':<22} {'depth_first':<22} "
           f"{'breadth_first':<22} {'random':<22}")
     print("-" * 116)
 
     configs = [
-        (15, 20, 0.3, 400),
-        (20, 25, 0.25, 500),
-        (25, 30, 0.2, 600),
-        (40, 50, 0.15, 1000),
+        (40, 50, 0.15, 1500),
+        (50, 60, 0.15, 2000),
+        (50, 80, 0.10, 2500),
+        (60, 80, 0.12, 3000),
     ]
 
     for n_e, n_s, density, max_steps in configs:
         factory = setcover_factory(n_e, n_s, density, max_steps)
-        sweep = heuristic_sweep(factory, n_eval=8, seed_offset=2000, k_nodes=K)
+        sweep = heuristic_sweep(factory, n_eval=20, seed_offset=2000, k_nodes=K)
         cfg_str = f"{n_e}e x {n_s}s d={density}"
         cells = " ".join(
             f"{sweep[m]['nodes_mean']:>5.1f}±{sweep[m]['nodes_std']:<5.1f} ({100*sweep[m]['solved_frac']:>3.0f}%)  "
