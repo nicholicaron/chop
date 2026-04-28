@@ -759,7 +759,8 @@ class BranchAndBoundSolver:
             'slack_values': [],
             'optimality_gap': np.inf,
             'children_pruned': 0,
-            'color': 'lightgray'
+            'color': 'lightgray',
+            'prune_reason': None,
         }
     
     def _visualize_tree(self, problem_name):
@@ -798,9 +799,9 @@ class BranchAndBoundSolver:
             node_data = self.enumeration_tree.nodes[node]
             if node_data.get('color') == 'blue':  # Root node
                 colors.append('blue')
-            elif node_data['prune_reason'] == 'infeasible':
+            elif node_data.get('prune_reason') == 'infeasible':
                 colors.append('red')
-            elif node_data['prune_reason'] == 'suboptimal':
+            elif node_data.get('prune_reason') == 'suboptimal':
                 colors.append('orange')
             elif node_data.get('color') == 'green':  # Optimal node
                 colors.append('green')
@@ -828,7 +829,7 @@ class BranchAndBoundSolver:
             # Add node type and constraint information
             if node_data.get('color') == 'blue':
                 label += "Root Node"
-            elif node_data['branch_direction'] is not None:
+            elif node_data.get('branch_direction') is not None:
                 if node_data['branch_direction'] == 'floor':
                     label += f"Floor Branch:\nX{node_data['branch_variable']} <= {node_data['branch_value']}"
                 elif node_data['branch_direction'] == 'ceil':

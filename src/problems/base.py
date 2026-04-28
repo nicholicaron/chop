@@ -189,7 +189,7 @@ class OptimizationProblem(abc.ABC):
         Returns:
             float: The objective value of the LP relaxation
         """
-        from ..simplex import linprog_simplex
+        from src.simplex import linprog_simplex
         
         # Convert to ILP
         c, A_eq, b_eq, A_ub, b_ub = self.to_ilp()

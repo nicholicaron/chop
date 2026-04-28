@@ -6,7 +6,7 @@ Method.
 from collections import namedtuple
 import numpy as np
 from numba import jit
-from pivoting import _pivoting, _lex_min_ratio_test
+from src.pivoting import _pivoting, _lex_min_ratio_test
 
 
 SimplexResult = namedtuple(

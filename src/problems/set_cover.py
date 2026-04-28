@@ -140,18 +140,22 @@ class SetCover(OptimizationProblem):
         # Objective: minimize sum of costs of selected sets
         # Since our solver maximizes, we negate the costs
         c = -self.set_costs.copy()
-        
-        # Coverage constraints: For each element i, sum of x_j for sets containing i >= 1
-        # We rearrange to: -sum_j a_ij * x_j <= -1 for all i
-        # where a_ij = 1 if set j contains element i, 0 otherwise
-        
-        A_ub = -self.coverage_matrix  # Negate for standard form
-        b_ub = -np.ones(self.n_elements)  # Each element must be covered at least once
-        
+
+        # Coverage constraints: -sum_j a_ij * x_j <= -1 for each element i
+        coverage_rows = -self.coverage_matrix.astype(float)
+        coverage_rhs = -np.ones(self.n_elements)
+
+        # Binary upper bounds: x_j <= 1 for each set
+        binary_upper = np.eye(self.n_sets)
+        upper_rhs = np.ones(self.n_sets)
+
+        A_ub = np.vstack([coverage_rows, binary_upper])
+        b_ub = np.concatenate([coverage_rhs, upper_rhs])
+
         # No equality constraints
         A_eq = np.zeros((0, self.n_sets))
         b_eq = np.zeros(0)
-        
+
         return c, A_eq, b_eq, A_ub, b_ub
     
     def validate_solution(self, solution: np.ndarray) -> Tuple[bool, float]:

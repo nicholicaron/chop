@@ -75,18 +75,21 @@ class Knapsack(OptimizationProblem):
             - b_ub: Inequality constraint right-hand side (capacity)
         """
         n = self.n_items
-        
+
         # Objective: maximize sum of values for selected items
         c = self.values.copy()
-        
+
         # Capacity constraint: sum of weights <= capacity
-        A_ub = self.weights.reshape(1, -1)  # Single row for the capacity constraint
-        b_ub = np.array([self.capacity])
-        
+        capacity_row = self.weights.reshape(1, -1)
+        # Binary upper bounds: x_i <= 1 (lower bound x_i >= 0 is implicit in simplex)
+        binary_upper = np.eye(n)
+        A_ub = np.vstack([capacity_row, binary_upper])
+        b_ub = np.concatenate([[self.capacity], np.ones(n)])
+
         # No equality constraints
         A_eq = np.zeros((0, n))
         b_eq = np.zeros(0)
-        
+
         return c, A_eq, b_eq, A_ub, b_ub
     
     def validate_solution(self, solution: np.ndarray) -> Tuple[bool, float]:
