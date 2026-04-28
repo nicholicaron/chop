@@ -70,6 +70,10 @@ htmlcov/
 CLAUDE.md
 .venv/
 logs/
+checkpoints/
+plots/
+benchmark_results/
+.python-version-local
 
 # Numba cache files
 *.nbc

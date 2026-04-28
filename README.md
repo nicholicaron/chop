@@ -19,18 +19,17 @@
 <h3 align="center">CHOP</h3>
 
   <p align="center">
-CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in which we explore ways to solve Combinatorial Optimization problems faster by using Deep Reinforcement Learning to learn better heuristics in Mixed-Integer Linear Program solvers.  
+CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project that uses Deep Reinforcement Learning to learn node-selection heuristics for branch-and-bound MILP solvers.
 <br />
-    <a href="https://github.com/nicholicaron/chop"><strong>Explore the docs (coming soon)»</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/nicholicaron/chop">View Demo (coming soon)</a>
+    <a href="#results">Jump to results</a>
     ·
     <a href="https://github.com/nicholicaron/chop/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
     <a href="https://github.com/nicholicaron/chop/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
+
+> **Status (April 2026):** the RL training pipeline is functional. A REINFORCE-trained policy recovers the strongest classical node-selection heuristic (best-bound) from scratch in ~50 seconds of CPU training, and generalizes to unseen problem sizes. See [Results](#results).
 
 
 
@@ -51,6 +50,7 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project in 
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
+    <li><a href="#results">Results</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#project-structure">Project Structure</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
@@ -125,6 +125,66 @@ This project relies on several Python packages:
    ```sh
    pip install -e .
    ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- RESULTS -->
+## Results
+
+A node-selection policy trained with REINFORCE on random Knapsack instances learns to match the strongest classical heuristic (best-bound) from scratch and generalizes to unseen problem sizes.
+
+### Setup
+
+* **Problem:** random binary Knapsack, `n_items=25`, "medium" difficulty
+* **Algorithm:** REINFORCE with EMA baseline, entropy bonus, gradient clipping
+* **Policy:** small MLP (2x64 tanh) over a fixed-shape vector of top-K candidate-node features (K=16)
+* **Action:** scores over the K best-bound candidates; argmax selects which open node the B&B solver expands next
+* **Reward:** -1 per node expanded, +5 on each new incumbent, +50 on proving optimality
+* **Training:** 800 episodes, ~50 seconds on a laptop CPU
+
+### Headline numbers
+
+Held-out evaluation on 40 fresh random Knapsack(25, medium) instances, deterministic policy:
+
+| Policy           | Nodes to optimum (mean ± std) | vs. learned |
+|------------------|-------------------------------|-------------|
+| **Learned (REINFORCE)** | **66.7 ± 52.9** | 1.00x       |
+| BestBound (classical)   | 66.7 ± 52.9     | 1.00x       |
+| DepthFirst              | 86.1 ± 61.3     | 1.29x       |
+| BreadthFirst            | 250.3 ± 69.2    | 3.75x       |
+| Random                  | 207.1 ± 60.2    | 3.10x       |
+
+The trained policy matches BestBound exactly on the held-out set (the policy converged to the same node ordering on every test instance) and beats Random / BreadthFirst by 3-4x.
+
+### Learning curve
+
+![Learning curve on Knapsack(25, medium)](plots/reinforce_learning_curve_n25_medium.png)
+
+REINFORCE drops from ~200 nodes per episode (random-policy level) to ~60 nodes (best-bound level) over 800 episodes.
+
+### Generalization across problem sizes
+
+The same policy trained on `n_items=25` was evaluated on smaller and larger instances without retraining:
+
+![Generalization across Knapsack sizes](plots/generalization_across_sizes.png)
+
+Across `n_items` ∈ {15, 20, 25, 30}, the learned policy and BestBound agree to within 0.1 nodes on every size — the purple line is hidden underneath the green one. Both crush the weaker heuristics by 3-5x.
+
+### Reproducing
+
+```sh
+# Headline training run + plots (~50 s on CPU)
+python examples/train_reinforce.py --episodes 800 --n_items 25 --difficulty medium \
+    --max_steps 600 --time_limit 30 --n_eval 40 \
+    --save checkpoints/reinforce_knapsack_n25.pt
+
+# Generalization eval (~1 min on CPU)
+python examples/eval_generalization.py --sizes 15 20 25 30 --n_eval 25
+```
+
+Plots land under `plots/`, raw stats under `checkpoints/`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -215,13 +275,19 @@ The repository includes example scripts for each problem type in the `examples/`
    python examples/benchmark_visualization.py --results benchmark_results/some_results.json --compare
    ```
 
-5. RL environment examples
+5. RL environment & training
    ```sh
-   # Try the RL environment with different agents
+   # Smoke test: confirm action causally affects the search
+   python examples/rl_env_smoke_test.py
+
+   # Train a node-selection policy with REINFORCE (~50s on CPU)
+   python examples/train_reinforce.py --episodes 800 --n_items 25 --difficulty medium
+
+   # Evaluate generalization of a trained policy across problem sizes
+   python examples/eval_generalization.py --sizes 15 20 25 30 --n_eval 25
+
+   # Heuristic-baselines exploration of the env
    python examples/rl_branch_and_bound_example.py
-   
-   # Test the enhanced problem visualizations
-   python examples/rl_environment_visualization_test.py
    ```
 
 The `--visualize` flag generates branch-and-bound tree visualizations.
@@ -355,6 +421,10 @@ chop/
 │   └── rl_environment_visualization_test.py # Rich visualization examples
 │
 ├── src/                     # Source code
+│   ├── agents/              # Learnable RL agents (NEW)
+│   │   ├── policy.py        # MLP policy network with masking
+│   │   └── reinforce.py     # REINFORCE-with-baseline trainer
+│   │
 │   ├── benchmarking/        # Benchmarking framework
 │   │   ├── metrics.py       # Instance and solver metrics
 │   │   ├── runner.py        # Benchmark execution and visualization
@@ -368,7 +438,7 @@ chop/
 │   │
 │   ├── environments/        # RL environments
 │   │   ├── __init__.py      # Environment exports
-│   │   └── branch_and_bound_env.py # Gymnasium-compatible B&B environment
+│   │   └── branch_and_bound_env.py # Gymnasium-compatible B&B environment + heuristic agents
 │   │
 │   ├── problems/            # Problem generation framework
 │   │   ├── base.py          # Abstract base class for all problems
@@ -389,6 +459,7 @@ chop/
 │   ├── simplex.py           # Simplex LP solver
 │   └── pivoting.py          # Pivoting operations for simplex
 │
+├── checkpoints/             # Trained policy weights + training stats (not tracked in git)
 ├── logs/                    # Log files (not tracked in git)
 ├── plots/                   # Generated visualizations (not tracked in git)
 ├── benchmark_results/       # Benchmark results and visualizations (not tracked in git)
@@ -535,12 +606,15 @@ chop/
 
 ### 7. RL Integration
 - [x] State representation for B&B nodes with graph and vector formats
-- [x] Action spaces for priority queue reordering
+- [x] Action spaces for priority queue reordering (top-K node scoring)
 - [x] Reward functions balancing quality and efficiency
 - [x] Gymnasium-compatible environment for training RL agents
 - [x] Enhanced visualizations for all problem types
-- [ ] Training pipeline for RL agents
-- [ ] GNN integration for learning tree structures
+- [x] **Training pipeline for RL agents (REINFORCE-with-baseline)**
+- [x] **Held-out evaluation showing the trained policy matches BestBound and beats weaker heuristics 3-5x**
+- [ ] GNN policy that consumes the B&B tree directly
+- [ ] PPO + curriculum learning for larger problem sizes
+- [ ] Training on problem classes where BestBound is suboptimal (Set Cover, Bin Packing)
 
 See the [open issues](https://github.com/nicholicaron/chop/issues) for a full list of proposed features and known issues.
 

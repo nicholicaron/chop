@@ -1,207 +1,136 @@
 """
-Example showing the Branch-and-Bound Reinforcement Learning environment.
+Compare a trained REINFORCE policy against the classical heuristic agents on
+random Knapsack instances. Designed as the headline runnable example for the
+RL side of the project.
 
-This example demonstrates how to create and use the BranchAndBoundEnv for
-training RL agents to optimize the priority queue ordering in the
-Branch-and-Bound algorithm.
+Run after training a policy:
+    python examples/train_reinforce.py --episodes 800 --n_items 25 --difficulty medium
+    python examples/rl_branch_and_bound_example.py
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
+import argparse
+import os
+import sys
 from time import time
 
-from src.problems.knapsack import KnapsackProblem
-from src.environments.branch_and_bound_env import BranchAndBoundEnv
-from src.strategies.priority_queue import BestBoundPrioritizer, DepthFirstPrioritizer
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+
+from src.agents.policy import NodeSelectionPolicy
+from src.environments.branch_and_bound_env import BranchAndBoundEnv, HeuristicAgent
+from src.problems.knapsack import Knapsack
 
 
-def random_agent(observation):
-    """
-    Simple random agent that returns a random perturbation.
-    
-    Args:
-        observation: Current state observation
-        
-    Returns:
-        numpy.ndarray: Random action
-    """
-    return np.random.uniform(-1.0, 1.0, size=(1,))
+K = 16
 
 
-def best_bound_agent(observation):
-    """
-    Agent that mimics the best-bound strategy.
-    
-    Args:
-        observation: Current state observation
-        
-    Returns:
-        numpy.ndarray: Action encouraging best-bound behavior (zero perturbation)
-    """
-    return np.array([0.0])
+def make_env(seed: int, n_items: int, difficulty: str, max_steps: int) -> BranchAndBoundEnv:
+    rng = np.random.default_rng(seed)
+
+    def gen():
+        return Knapsack.generate_random_instance(
+            n_items=n_items,
+            seed=int(rng.integers(0, 10**6)),
+            difficulty=difficulty,
+        )
+
+    return BranchAndBoundEnv(
+        problem_generator=gen,
+        k_nodes=K,
+        max_steps=max_steps,
+        time_limit=30.0,
+        reward_type="nodes",
+    )
 
 
-def depth_first_agent(observation):
-    """
-    Agent that encourages depth-first behavior.
-    
-    For vector observations, it biases towards deeper nodes.
-    
-    Args:
-        observation: Current state observation
-        
-    Returns:
-        numpy.ndarray: Action encouraging depth-first behavior
-    """
-    # Positive values bias towards higher depths
-    return np.array([1.0])
+def run_episode(env, action_fn, seed):
+    obs, info = env.reset(seed=seed)
+    done, truncated = False, False
+    while not (done or truncated):
+        action = action_fn(obs)
+        obs, _, done, truncated, info = env.step(action)
+    return info
 
 
-def compare_agents(problem_generator, num_episodes=5, max_steps=100):
-    """
-    Compare different agents on the same set of problems.
-    
-    Args:
-        problem_generator: Function that generates problem instances
-        num_episodes: Number of episodes to run for each agent
-        max_steps: Maximum steps per episode
-        
-    Returns:
-        dict: Results for each agent
-    """
-    agents = {
-        "Random": random_agent,
-        "BestBound": best_bound_agent,
-        "DepthFirst": depth_first_agent
-    }
-    
-    # For storing results
-    results = {
-        agent_name: {
-            "steps_to_solve": [],
-            "objective_values": [],
-            "times": []
-        } for agent_name in agents
-    }
-    
-    # Set the same seeds for fair comparison
-    seeds = [42 + i for i in range(num_episodes)]
-    
-    # Run each agent on the same problem instances
-    for agent_name, agent_fn in agents.items():
-        print(f"\nEvaluating {agent_name} agent...")
-        
-        for episode in range(num_episodes):
-            # Create environment with the same seed
-            env = BranchAndBoundEnv(
-                problem_generator=problem_generator,
-                max_steps=max_steps,
-                reward_type='improvement',
-                observation_type='vector'
-            )
-            
-            # Reset environment with seed
-            observation, info = env.reset(seed=seeds[episode])
-            
-            # Run episode
-            start_time = time()
-            done = False
-            truncated = False
-            total_reward = 0
-            steps = 0
-            
-            while not (done or truncated):
-                # Get action from agent
-                action = agent_fn(observation)
-                
-                # Take step in environment
-                observation, reward, done, truncated, info = env.step(action)
-                
-                # Update counters
-                total_reward += reward
-                steps += 1
-            
-            # Record results
-            episode_time = time() - start_time
-            results[agent_name]["steps_to_solve"].append(steps)
-            results[agent_name]["objective_values"].append(info["current_best_obj"])
-            results[agent_name]["times"].append(episode_time)
-            
-            print(f"  Episode {episode + 1}: {steps} steps, obj_value={info['current_best_obj']:.2f}, time={episode_time:.3f}s")
-    
-    # Calculate averages
-    for agent_name in agents:
-        avg_steps = np.mean(results[agent_name]["steps_to_solve"])
-        avg_obj = np.mean(results[agent_name]["objective_values"])
-        avg_time = np.mean(results[agent_name]["times"])
-        
-        print(f"\n{agent_name} Summary:")
-        print(f"  Avg Steps: {avg_steps:.2f}")
-        print(f"  Avg Objective: {avg_obj:.2f}")
-        print(f"  Avg Time: {avg_time:.3f}s")
-    
-    return results
+def compare(checkpoint_path, n_items, difficulty, n_episodes, max_steps):
+    # Heuristic agents
+    agents = {mode: HeuristicAgent(mode=mode, k=K) for mode in
+              ("best_bound", "depth_first", "breadth_first", "random")}
 
+    # Trained policy if available
+    policy = None
+    if os.path.exists(checkpoint_path):
+        ckpt = torch.load(checkpoint_path, weights_only=False)
+        policy = NodeSelectionPolicy(k=K, hidden=64)
+        policy.load_state_dict(ckpt["policy_state"])
+        policy.eval()
+        print(f"Loaded trained policy from {checkpoint_path}\n")
+    else:
+        print(f"(No trained policy found at {checkpoint_path}; "
+              f"run train_reinforce.py first to enable the 'learned' agent.)\n")
 
-def plot_results(results):
-    """
-    Plot comparison results.
-    
-    Args:
-        results: Results dictionary from compare_agents
-    """
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    
-    # Plot steps
-    for i, (metric, title, ylabel) in enumerate([
-        ("steps_to_solve", "Steps to Solve", "Steps"),
-        ("objective_values", "Objective Values", "Value"),
-        ("times", "Solution Times", "Time (s)")
-    ]):
-        ax = axes[i]
-        
-        # Get data
-        data = []
-        labels = []
-        
-        for agent_name in results:
-            data.append(results[agent_name][metric])
-            labels.append(agent_name)
-        
-        # Create boxplot
-        ax.boxplot(data, labels=labels)
-        ax.set_title(title)
-        ax.set_ylabel(ylabel)
-        
-        # Add individual points
-        for j, d in enumerate(data):
-            # Add jitter to x position
-            x = np.random.normal(j + 1, 0.05, size=len(d))
-            ax.scatter(x, d, alpha=0.5)
-    
+    seeds = [3000 + i for i in range(n_episodes)]
+    results = {name: [] for name in list(agents.keys()) + (["learned"] if policy else [])}
+
+    for name, agent in agents.items():
+        print(f"Evaluating {name}...")
+        for s in seeds:
+            agent.reset(seed=s)
+            env = make_env(s, n_items, difficulty, max_steps)
+            info = run_episode(env, agent.act, s)
+            results[name].append(info["nodes_explored"])
+
+    if policy is not None:
+        print("Evaluating learned (deterministic policy)...")
+        for s in seeds:
+            env = make_env(s, n_items, difficulty, max_steps)
+            with torch.no_grad():
+                def act_fn(obs):
+                    a, _, _ = policy.sample_action(obs, deterministic=True)
+                    return a
+                info = run_episode(env, act_fn, s)
+            results["learned"].append(info["nodes_explored"])
+
+    print(f"\n=== Knapsack({n_items}, {difficulty}), {n_episodes} held-out instances ===\n")
+    print(f"{'Agent':<14} {'Nodes (mean ± std)':<24} {'Min':<7} {'Max':<7}")
+    print("-" * 56)
+    for name in list(results.keys()):
+        ns = np.array(results[name])
+        print(f"{name:<14} {ns.mean():>6.1f} ± {ns.std():<6.1f}        {ns.min():>5.0f}  {ns.max():>5.0f}")
+
+    # Bar chart
+    os.makedirs("plots", exist_ok=True)
+    order = (["learned"] if policy else []) + ["best_bound", "depth_first", "breadth_first", "random"]
+    means = [np.mean(results[m]) for m in order]
+    stds = [np.std(results[m]) for m in order]
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    colors = ["tab:purple", "tab:green", "tab:orange", "tab:red", "tab:gray"]
+    if not policy:
+        colors = colors[1:]
+    ax.bar(order, means, yerr=stds, color=colors, capsize=4, alpha=0.85)
+    ax.set_ylabel("Nodes explored to optimum")
+    ax.set_title(f"Held-out Knapsack({n_items}, {difficulty}), n={n_episodes}")
+    ax.grid(True, axis="y", alpha=0.3)
+    out = f"plots/agent_comparison_{n_items}_{difficulty}.png"
     plt.tight_layout()
-    plt.savefig("plots/agent_comparison.png", dpi=300)
-    plt.show()
-
-
-def knapsack_generator():
-    """Generate a random knapsack problem instance."""
-    return KnapsackProblem.generate_random_instance(num_items=20, difficulty='medium')
+    plt.savefig(out, dpi=160)
+    plt.close()
+    print(f"\nSaved bar chart to {out}")
 
 
 def main():
-    """Main function to run the example."""
-    print("Branch-and-Bound RL Environment Example")
-    print("======================================")
-    
-    # Create problem generator
-    problem_generator = knapsack_generator
-    
-    # Compare different agent strategies
-    results = compare_agents(problem_generator, num_episodes=5, max_steps=100)
-    
-    # Plot the results
-    plot_results(results)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--checkpoint", default="checkpoints/reinforce_knapsack_n25.pt")
+    parser.add_argument("--n_items", type=int, default=20)
+    parser.add_argument("--difficulty", default="medium")
+    parser.add_argument("--episodes", type=int, default=20)
+    parser.add_argument("--max_steps", type=int, default=600)
+    args = parser.parse_args()
+
+    compare(args.checkpoint, args.n_items, args.difficulty, args.episodes, args.max_steps)
 
 
 if __name__ == "__main__":
