@@ -126,8 +126,7 @@ class BranchAndBoundEnv(gym.Env):
         c, A_eq, b_eq, A_ub, b_ub = self.problem.to_ilp()
         self.problem_c = c
 
-        # Use a logger that doesn't dump per-step to stderr
-        logger = BnBLogger(verbose=False) if self.verbose is False else BnBLogger()
+        logger = BnBLogger(verbose=self.verbose)
         self.solver = BranchAndBoundSolver(logger=logger, max_nodes=10**9, use_cuts=False)
         self.solver.reset()
 

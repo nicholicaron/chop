@@ -15,63 +15,34 @@ import numpy as np
 import torch
 
 from src.agents.policy import NodeSelectionPolicy
-from src.environments.branch_and_bound_env import BranchAndBoundEnv, HeuristicAgent
+from src.environments.branch_and_bound_env import DEFAULT_K
 from src.problems.knapsack import Knapsack
+from src.utils.eval import (
+    evaluate_heuristic,
+    evaluate_policy,
+    make_env_factory,
+)
 
 
-K = 16
+K = DEFAULT_K
+SEED_OFFSET = 20_000
 
 
-def env_factory(n_items: int, max_steps: int, time_limit: float, difficulty: str):
-    def factory(seed: int) -> BranchAndBoundEnv:
-        rng = np.random.default_rng(seed)
-
-        def gen():
-            return Knapsack.generate_random_instance(
-                n_items=n_items,
-                seed=int(rng.integers(0, 10**6)),
-                difficulty=difficulty,
-            )
-
-        return BranchAndBoundEnv(
-            problem_generator=gen,
-            k_nodes=K,
-            max_steps=max_steps,
-            time_limit=time_limit,
-            reward_type="nodes",
+def knapsack_factory(n_items: int, difficulty: str, max_steps: int, time_limit: float):
+    def make_problem(rng):
+        return Knapsack.generate_random_instance(
+            n_items=n_items,
+            seed=int(rng.integers(0, 10**6)),
+            difficulty=difficulty,
         )
 
-    return factory
-
-
-@torch.no_grad()
-def eval_policy(policy: NodeSelectionPolicy, factory, n_eval: int):
-    nodes, completed = [], []
-    for ep in range(n_eval):
-        env = factory(20_000 + ep)
-        obs, info = env.reset(seed=20_000 + ep)
-        done, truncated = False, False
-        while not (done or truncated):
-            action, _, _ = policy.sample_action(obs, deterministic=True)
-            obs, reward, done, truncated, info = env.step(action)
-        nodes.append(info["nodes_explored"])
-        completed.append(done)
-    return float(np.mean(nodes)), float(np.std(nodes)), float(np.mean(completed))
-
-
-def eval_heuristic(mode: str, factory, n_eval: int):
-    nodes, completed = [], []
-    for ep in range(n_eval):
-        env = factory(20_000 + ep)
-        obs, info = env.reset(seed=20_000 + ep)
-        agent = HeuristicAgent(mode=mode, k=K)
-        agent.reset(seed=20_000 + ep)
-        done, truncated = False, False
-        while not (done or truncated):
-            obs, reward, done, truncated, info = env.step(agent.act(obs))
-        nodes.append(info["nodes_explored"])
-        completed.append(done)
-    return float(np.mean(nodes)), float(np.std(nodes)), float(np.mean(completed))
+    return make_env_factory(
+        make_problem,
+        k_nodes=K,
+        max_steps=max_steps,
+        time_limit=time_limit,
+        reward_type="nodes",
+    )
 
 
 def main():
@@ -84,63 +55,62 @@ def main():
     parser.add_argument("--time_limit", type=float, default=60.0)
     args = parser.parse_args()
 
-    print(f"\n=== Generalization eval: policy trained on n=25 medium ===\n")
-    print(f"Loading {args.checkpoint}")
+    print(f"\n=== Generalization eval: policy {args.checkpoint} ===\n")
 
     ckpt = torch.load(args.checkpoint, weights_only=False)
     policy = NodeSelectionPolicy(k=K, hidden=64)
     policy.load_state_dict(ckpt["policy_state"])
     policy.eval()
-
     print(f"Trained on: n_items={ckpt['config']['n_items']} difficulty={ckpt['config']['difficulty']}\n")
 
-    results = {"size": [], "learned": [], "best_bound": [], "depth_first": [],
-               "breadth_first": [], "random": []}
+    modes = ("best_bound", "depth_first", "breadth_first", "random")
+    results = {key: [] for key in ("learned", *modes)}
+    sizes = []
 
     print(f"{'Size':<6} {'Learned':<14} {'BestBound':<14} {'DepthFirst':<14} "
           f"{'BreadthFirst':<14} {'Random':<14}")
     print("-" * 88)
 
     for n_items in args.sizes:
-        factory = env_factory(n_items, args.max_steps, args.time_limit, args.difficulty)
+        factory = knapsack_factory(n_items, args.difficulty, args.max_steps, args.time_limit)
 
-        learned_m, learned_s, learned_done = eval_policy(policy, factory, args.n_eval)
-        bb_m, bb_s, _ = eval_heuristic("best_bound", factory, args.n_eval)
-        df_m, df_s, _ = eval_heuristic("depth_first", factory, args.n_eval)
-        bf_m, bf_s, _ = eval_heuristic("breadth_first", factory, args.n_eval)
-        rd_m, rd_s, _ = eval_heuristic("random", factory, args.n_eval)
+        learned = evaluate_policy(policy, factory, n_eval=args.n_eval, deterministic=True,
+                                  seed_offset=SEED_OFFSET)
+        per_mode = {mode: evaluate_heuristic(mode, factory, n_eval=args.n_eval,
+                                             seed_offset=SEED_OFFSET, k_nodes=K)
+                    for mode in modes}
 
-        results["size"].append(n_items)
-        results["learned"].append((learned_m, learned_s))
-        results["best_bound"].append((bb_m, bb_s))
-        results["depth_first"].append((df_m, df_s))
-        results["breadth_first"].append((bf_m, bf_s))
-        results["random"].append((rd_m, rd_s))
+        sizes.append(n_items)
+        results["learned"].append((learned["nodes_mean"], learned["nodes_std"]))
+        for mode in modes:
+            results[mode].append((per_mode[mode]["nodes_mean"], per_mode[mode]["nodes_std"]))
 
-        print(f"{n_items:<6} {learned_m:>5.1f}±{learned_s:<6.1f}  "
-              f"{bb_m:>5.1f}±{bb_s:<6.1f}  {df_m:>5.1f}±{df_s:<6.1f}  "
-              f"{bf_m:>5.1f}±{bf_s:<6.1f}  {rd_m:>5.1f}±{rd_s:<6.1f}")
+        print(f"{n_items:<6} {learned['nodes_mean']:>5.1f}±{learned['nodes_std']:<6.1f}  "
+              + "  ".join(f"{per_mode[m]['nodes_mean']:>5.1f}±{per_mode[m]['nodes_std']:<6.1f}"
+                          for m in modes))
 
     # Plot
-    sizes = np.array(results["size"])
+    sizes = np.array(sizes)
     fig, ax = plt.subplots(1, 1, figsize=(8, 5))
-    for label, key, color, marker in [
+    series = [
         ("Learned (REINFORCE)", "learned", "tab:purple", "o"),
         ("BestBound", "best_bound", "tab:green", "s"),
         ("DepthFirst", "depth_first", "tab:orange", "^"),
         ("BreadthFirst", "breadth_first", "tab:red", "v"),
         ("Random", "random", "tab:gray", "d"),
-    ]:
+    ]
+    for label, key, color, marker in series:
         means = np.array([m for m, s in results[key]])
         stds = np.array([s for m, s in results[key]])
         ax.errorbar(sizes, means, yerr=stds, label=label, color=color,
                     marker=marker, capsize=3, linewidth=2, markersize=7)
     ax.set_xlabel("Knapsack size (n_items)")
     ax.set_ylabel("Nodes explored to optimum (mean ± std)")
-    ax.set_title(f"Generalization across problem sizes\n(policy trained on n=25 only)")
+    ax.set_title("Generalization across problem sizes\n(policy trained on a single size)")
     ax.set_yscale("log")
     ax.legend(loc="best")
     ax.grid(True, which="both", alpha=0.3)
+    os.makedirs("plots", exist_ok=True)
     out = "plots/generalization_across_sizes.png"
     plt.tight_layout()
     plt.savefig(out, dpi=160)
@@ -148,13 +118,13 @@ def main():
     print(f"\nSaved generalization plot to {out}")
 
     # Persist as JSON
+    os.makedirs("checkpoints", exist_ok=True)
     json_out = "checkpoints/generalization_results.json"
     with open(json_out, "w") as f:
         json.dump({
             "trained_on": ckpt["config"],
             "sizes": list(map(int, sizes)),
-            "results": {k: results[k] for k in ("learned", "best_bound", "depth_first",
-                                                  "breadth_first", "random")},
+            "results": {k: results[k] for k in ("learned", *modes)},
         }, f, indent=2)
     print(f"Saved JSON to {json_out}")
     return 0

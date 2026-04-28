@@ -17,55 +17,30 @@ import torch
 
 from src.agents.policy import NodeSelectionPolicy
 from src.agents.reinforce import ReinforceTrainer, TrainConfig
-from src.environments.branch_and_bound_env import BranchAndBoundEnv, HeuristicAgent
+from src.environments.branch_and_bound_env import DEFAULT_K
 from src.problems.knapsack import Knapsack
+from src.utils.eval import evaluate_heuristic, evaluate_policy, make_env_factory
 
 
-K = 16
-F_PER_NODE = 7  # mirrored from env for shape reference
+K = DEFAULT_K
 
 
-def make_env_factory(n_items: int, max_steps: int, time_limit: float, difficulty: str):
-    def factory(seed: int) -> BranchAndBoundEnv:
-        rng = np.random.default_rng(seed)
-
-        def gen():
-            return Knapsack.generate_random_instance(
-                n_items=n_items,
-                seed=int(rng.integers(0, 10**6)),
-                difficulty=difficulty,
-            )
-
-        return BranchAndBoundEnv(
-            problem_generator=gen,
-            k_nodes=K,
-            max_steps=max_steps,
-            time_limit=time_limit,
-            reward_type="nodes",
+def knapsack_factory(n_items: int, difficulty: str, max_steps: int, time_limit: float):
+    """Env factory that yields random Knapsack instances of the given size/difficulty."""
+    def make_problem(rng):
+        return Knapsack.generate_random_instance(
+            n_items=n_items,
+            seed=int(rng.integers(0, 10**6)),
+            difficulty=difficulty,
         )
 
-    return factory
-
-
-def evaluate_heuristic(mode: str, env_factory, n_eval: int):
-    nodes, objs, completed = [], [], []
-    for ep in range(n_eval):
-        env = env_factory(10_000 + ep)
-        obs, info = env.reset(seed=10_000 + ep)
-        agent = HeuristicAgent(mode=mode, k=K)
-        agent.reset(seed=10_000 + ep)
-        done, truncated = False, False
-        while not (done or truncated):
-            obs, reward, done, truncated, info = env.step(agent.act(obs))
-        nodes.append(info["nodes_explored"])
-        objs.append(info["current_best_obj"])
-        completed.append(done)
-    return {
-        "nodes_mean": float(np.mean(nodes)),
-        "nodes_std": float(np.std(nodes)),
-        "obj_mean": float(np.mean(objs)),
-        "solved_frac": float(np.mean(completed)),
-    }
+    return make_env_factory(
+        make_problem,
+        k_nodes=K,
+        max_steps=max_steps,
+        time_limit=time_limit,
+        reward_type="nodes",
+    )
 
 
 def main():
@@ -84,11 +59,11 @@ def main():
 
     print(f"\n=== Training REINFORCE policy on Knapsack({args.n_items}, {args.difficulty}) ===\n")
 
-    env_factory = make_env_factory(
+    env_factory = knapsack_factory(
         n_items=args.n_items,
+        difficulty=args.difficulty,
         max_steps=args.max_steps,
         time_limit=args.time_limit,
-        difficulty=args.difficulty,
     )
 
     policy = NodeSelectionPolicy(k=K, hidden=64)
@@ -110,7 +85,7 @@ def main():
 
     # Evaluate trained policy
     print("\n=== Evaluation (held-out instances, deterministic policy) ===")
-    learned = trainer.evaluate(n_eval=args.n_eval, deterministic=True)
+    learned = evaluate_policy(policy, env_factory, n_eval=args.n_eval, deterministic=True)
     print(f"Learned   nodes={learned['nodes_mean']:>6.1f} ± {learned['nodes_std']:<5.1f}  "
           f"obj={learned['obj_mean']:>7.2f}  solved={100*learned['solved_frac']:>5.1f}%")
 
