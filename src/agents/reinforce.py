@@ -16,7 +16,6 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from src.agents.policy import NodeSelectionPolicy
 from src.environments.branch_and_bound_env import BranchAndBoundEnv
 
 
@@ -44,9 +43,16 @@ class TrainStats:
 
 
 class ReinforceTrainer:
+    """Policy-agnostic REINFORCE trainer.
+
+    The policy must expose ``act(env, deterministic=False)`` returning a
+    ``(action, log_prob, entropy)`` tuple. Both the MLP and GNN policies
+    in src/agents/ follow this contract.
+    """
+
     def __init__(
         self,
-        policy: NodeSelectionPolicy,
+        policy: torch.nn.Module,
         env_factory: Callable[[int], BranchAndBoundEnv],
         config: Optional[TrainConfig] = None,
         device: str = "cpu",
@@ -61,7 +67,7 @@ class ReinforceTrainer:
 
     def _run_episode(self, episode_idx: int) -> dict:
         env = self.env_factory(self.cfg.seed + episode_idx)
-        obs, info = env.reset(seed=self.cfg.seed + episode_idx)
+        env.reset(seed=self.cfg.seed + episode_idx)
 
         log_probs: List[torch.Tensor] = []
         entropies: List[torch.Tensor] = []
@@ -69,8 +75,8 @@ class ReinforceTrainer:
 
         done, truncated = False, False
         while not (done or truncated):
-            action, log_prob, entropy = self.policy.sample_action(obs, deterministic=False)
-            obs, reward, done, truncated, info = env.step(action)
+            action, log_prob, entropy = self.policy.act(env, deterministic=False)
+            _, reward, done, truncated, info = env.step(action)
             log_probs.append(log_prob)
             entropies.append(entropy)
             rewards.append(reward)
@@ -146,11 +152,11 @@ class ReinforceTrainer:
         nodes, objs, completed = [], [], []
         for ep in range(n_eval):
             env = self.env_factory(10_000 + ep)
-            obs, info = env.reset(seed=10_000 + ep)
+            env.reset(seed=10_000 + ep)
             done, truncated = False, False
             while not (done or truncated):
-                action, _, _ = self.policy.sample_action(obs, deterministic=deterministic)
-                obs, reward, done, truncated, info = env.step(action)
+                action, _, _ = self.policy.act(env, deterministic=deterministic)
+                _, _, done, truncated, info = env.step(action)
             nodes.append(info["nodes_explored"])
             objs.append(info["current_best_obj"])
             completed.append(done)

@@ -93,19 +93,22 @@ def evaluate_policy(
     deterministic: bool = True,
     seed_offset: int = 10_000,
 ) -> Dict[str, float]:
-    """Run a torch policy (must expose `.sample_action(obs, deterministic=...)`)
-    for n_eval episodes and report aggregate metrics."""
+    """Run a learnable policy for n_eval episodes and report aggregate metrics.
+
+    The policy must expose ``act(env, deterministic=...)`` returning a
+    ``(action, log_prob, entropy)`` tuple (both NodeSelectionPolicy and
+    GNNNodeSelectionPolicy follow this contract).
+    """
     nodes, objs, completed = [], [], []
     with torch.no_grad():
         for ep in range(n_eval):
             seed = seed_offset + ep
             env = env_factory(seed)
-
-            def action_fn(obs):
-                action, _, _ = policy.sample_action(obs, deterministic=deterministic)
-                return action
-
-            info = _run_episode(env, action_fn, seed)
+            env.reset(seed=seed)
+            done, truncated = False, False
+            while not (done or truncated):
+                action, _, _ = policy.act(env, deterministic=deterministic)
+                _, _, done, truncated, info = env.step(action)
             nodes.append(info["nodes_explored"])
             objs.append(info["current_best_obj"])
             completed.append(info["queue_size"] == 0)

@@ -61,6 +61,10 @@ class NodeSelectionPolicy(nn.Module):
         mask = is_real > 0.5
         return logits, mask
 
+    def act(self, env, deterministic: bool = False) -> Tuple[np.ndarray, torch.Tensor, torch.Tensor]:
+        """Uniform interface that pulls obs from the env (mirrors GNNNodeSelectionPolicy.act)."""
+        return self.sample_action(env._observation(), deterministic=deterministic)
+
     def sample_action(self, obs_np: np.ndarray, deterministic: bool = False) -> Tuple[np.ndarray, torch.Tensor, torch.Tensor]:
         """
         Sample a discrete choice over candidate nodes.

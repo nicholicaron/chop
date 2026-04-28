@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+from src.agents.gnn_policy import GNNNodeSelectionPolicy
 from src.agents.policy import NodeSelectionPolicy
 from src.agents.reinforce import ReinforceTrainer, TrainConfig
 from src.environments.branch_and_bound_env import DEFAULT_K
@@ -43,8 +44,17 @@ def knapsack_factory(n_items: int, difficulty: str, max_steps: int, time_limit: 
     )
 
 
+def build_policy(name: str):
+    if name == "mlp":
+        return NodeSelectionPolicy(k=K, hidden=64)
+    if name == "gnn":
+        return GNNNodeSelectionPolicy(k=K, hidden=64, n_conv=2)
+    raise ValueError(f"unknown policy: {name}")
+
+
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--policy", type=str, default="mlp", choices=["mlp", "gnn"])
     parser.add_argument("--n_items", type=int, default=15)
     parser.add_argument("--difficulty", type=str, default="easy", choices=["easy", "medium", "hard"])
     parser.add_argument("--episodes", type=int, default=400)
@@ -57,7 +67,7 @@ def main():
     parser.add_argument("--save", type=str, default="checkpoints/reinforce_knapsack.pt")
     args = parser.parse_args()
 
-    print(f"\n=== Training REINFORCE policy on Knapsack({args.n_items}, {args.difficulty}) ===\n")
+    print(f"\n=== Training REINFORCE ({args.policy}) on Knapsack({args.n_items}, {args.difficulty}) ===\n")
 
     env_factory = knapsack_factory(
         n_items=args.n_items,
@@ -66,7 +76,7 @@ def main():
         time_limit=args.time_limit,
     )
 
-    policy = NodeSelectionPolicy(k=K, hidden=64)
+    policy = build_policy(args.policy)
     trainer = ReinforceTrainer(
         policy=policy,
         env_factory=env_factory,

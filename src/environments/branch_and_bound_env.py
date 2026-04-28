@@ -203,6 +203,84 @@ class BranchAndBoundEnv(gym.Env):
         if self.solver and self.solver.logger:
             self.solver.logger.finish()
 
+    # ----- Graph observation (for GNN policies) -----
+
+    GRAPH_F_PER_NODE = 9  # depth, rel_bound, num_int, num_frac, is_open, is_pruned,
+                          # is_integer, is_root, is_candidate
+
+    def graph_observation(self):
+        """
+        Return a torch_geometric.data.Data view of the current B&B tree
+        plus the indices of the K candidate (top-K open) nodes.
+
+        Lazy-imported torch_geometric so non-GNN code paths don't pay for it.
+
+        Returns:
+            data:                torch_geometric.data.Data with x (N, GRAPH_F_PER_NODE)
+                                 and edge_index (2, 2*E) (undirected expansion).
+            candidate_indices:   torch.LongTensor of length min(K, n_open) -- indices
+                                 into data.x for the candidate nodes (top-K by LP bound).
+        """
+        import torch
+        from torch_geometric.data import Data
+
+        tree = self.solver.enumeration_tree
+        all_ids = list(tree.nodes())
+        id_to_idx = {nid: i for i, nid in enumerate(all_ids)}
+
+        root_v = self.solver.root_relaxation_value or 1.0
+        root_v_safe = root_v if root_v != 0 else 1.0
+
+        # Candidate set (top-K open by LP bound)
+        self.open_nodes.sort(key=lambda n: -n.value)
+        candidate_nodes = self.open_nodes[: self.k_nodes]
+        open_ids = {n.id for n in self.open_nodes}
+        candidate_ids = {n.id for n in candidate_nodes}
+
+        features = []
+        for nid in all_ids:
+            data = tree.nodes[nid]
+            depth = data.get("depth", 0)
+            raw_bound = data.get("relaxed_obj_value")
+            if raw_bound is None or not np.isfinite(raw_bound):
+                # Fall back to local_upper_bound only if it's finite; else 0
+                lb = data.get("local_upper_bound", 0.0)
+                raw_bound = lb if np.isfinite(lb) else 0.0
+            rel_bound = float(raw_bound) / root_v_safe
+            num_int = data.get("num_int", 0)
+            num_frac = data.get("num_frac", 0)
+            is_open = 1.0 if nid in open_ids else 0.0
+            color = data.get("color", "")
+            is_pruned = 1.0 if color in ("orange", "red") else 0.0
+            is_integer = 1.0 if color in ("green", "lightblue") else 0.0
+            is_root = 1.0 if color == "blue" else 0.0
+            is_candidate = 1.0 if nid in candidate_ids else 0.0
+            features.append([
+                depth / 50.0,
+                rel_bound,
+                num_int / 50.0,
+                num_frac / 50.0,
+                is_open, is_pruned, is_integer, is_root, is_candidate,
+            ])
+        x = torch.tensor(features, dtype=torch.float32) if features else torch.zeros((0, self.GRAPH_F_PER_NODE), dtype=torch.float32)
+
+        # Build undirected edge_index (each tree edge appears in both directions)
+        edge_pairs = []
+        for u, v in tree.edges():
+            iu, iv = id_to_idx[u], id_to_idx[v]
+            edge_pairs.append((iu, iv))
+            edge_pairs.append((iv, iu))
+        if edge_pairs:
+            edge_index = torch.tensor(edge_pairs, dtype=torch.long).t().contiguous()
+        else:
+            edge_index = torch.zeros((2, 0), dtype=torch.long)
+
+        candidate_indices = torch.tensor(
+            [id_to_idx[n.id] for n in candidate_nodes], dtype=torch.long
+        )
+
+        return Data(x=x, edge_index=edge_index), candidate_indices
+
     # ----- Internals -----
 
     def _process_node(self, node: Node) -> str:

@@ -135,3 +135,43 @@ def test_policy_eval_smoke():
     res = trainer.evaluate(n_eval=3, deterministic=True)
     assert res["nodes_mean"] > 0
     assert res["solved_frac"] == pytest.approx(1.0, abs=1e-6)
+
+
+def test_gnn_policy_runs_episode():
+    """GNN policy must consume the env's graph_observation and survive a full
+    episode without NaN'ing the softmax."""
+    from src.agents.gnn_policy import GNNNodeSelectionPolicy
+
+    torch.manual_seed(0)
+    policy = GNNNodeSelectionPolicy(k=8, hidden=16, n_conv=2)
+
+    env = _knapsack_factory(n_items=10, seed=99)
+    env.reset(seed=99)
+    done, truncated = False, False
+    total_reward = 0.0
+    while not (done or truncated):
+        action, log_prob, entropy = policy.act(env, deterministic=False)
+        assert torch.isfinite(log_prob)
+        assert torch.isfinite(entropy)
+        _, r, done, truncated, info = env.step(action)
+        total_reward += r
+    assert info["nodes_explored"] > 0
+    assert done, "GNN should solve the easy 10-item knapsack to completion"
+
+
+def test_gnn_trains_with_reinforce():
+    """Same trainer drives both MLP and GNN (uniform act(env) interface)."""
+    from src.agents.gnn_policy import GNNNodeSelectionPolicy
+    from src.agents.reinforce import ReinforceTrainer, TrainConfig
+
+    torch.manual_seed(0)
+    policy = GNNNodeSelectionPolicy(k=8, hidden=16, n_conv=2)
+    trainer = ReinforceTrainer(
+        policy=policy,
+        env_factory=lambda seed: _knapsack_factory(n_items=8, seed=seed),
+        config=TrainConfig(n_episodes=8, lr=1e-3, log_every=20, seed=0),
+    )
+    stats = trainer.train()
+    assert len(stats.nodes_explored) == 8
+    assert all(stats.completed)
+    assert max(stats.pg_loss) != min(stats.pg_loss)
