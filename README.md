@@ -32,7 +32,7 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project tha
 > **Status (April 2026):** the RL training pipeline is functional with seven architectures (MLP, GCN over the B&B tree, Transformer, Tree-GNN, Gasse-style Bipartite-GCN, Bipartite-GCN+self-attention, Hybrid Bipartite+Tree), three trainers (REINFORCE, PPO, Imitation), an Ensemble combiner, and a multi-task curriculum. Headline results — see [Results](#results):
 >
 > 1. **Knapsack:** REINFORCE recovers best-bound from scratch in ~50 s of CPU training and generalizes to unseen problem sizes.
-> 2. **Set Cover SOTA-on-CPU:** Bipartite-GCN with cross-candidate self-attention reaches **8.9 ± 6.4 nodes — 2.15x better than best_bound** (19.1) on held-out instances. The top seven ranked approaches are all learned; depth-first (the strongest classical heuristic) ranks 8th.
+> 2. **Set Cover SOTA-on-CPU:** Both the Gasse-style Bipartite-GCN and Tree-GNN reach **9.3 ± 7.4 nodes — 2.05x better than best_bound** (19.1) on n=40 held-out instances. Adding cross-candidate self-attention on top hit 8.9 (2.15x) on one training seed but reverted to 9.7 on a robustness retrain — the seed-to-seed variance is comparable to the architectural delta. The top seven approaches are all learned; depth-first (the strongest classical heuristic) ranks 8th.
 > 3. **Multi-task generalist:** a single MLP trained on Knapsack + Set Cover beats both single-task baselines while matching best-bound on Knapsack.
 > 4. **Honest negative results:** naive ensemble (Bipartite + Tree-GNN average) didn't help; jointly-trained hybrid encoder didn't beat the bare Bipartite-GCN. Documented under "What didn't work."
 
@@ -179,9 +179,10 @@ Comprehensive held-out evaluation on **40 fresh instances** comparing every arch
 
 | Rank | Approach                  | Nodes (mean ± std) | vs. best_bound | Architecture / Trainer        |
 |-----:|---------------------------|--------------------|----------------|-------------------------------|
-| 1    | **Bipartite-GCN + self-attention** | **8.9 ± 6.4** | **2.15x better** | Gasse encoder + transformer over candidates |
-| 2    | Bipartite-GCN             | 9.3 ± 7.4          | 2.05x better   | Gasse-style C↔V conv          |
-| 3    | Tree-GNN (stochastic)     | 9.3 ± 7.3          | 2.05x better   | Bottom-up tree msg-passing    |
+| 1    | **Bipartite-GCN + self-attention** (seed=0) | **8.9 ± 6.4** | **2.15x** | Gasse encoder + transformer over candidates |
+| 1b   | Bipartite-GCN + self-attention (seed=7, 800 ep) | 9.7 ± 7.9 | 1.97x | *robustness retrain — seed variance > architecture delta* |
+| 2    | Bipartite-GCN             | 9.3 ± 7.4          | 2.05x          | Gasse-style C↔V conv          |
+| 3    | Tree-GNN (stochastic)     | 9.3 ± 7.3          | 2.05x          | Bottom-up tree msg-passing    |
 | 4    | Multi-task MLP            | 10.0 ± 8.9         | 1.91x better   | REINFORCE on Knap+SC mix      |
 | 5    | Hybrid (Bipartite+Tree)   | 10.6 ± 10.4        | 1.80x better   | Joint encoder, shared head    |
 | 6    | Tree-GNN (deterministic)  | 10.7 ± 9.2         | 1.79x better   | Same as #3, argmax eval       |
@@ -202,7 +203,7 @@ Comprehensive held-out evaluation on **40 fresh instances** comparing every arch
 
 * **Architecture matters more than training time.** Longer training of an MLP (1500 vs 600 episodes) actually got *worse*, but switching architecture (MLP → Bipartite-GCN → Bipartite + cross-candidate attention) cut nodes from 10.8 to 9.3 to 8.9.
 * **Top 7 are all learned.** Bipartite-Attn, Bipartite-GCN, Tree-GNN, Multi-task MLP, Hybrid, Tree-GNN-det, single-task MLP all beat depth-first — the strongest classical heuristic for this distribution.
-* **Cross-candidate self-attention helps.** Adding a transformer encoder over the K candidate embeddings (so each candidate's score depends on the others) improved over the bare Bipartite-GCN (8.9 vs 9.3, ~4% better mean and tighter std 6.4 vs 7.4). Within-noise statistically but on the same held-out seeds, so directionally meaningful.
+* **Cross-candidate self-attention is *seed-variant*, not clearly better.** Adding a transformer encoder over the K candidate embeddings (so each candidate's score depends on the others) gave 8.9 ± 6.4 on one seed but 9.7 ± 7.9 with a different seed and longer training. Median behaviour appears statistically tied with the bare Bipartite-GCN (9.3). The architecture is not strictly worse — and on its best seed it leads the leaderboard — but the headline "2.15x" should be read as "at the better end of seed variance," not as a robust architectural win.
 * **Two GNN architectures, one over each natural graph.** The Bipartite-GCN reads the *LP problem structure* per candidate (variables, constraints, coefficients). The Tree-GNN reads the *B&B search tree* (parent-child relationships, per-node bounds). Both improve over the MLP and tied at 9.3 individually.
 * **Multi-task beats single-task on the same architecture** — for the MLP, training on a Knapsack+Set Cover mix gave 10.0 vs single-task 10.8. The Bipartite-GCN didn't get the benefit cleanly in our run because the bigger LP graphs of mixed problems blew up training time.
 * **GNN deterministic-eval collapse fixed** with low-temperature Boltzmann sampling at eval (T=0.05). The original GNN's `argmax` always landed on best_bound's choice because of near-tied scores at the top.

@@ -170,11 +170,17 @@ A two-pass C↔V graph convolution embeds the LP into per-variable hidden vector
 
 The intuition for why this works: the LP graph captures problem *structure* — which variables are intertwined through which constraints. A candidate node whose constraints have a small "neighbourhood" of fractional variables can probably be resolved quickly; a candidate whose constraints sprawl across many fractional variables won't. Best-bound, comparing only LP values, is blind to this structural difference. The bipartite GCN learns to read it.
 
-### 5.9 Bipartite-GCN + cross-candidate self-attention — THE NEW CHAMPION
+### 5.9 Bipartite-GCN + cross-candidate self-attention — best on lucky seed, tied on average
 
-The Gasse-style bipartite encoder scores each candidate *independently*. But ranking is fundamentally a comparative task: candidate i's score should depend on what j ≠ i look like. Adding a transformer encoder (self-attention across the K candidate embeddings, with padding-aware masking) gives each candidate "awareness" of its competition.
+The Gasse-style bipartite encoder scores each candidate *independently*. Ranking is fundamentally a comparative task: candidate i's score should depend on what j ≠ i look like. Adding a transformer encoder (self-attention across the K candidate embeddings, with padding-aware masking) gives each candidate "awareness" of its competition.
 
-**Result: 8.9 ± 6.4 nodes — 2.15x best_bound.** New top of the leaderboard. Mean improvement over bare Bipartite-GCN is small (~4%) but the std also tightened (6.4 vs 7.4), suggesting the policy makes more consistent rankings, not just slightly better mean choices.
+**First training run (seed=0, 400 episodes): 8.9 ± 6.4 nodes — 2.15x best_bound.** Top of the leaderboard.
+
+**Robustness retrain (seed=7, 800 episodes): 9.7 ± 7.9 nodes — 1.97x best_bound.** *Worse* than the first run.
+
+This is a real lesson and worth highlighting in the writeup: with single-seed evaluations and the high-variance environment we have here (instance std ~8 nodes on means ~10), seed-to-seed differences in training trajectory can swamp small architectural improvements. The 8.9 number is real, but so is 9.7. Honest framing: the cross-candidate-attention architecture is *not strictly worse* than the bare Bipartite-GCN, and on its best seed leads the leaderboard, but it's not a robust 2.15x improvement either. To claim that, you'd want 5+ training seeds and report mean-of-means.
+
+What this means for the codebase: the Bipartite-GCN at 9.3 ± 7.4 is the more honest "stable best" architecture. Bipartite-Attn is a promising direction worth more compute / more seeds.
 
 ### 5.10 Negative results we ran honestly
 
