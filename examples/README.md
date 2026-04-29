@@ -2,7 +2,18 @@
 
 This directory contains example scripts that demonstrate how to use the CHOP framework for combinatorial optimization problems.
 
-## Basic Examples
+## RL training & evaluation (the headline experiments)
+
+| Script | What it does |
+|--------|--------------|
+| [`rl_env_smoke_test.py`](rl_env_smoke_test.py) | Confirms the env's action causally affects the search (different heuristic agents → different node counts). Catches the "action is a no-op" regression. |
+| [`train_reinforce.py`](train_reinforce.py) | Train MLP/GNN policy with REINFORCE on Knapsack. Saves checkpoint, learning curve, comparison bar chart. `--policy {mlp, gnn}`. |
+| [`train_setcover.py`](train_setcover.py) | Train on Set Cover (the regime where RL beats best-bound). `--algo {reinforce, ppo}`, `--policy {mlp, gnn}`. |
+| [`eval_generalization.py`](eval_generalization.py) | Load a trained Knapsack policy and evaluate it across a range of `n_items` it was never trained on. |
+| [`rl_branch_and_bound_example.py`](rl_branch_and_bound_example.py) | Side-by-side benchmark of a trained policy vs all heuristic agents on held-out instances. |
+| [`setcover_baseline_check.py`](setcover_baseline_check.py) | Heuristic-only baseline scan for Set Cover. Used to find configurations where best_bound is actually beatable. |
+
+## Basic ILP / problem examples
 
 - **simple_ilp.py**: Basic example of solving a simple ILP using the BnB solver
 - **tsp_example.py**: Example of solving Traveling Salesman Problem instances
