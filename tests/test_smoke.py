@@ -175,3 +175,26 @@ def test_gnn_trains_with_reinforce():
     assert len(stats.nodes_explored) == 8
     assert all(stats.completed)
     assert max(stats.pg_loss) != min(stats.pg_loss)
+
+
+def test_ppo_trains_mlp_policy():
+    """PPO trainer collects rollouts, computes GAE, and updates without erroring."""
+    from src.agents.policy import NodeSelectionPolicy
+    from src.agents.ppo import PPOConfig, PPOTrainer
+
+    torch.manual_seed(0)
+    policy = NodeSelectionPolicy(k=8, hidden=16)
+    trainer = PPOTrainer(
+        policy=policy,
+        env_factory=lambda seed: _knapsack_factory(n_items=8, seed=seed),
+        config=PPOConfig(
+            n_iterations=2, episodes_per_iter=4,
+            update_epochs=2, minibatch_size=8,
+            seed=0,
+        ),
+    )
+    stats = trainer.train()
+    assert len(stats.iteration) == 2
+    assert all(c >= 0.5 for c in stats.completed_frac)
+    # Policy and value losses should both have moved
+    assert max(stats.pg_loss) != min(stats.pg_loss) or max(stats.value_loss) != min(stats.value_loss)

@@ -27,6 +27,7 @@ import torch
 
 from src.agents.gnn_policy import GNNNodeSelectionPolicy
 from src.agents.policy import NodeSelectionPolicy
+from src.agents.ppo import PPOConfig, PPOTrainer
 from src.agents.reinforce import ReinforceTrainer, TrainConfig
 from src.environments.branch_and_bound_env import DEFAULT_K
 from src.problems.set_cover import SetCover
@@ -59,39 +60,61 @@ def build_policy(name: str):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--algo", default="reinforce", choices=["reinforce", "ppo"])
     parser.add_argument("--policy", default="mlp", choices=["mlp", "gnn"])
     parser.add_argument("--n_elements", type=int, default=50)
     parser.add_argument("--n_sets", type=int, default=80)
     parser.add_argument("--density", type=float, default=0.10)
-    parser.add_argument("--episodes", type=int, default=600)
+    parser.add_argument("--episodes", type=int, default=600,
+                        help="REINFORCE only: number of episodes")
+    parser.add_argument("--ppo_iters", type=int, default=60,
+                        help="PPO only: number of rollout/update iterations")
+    parser.add_argument("--ppo_eps_per_iter", type=int, default=10,
+                        help="PPO only: episodes per rollout")
     parser.add_argument("--max_steps", type=int, default=2000)
     parser.add_argument("--lr", type=float, default=5e-4)
     parser.add_argument("--entropy", type=float, default=0.02)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--n_eval", type=int, default=30)
     parser.add_argument("--save", type=str,
-                        default="checkpoints/reinforce_setcover_{policy}.pt")
+                        default="checkpoints/{algo}_setcover_{policy}.pt")
     args = parser.parse_args()
 
-    save_path = args.save.format(policy=args.policy)
+    save_path = args.save.format(algo=args.algo, policy=args.policy)
 
     cfg_str = f"SetCover({args.n_elements}e x {args.n_sets}s d={args.density})"
-    print(f"\n=== Training {args.policy.upper()} on {cfg_str} ===\n")
+    print(f"\n=== Training {args.policy.upper()} via {args.algo.upper()} on {cfg_str} ===\n")
 
     factory = setcover_factory(args.n_elements, args.n_sets, args.density, args.max_steps)
 
     policy = build_policy(args.policy)
-    trainer = ReinforceTrainer(
-        policy=policy,
-        env_factory=factory,
-        config=TrainConfig(
-            n_episodes=args.episodes,
-            lr=args.lr,
-            entropy_coef=args.entropy,
-            seed=args.seed,
-            log_every=max(1, args.episodes // 20),
-        ),
-    )
+    if args.algo == "reinforce":
+        trainer = ReinforceTrainer(
+            policy=policy,
+            env_factory=factory,
+            config=TrainConfig(
+                n_episodes=args.episodes,
+                lr=args.lr,
+                entropy_coef=args.entropy,
+                seed=args.seed,
+                log_every=max(1, args.episodes // 20),
+            ),
+        )
+    else:
+        if args.policy != "mlp":
+            raise SystemExit("PPO trainer is currently MLP-only.")
+        trainer = PPOTrainer(
+            policy=policy,
+            env_factory=factory,
+            config=PPOConfig(
+                n_iterations=args.ppo_iters,
+                episodes_per_iter=args.ppo_eps_per_iter,
+                lr_policy=args.lr,
+                entropy_coef=args.entropy,
+                seed=args.seed,
+                log_every=max(1, args.ppo_iters // 20),
+            ),
+        )
 
     t0 = time.time()
     stats = trainer.train()
@@ -118,23 +141,32 @@ def main():
     # Learning curve plot
     os.makedirs("plots", exist_ok=True)
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    nodes = np.array(stats.nodes_explored)
-    eps = np.array(stats.episode)
+    if args.algo == "reinforce":
+        nodes = np.array(stats.nodes_explored)
+        xs = np.array(stats.episode)
+        x_label = "Episode"
+    else:  # ppo
+        nodes = np.array(stats.nodes_explored_mean)
+        xs = np.array(stats.iteration)
+        x_label = "Iteration"
     window = max(5, len(nodes) // 20)
-    rolling = np.convolve(nodes, np.ones(window) / window, mode="valid")
-    ax.plot(eps, nodes, alpha=0.25, color="tab:blue", label="per-episode")
-    ax.plot(eps[window-1:], rolling, color="tab:blue", linewidth=2,
-            label=f"rolling mean (w={window})")
+    if len(nodes) >= window:
+        rolling = np.convolve(nodes, np.ones(window) / window, mode="valid")
+        ax.plot(xs, nodes, alpha=0.25, color="tab:blue", label="per-step")
+        ax.plot(xs[window - 1:], rolling, color="tab:blue", linewidth=2,
+                label=f"rolling mean (w={window})")
+    else:
+        ax.plot(xs, nodes, color="tab:blue", linewidth=2, label="per-step")
     ax.axhline(results["best_bound"]["nodes_mean"], color="tab:green",
                linestyle="--", label=f"best_bound ({results['best_bound']['nodes_mean']:.1f})")
     ax.axhline(results["random"]["nodes_mean"], color="tab:red",
                linestyle="--", label=f"random ({results['random']['nodes_mean']:.1f})")
-    ax.set_xlabel("Episode")
+    ax.set_xlabel(x_label)
     ax.set_ylabel("Nodes explored to optimum")
-    ax.set_title(f"REINFORCE ({args.policy.upper()}) on {cfg_str}")
+    ax.set_title(f"{args.algo.upper()} ({args.policy.upper()}) on {cfg_str}")
     ax.legend(loc="best")
     ax.grid(True, alpha=0.3)
-    out = f"plots/setcover_learning_curve_{args.policy}.png"
+    out = f"plots/setcover_learning_curve_{args.algo}_{args.policy}.png"
     plt.tight_layout()
     plt.savefig(out, dpi=160)
     plt.close()
@@ -150,26 +182,34 @@ def main():
     ax.set_ylabel("Nodes explored to optimum (mean ± std)")
     ax.set_title(f"Held-out eval, {cfg_str}, n={args.n_eval}")
     ax.grid(True, axis="y", alpha=0.3)
-    out_bar = f"plots/setcover_comparison_{args.policy}.png"
+    out_bar = f"plots/setcover_comparison_{args.algo}_{args.policy}.png"
     plt.tight_layout()
     plt.savefig(out_bar, dpi=160)
     plt.close()
     print(f"Saved comparison bar to {out_bar}")
 
-    # JSON dump
-    json_out = f"checkpoints/setcover_stats_{args.policy}.json"
+    # JSON dump (algo-specific stat shape)
+    if args.algo == "reinforce":
+        stats_dump = {
+            "episode": stats.episode,
+            "nodes_explored": stats.nodes_explored,
+            "return_total": stats.return_total,
+            "completed": stats.completed,
+            "pg_loss": stats.pg_loss,
+        }
+    else:
+        stats_dump = {
+            "iteration": stats.iteration,
+            "nodes_explored_mean": stats.nodes_explored_mean,
+            "return_mean": stats.return_mean,
+            "completed_frac": stats.completed_frac,
+            "pg_loss": stats.pg_loss,
+            "value_loss": stats.value_loss,
+            "entropy": stats.entropy,
+        }
+    json_out = f"checkpoints/setcover_stats_{args.algo}_{args.policy}.json"
     with open(json_out, "w") as f:
-        json.dump({
-            "config": vars(args),
-            "stats": {
-                "episode": stats.episode,
-                "nodes_explored": stats.nodes_explored,
-                "return_total": stats.return_total,
-                "completed": stats.completed,
-                "pg_loss": stats.pg_loss,
-            },
-            "eval": results,
-        }, f, indent=2)
+        json.dump({"config": vars(args), "stats": stats_dump, "eval": results}, f, indent=2)
     print(f"Saved stats to {json_out}")
     return 0
 

@@ -39,21 +39,21 @@ intended slot works.
 
 ## Training
 
-`ReinforceTrainer` ([`reinforce.py`](reinforce.py)) is the policy-agnostic
-trainer. It calls `policy.act(env)` each step, accumulates log-probs / rewards
-across the episode, and applies REINFORCE-with-baseline:
+Two trainers are available; both expect the same `act(env)` policy contract.
+
+### `ReinforceTrainer` ([`reinforce.py`](reinforce.py))
+
+Policy-gradient with EMA baseline. Simplest, lowest-overhead option.
 
 * **Returns**: discounted with `gamma=0.99` (effectively undiscounted on short episodes)
 * **Baseline**: EMA of episode returns with `baseline_decay=0.95`, used for variance reduction
 * **Entropy bonus**: `entropy_coef * entropy.mean()` added to the loss to keep early exploration alive
 * **Gradient clip**: `grad_clip=1.0`
+* **Works with**: MLP and GNN policies
 
 ```python
 from src.agents.reinforce import ReinforceTrainer, TrainConfig
 from src.utils.eval import make_env_factory
-
-def make_problem(rng):
-    return ...  # build a problem instance
 
 env_factory = make_env_factory(make_problem, k_nodes=16, max_steps=400)
 trainer = ReinforceTrainer(
@@ -63,6 +63,31 @@ trainer = ReinforceTrainer(
 )
 stats = trainer.train()
 eval_results = trainer.evaluate(n_eval=30, deterministic=True)
+```
+
+### `PPOTrainer` ([`ppo.py`](ppo.py))
+
+Clipped-objective PPO with GAE(lambda), separate value network, and minibatch
+updates. More overhead per iteration but more sample-efficient on longer-horizon
+or higher-variance problems.
+
+* **Rollouts**: collects `episodes_per_iter` complete episodes per iteration
+* **Advantages**: GAE with `gamma=0.99`, `lambda=0.95`; normalized per batch
+* **Update**: `update_epochs` passes through the rollout buffer with `minibatch_size`
+* **Loss**: `clipped surrogate + value_coef * MSE - entropy_coef * H`, `clip_eps=0.2`
+* **Currently MLP-only** — generalizing to the GNN requires storing the graph
+  observation per step and replaying it through the GNN, which is straightforward
+  but not yet implemented.
+
+```python
+from src.agents.ppo import PPOTrainer, PPOConfig
+
+trainer = PPOTrainer(
+    policy=policy,  # NodeSelectionPolicy
+    env_factory=env_factory,
+    config=PPOConfig(n_iterations=60, episodes_per_iter=10),
+)
+stats = trainer.train()
 ```
 
 ## Adding a new policy
@@ -83,6 +108,13 @@ can fish out whichever observation flavor it wants (`env._observation()`,
 See the top-level [README — Results](../../README.md#results) for the
 headline numbers. Short version:
 
-* **MLP on Knapsack(25, medium)** — recovers BestBound from scratch in ~50 s, generalizes to n_items 15-30
-* **MLP on SetCover(50e×80s d=0.1)** — beats BestBound by ~40% (11.3 vs 19.0 nodes)
-* **GNN on Knapsack** — trains end-to-end; deterministic eval matches BestBound on small instances. Hasn't decisively beaten the MLP yet — see `--policy gnn` flag in `examples/train_*.py` to experiment.
+| Setup | Algorithm | Held-out nodes (mean ± std) | vs. BestBound |
+|-------|-----------|------------------------------|---------------|
+| Knapsack(25, medium) | REINFORCE + MLP | 66.7 ± 52.9 | matches |
+| SetCover(50e×80s d=0.1) | REINFORCE + MLP | **11.3 ± 9.7** | **1.68x better** |
+| SetCover(50e×80s d=0.1) | PPO + MLP | 16.4 ± 11.5 | 1.16x better |
+| SetCover(50e×80s d=0.1) | REINFORCE + GNN | 19.0 ± 15.0 (collapses to BestBound under det. eval) | matches |
+
+The GNN trains end-to-end with REINFORCE but its deterministic eval has so far collapsed to BestBound's behavior on Set Cover, even though stochastic per-episode performance during training is competitive (~10-15 nodes). Likely fixable via more entropy regularization and longer training; see roadmap.
+
+PPO trains faster wall-clock per iteration but on these short-episode problems doesn't beat REINFORCE — its sample-efficiency edge will start to matter on longer episodes (n_items >= 50).
