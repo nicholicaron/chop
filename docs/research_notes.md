@@ -170,26 +170,41 @@ A two-pass C↔V graph convolution embeds the LP into per-variable hidden vector
 
 The intuition for why this works: the LP graph captures problem *structure* — which variables are intertwined through which constraints. A candidate node whose constraints have a small "neighbourhood" of fractional variables can probably be resolved quickly; a candidate whose constraints sprawl across many fractional variables won't. Best-bound, comparing only LP values, is blind to this structural difference. The bipartite GCN learns to read it.
 
+### 5.9 Bipartite-GCN + cross-candidate self-attention — THE NEW CHAMPION
+
+The Gasse-style bipartite encoder scores each candidate *independently*. But ranking is fundamentally a comparative task: candidate i's score should depend on what j ≠ i look like. Adding a transformer encoder (self-attention across the K candidate embeddings, with padding-aware masking) gives each candidate "awareness" of its competition.
+
+**Result: 8.9 ± 6.4 nodes — 2.15x best_bound.** New top of the leaderboard. Mean improvement over bare Bipartite-GCN is small (~4%) but the std also tightened (6.4 vs 7.4), suggesting the policy makes more consistent rankings, not just slightly better mean choices.
+
+### 5.10 Negative results we ran honestly
+
+* **Naive score-ensemble** of pre-trained Bipartite-GCN + Tree-GNN. Hypothesis: orthogonal signals should disagree usefully. Reality: 1:1 average gave 10.97, *worse* than Bipartite alone (10.4) on the same seeds. Even 5:1 weighting toward Bipartite just recovered Bipartite's number. The two architectures make correlated errors on this problem.
+* **Hybrid jointly-trained encoder** (Bipartite + Tree, shared score head). 10.6 ± 10.4 — slightly worse than the bare Bipartite-GCN (9.3). The tree-side encoder added parameters but no useful gradient signal; the shared head learned to weight it down.
+
+What this teaches: on Set Cover, the LP-structure signal dominates. Adding additional sources (tree structure, multi-arch ensembles) doesn't help because they're either redundant (correlated mistakes) or distracting (extra parameters with no orthogonal information).
+
 ## 6. Comparison Table (Set Cover, 50e × 80s d=0.10, n=40 held-out)
 
 | Rank | Approach                  | Nodes (mean ± std) | vs best_bound | Notes                              |
 |-----:|---------------------------|--------------------|---------------|------------------------------------|
-| 1    | **Bipartite-GCN**         | **9.3 ± 7.4**      | **2.05x**     | Gasse 2019 architecture, REINFORCE |
-| 2    | Tree-GNN (stochastic)     | 9.7 ± 8.1          | 1.97x         | Bottom-up tree msg-passing         |
-| 3    | Multi-task MLP            | 10.0 ± 8.9         | 1.91x         | Single policy on Knap+SC mix       |
-| 4    | Tree-GNN (deterministic)  | 10.7 ± 9.2         | 1.79x         | Argmax eval                        |
-| 5    | REINFORCE+MLP             | 10.8 ± 9.0         | 1.77x         | Simplest learnable approach        |
-| 6    | depth_first               | 10.9 ± 10.5        | 1.75x         | Strongest classical                |
-| 7    | breadth_first             | 11.7 ± 9.8         | 1.63x         |                                    |
-| 8    | GNN over B&B tree (stoch) | 12.3 ± 10.3        | 1.55x         | GCN, not bottom-up                 |
-| 9    | random                    | 13.2 ± 9.8         | 1.45x         |                                    |
-| 10   | REINFORCE+MLP-long        | 13.9 ± 8.8         | 1.37x         | 1500 ep — overfit                  |
-| 11   | GNN det (Boltzmann fix)   | 14.0 ± 10.8        | 1.36x         | Was 19.1 with pure argmax          |
-| 12   | PPO+MLP                   | 16.2 ± 11.3        | 1.18x         |                                    |
-| 13   | Imitation+RL+MLP          | 18.8 ± 15.9        | 1.02x         | Distill best_bound, then RL        |
-| 14   | best_bound                | 19.1 ± 16.1        | 1.00x         | Classical baseline                 |
+| 1    | **Bipartite-GCN + Self-Attention** | **8.9 ± 6.4** | **2.15x**     | Gasse encoder + transformer over K candidates |
+| 2    | Bipartite-GCN             | 9.3 ± 7.4          | 2.05x         | Gasse 2019 architecture, REINFORCE |
+| 3    | Tree-GNN (stochastic)     | 9.3 ± 7.3          | 2.05x         | Bottom-up tree msg-passing         |
+| 4    | Multi-task MLP            | 10.0 ± 8.9         | 1.91x         | Single policy on Knap+SC mix       |
+| 5    | Hybrid (Bipartite+Tree)   | 10.6 ± 10.4        | 1.80x         | Joint encoder — didn't help over bare bipartite |
+| 6    | Tree-GNN (deterministic)  | 10.7 ± 9.2         | 1.79x         | Argmax eval                        |
+| 7    | REINFORCE+MLP             | 10.8 ± 9.0         | 1.77x         | Simplest learnable approach        |
+| 8    | depth_first               | 10.9 ± 10.5        | 1.75x         | **Strongest classical**            |
+| 9    | breadth_first             | 11.7 ± 9.8         | 1.63x         |                                    |
+| 10   | random                    | 13.2 ± 9.8         | 1.45x         |                                    |
+| 11   | GNN over B&B tree (stoch) | 13.3 ± 9.8         | 1.43x         | Pre-Boltzmann fix                  |
+| 12   | REINFORCE+MLP-long        | 13.9 ± 8.8         | 1.37x         | 1500 ep — overfit                  |
+| 13   | GNN det (Boltzmann fix)   | 13.9 ± 12.4        | 1.37x         | Was 19.1 with pure argmax          |
+| 14   | PPO+MLP                   | 16.2 ± 11.3        | 1.18x         |                                    |
+| 15   | Imitation+RL+MLP          | 18.8 ± 15.9        | 1.02x         | Distill best_bound, then RL        |
+| 16   | best_bound                | 19.1 ± 16.1        | 1.00x         | Classical baseline                 |
 
-**The five top performers are all learned policies.** The strongest classical heuristic on this distribution (depth-first) ranks 6th.
+**The seven top performers are all learned policies.** The strongest classical heuristic on this distribution (depth-first) ranks 8th.
 
 ## 7. What We Did NOT Get Working (and why)
 

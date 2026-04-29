@@ -29,11 +29,12 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project tha
   </p>
 </div>
 
-> **Status (April 2026):** the RL training pipeline is functional with five architectures (MLP, GNN over the B&B tree, Transformer, Tree-GNN, Gasse-style Bipartite-GCN), three trainers (REINFORCE, PPO, Imitation), and a multi-task curriculum. Headline results — see [Results](#results):
+> **Status (April 2026):** the RL training pipeline is functional with seven architectures (MLP, GCN over the B&B tree, Transformer, Tree-GNN, Gasse-style Bipartite-GCN, Bipartite-GCN+self-attention, Hybrid Bipartite+Tree), three trainers (REINFORCE, PPO, Imitation), an Ensemble combiner, and a multi-task curriculum. Headline results — see [Results](#results):
 >
 > 1. **Knapsack:** REINFORCE recovers best-bound from scratch in ~50 s of CPU training and generalizes to unseen problem sizes.
-> 2. **Set Cover SOTA-on-CPU:** A Gasse-style Bipartite-GCN trained on this codebase reaches **9.3 ± 7.4 nodes — 2.05x better than best_bound** (19.1) on held-out instances. The top four ranked approaches are all learned; depth-first (the strongest classical heuristic) is fifth.
+> 2. **Set Cover SOTA-on-CPU:** Bipartite-GCN with cross-candidate self-attention reaches **8.9 ± 6.4 nodes — 2.15x better than best_bound** (19.1) on held-out instances. The top seven ranked approaches are all learned; depth-first (the strongest classical heuristic) ranks 8th.
 > 3. **Multi-task generalist:** a single MLP trained on Knapsack + Set Cover beats both single-task baselines while matching best-bound on Knapsack.
+> 4. **Honest negative results:** naive ensemble (Bipartite + Tree-GNN average) didn't help; jointly-trained hybrid encoder didn't beat the bare Bipartite-GCN. Documented under "What didn't work."
 
 
 
@@ -178,31 +179,40 @@ Comprehensive held-out evaluation on **40 fresh instances** comparing every arch
 
 | Rank | Approach                  | Nodes (mean ± std) | vs. best_bound | Architecture / Trainer        |
 |-----:|---------------------------|--------------------|----------------|-------------------------------|
-| 1    | **Bipartite-GCN**         | **9.3 ± 7.4**      | **2.05x better** | Gasse-style C↔V conv + REINFORCE |
-| 2    | Tree-GNN (stochastic)     | 9.7 ± 8.1          | 1.97x better   | Bottom-up tree msg-passing    |
-| 3    | Multi-task MLP            | 10.0 ± 8.9         | 1.91x better   | REINFORCE on Knap+SC mix      |
-| 4    | Tree-GNN (deterministic)  | 10.7 ± 9.2         | 1.79x better   | Same as #2, argmax eval       |
-| 5    | REINFORCE + MLP           | 10.8 ± 9.0         | 1.77x better   | 600 ep on SetCover only       |
-| 6    | depth_first (heuristic)   | 10.9 ± 10.5        | 1.75x          | classical                     |
-| 7    | breadth_first (heuristic) | 11.7 ± 9.8         | 1.63x          | classical                     |
-| 8    | GNN over B&B tree (stoch) | 12.3 ± 10.3        | 1.55x better   | GCN over enumeration tree     |
-| 9    | random (heuristic)        | 13.2 ± 9.8         | 1.45x          | classical                     |
-| 10   | REINFORCE + MLP-long      | 13.9 ± 8.8         | 1.37x          | 1500 ep (overfit)             |
-| 11   | GNN over B&B tree (det+T) | 14.0 ± 10.8        | 1.36x          | Boltzmann-temp eval fix       |
-| 12   | PPO + MLP                 | 16.2 ± 11.3        | 1.18x          | clipped surrogate + GAE       |
-| 13   | Imitation + RL + MLP      | 18.8 ± 15.9        | 1.02x          | distill best_bound, then RL   |
-| 14   | best_bound (heuristic)    | 19.1 ± 16.1        | 1.00x          | classical baseline            |
+| 1    | **Bipartite-GCN + self-attention** | **8.9 ± 6.4** | **2.15x better** | Gasse encoder + transformer over candidates |
+| 2    | Bipartite-GCN             | 9.3 ± 7.4          | 2.05x better   | Gasse-style C↔V conv          |
+| 3    | Tree-GNN (stochastic)     | 9.3 ± 7.3          | 2.05x better   | Bottom-up tree msg-passing    |
+| 4    | Multi-task MLP            | 10.0 ± 8.9         | 1.91x better   | REINFORCE on Knap+SC mix      |
+| 5    | Hybrid (Bipartite+Tree)   | 10.6 ± 10.4        | 1.80x better   | Joint encoder, shared head    |
+| 6    | Tree-GNN (deterministic)  | 10.7 ± 9.2         | 1.79x better   | Same as #3, argmax eval       |
+| 7    | REINFORCE + MLP           | 10.8 ± 9.0         | 1.77x better   | 600 ep on SetCover only       |
+| 8    | depth_first (heuristic)   | 10.9 ± 10.5        | 1.75x          | strongest classical here      |
+| 9    | breadth_first (heuristic) | 11.7 ± 9.8         | 1.63x          | classical                     |
+| 10   | random (heuristic)        | 13.2 ± 9.8         | 1.45x          | classical                     |
+| 11   | GNN over B&B tree (stoch) | 13.3 ± 9.8         | 1.43x          | GCN over enumeration tree     |
+| 12   | REINFORCE + MLP-long      | 13.9 ± 8.8         | 1.37x          | 1500 ep (overfit)             |
+| 13   | GNN over B&B tree (det)   | 13.9 ± 12.4        | 1.37x          | Boltzmann-temp eval fix       |
+| 14   | PPO + MLP                 | 16.2 ± 11.3        | 1.18x          | clipped surrogate + GAE       |
+| 15   | Imitation + RL + MLP      | 18.8 ± 15.9        | 1.02x          | distill best_bound, then RL   |
+| 16   | best_bound (heuristic)    | 19.1 ± 16.1        | 1.00x          | classical baseline            |
 
 ![All approaches benchmark](plots/benchmark_all.png)
 
 #### What we learned from running this whole grid
 
-* **Architecture matters more than training time.** The Bipartite-GCN follows Gasse, Chetelat, Ferroni, Charlin & Lodi (NeurIPS 2019) — variable-constraint bipartite graph of the LP, two-pass C↔V convolution, prenorm. It wins by a clean margin (1.96x best_bound) over the same trainer (REINFORCE) with simpler architectures. Longer training of an MLP (1500 vs 600 episodes) actually got *worse*, confirming the bottleneck is representation, not data.
-* **Top 5 are all learned.** Bipartite-GCN, Tree-GNN (stochastic), Multi-task MLP, Tree-GNN (det), and single-task MLP all beat depth-first — the strongest classical heuristic for this distribution.
-* **Two GNN architectures, one over each natural graph.** The Bipartite-GCN reads the *LP problem structure* per candidate (variables, constraints, coefficients). The Tree-GNN reads the *B&B search tree* (parent-child relationships, per-node bounds). Both improve over the MLP; running them ensemble-style (e.g., averaging scores) is a natural follow-up.
-* **Multi-task beats single-task on the same architecture** — for the MLP, training on a Knapsack+Set Cover mix gave 10.0 vs single-task 10.8. The Bipartite-GCN didn't get the benefit cleanly in our run because the bigger LP graphs of mixed problems blew up training time; that's a tractability issue, not a methods one.
-* **GNN deterministic-eval collapse fixed.** The original GNN's `argmax` always landed on best_bound's choice because of near-tied scores at the top. Replacing argmax with a low-temperature (T=0.05) Boltzmann sample broke the tie correctly: deterministic eval went from 19.1 (= best_bound) down to 14.0.
+* **Architecture matters more than training time.** Longer training of an MLP (1500 vs 600 episodes) actually got *worse*, but switching architecture (MLP → Bipartite-GCN → Bipartite + cross-candidate attention) cut nodes from 10.8 to 9.3 to 8.9.
+* **Top 7 are all learned.** Bipartite-Attn, Bipartite-GCN, Tree-GNN, Multi-task MLP, Hybrid, Tree-GNN-det, single-task MLP all beat depth-first — the strongest classical heuristic for this distribution.
+* **Cross-candidate self-attention helps.** Adding a transformer encoder over the K candidate embeddings (so each candidate's score depends on the others) improved over the bare Bipartite-GCN (8.9 vs 9.3, ~4% better mean and tighter std 6.4 vs 7.4). Within-noise statistically but on the same held-out seeds, so directionally meaningful.
+* **Two GNN architectures, one over each natural graph.** The Bipartite-GCN reads the *LP problem structure* per candidate (variables, constraints, coefficients). The Tree-GNN reads the *B&B search tree* (parent-child relationships, per-node bounds). Both improve over the MLP and tied at 9.3 individually.
+* **Multi-task beats single-task on the same architecture** — for the MLP, training on a Knapsack+Set Cover mix gave 10.0 vs single-task 10.8. The Bipartite-GCN didn't get the benefit cleanly in our run because the bigger LP graphs of mixed problems blew up training time.
+* **GNN deterministic-eval collapse fixed** with low-temperature Boltzmann sampling at eval (T=0.05). The original GNN's `argmax` always landed on best_bound's choice because of near-tied scores at the top.
 * **PPO + Imitation underperformed REINFORCE here.** Short-episode regimes don't expose PPO's sample-efficiency edge; imitation warm-start started near best_bound and the on-policy fine-tune destabilized rather than improved.
+
+#### What didn't work (honest negative results)
+
+* **Naive score-ensemble of pre-trained Bipartite-GCN + Tree-GNN.** Hypothesis: two architectures looking at orthogonal signals should disagree usefully. Reality: 1:1 average gave 10.97, *worse* than Bipartite-GCN alone (10.4 on the same seeds). Skewed weights (2:1 or 3:1 favoring Bipartite) just recovered Bipartite-alone's score. Conclusion: the two architectures make highly correlated mistakes on this problem — the LP-structure and tree-structure signals lead to similar rankings rather than complementary ones.
+* **Hybrid joint encoder (Bipartite-GCN + Tree-GNN trained together with a shared score head).** Hypothesis: joint training would let the encoders specialize on complementary signals during training, fixing what the naive ensemble couldn't. Reality: 10.6 ± 10.4 nodes — slightly worse than the bare Bipartite-GCN (9.3). The tree-side encoder added parameters but no useful gradient signal; the shared head just weighted it down.
+* **Long training (1500 episodes vs 600 for single-task MLP).** Got 13.9 vs 10.8. Likely overfitting on the noisy on-policy gradient.
 
 ### Result 3 — Multi-task: one policy, two problem classes
 

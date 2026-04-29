@@ -62,13 +62,20 @@ def build_policy(name: str):
     if name == "tree":
         from src.agents.tree_gnn_policy import TreeGNNNodeSelectionPolicy
         return TreeGNNNodeSelectionPolicy(k=K, hidden=64, n_iters=3)
+    if name == "bipartite_attn":
+        from src.agents.bipartite_attention_policy import BipartiteAttentionPolicy
+        return BipartiteAttentionPolicy(k=K, hidden=64, n_attn_layers=2, n_heads=4)
+    if name == "hybrid":
+        from src.agents.hybrid_policy import HybridGNNPolicy
+        return HybridGNNPolicy(k=K, hidden=64, n_tree_iters=3)
     raise ValueError(name)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--algo", default="reinforce", choices=["reinforce", "ppo"])
-    parser.add_argument("--policy", default="mlp", choices=["mlp", "gnn", "bipartite", "tree"])
+    parser.add_argument("--policy", default="mlp",
+                        choices=["mlp", "gnn", "bipartite", "tree", "bipartite_attn", "hybrid"])
     parser.add_argument("--n_elements", type=int, default=50)
     parser.add_argument("--n_sets", type=int, default=80)
     parser.add_argument("--density", type=float, default=0.10)

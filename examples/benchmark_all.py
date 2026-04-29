@@ -23,8 +23,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+from src.agents.bipartite_attention_policy import BipartiteAttentionPolicy
 from src.agents.bipartite_gnn_policy import BipartiteGCNNodeSelectionPolicy
+from src.agents.ensemble_policy import EnsemblePolicy
 from src.agents.gnn_policy import GNNNodeSelectionPolicy
+from src.agents.hybrid_policy import HybridGNNPolicy
 from src.agents.policy import NodeSelectionPolicy
 from src.agents.transformer_policy import TransformerNodeSelectionPolicy
 from src.agents.tree_gnn_policy import TreeGNNNodeSelectionPolicy
@@ -70,6 +73,10 @@ CHECKPOINTS = [
      lambda: TreeGNNNodeSelectionPolicy(k=K, hidden=64, n_iters=3), ("det",)),
     ("Tree-GNN (stoch)",    "checkpoints/reinforce_setcover_tree.pt",
      lambda: TreeGNNNodeSelectionPolicy(k=K, hidden=64, n_iters=3), ("stoch",)),
+    ("Bipartite-Attn",      "checkpoints/reinforce_setcover_bipartite_attn.pt",
+     lambda: BipartiteAttentionPolicy(k=K, hidden=64, n_attn_layers=2, n_heads=4), ("det",)),
+    ("Hybrid (BP+Tree)",    "checkpoints/reinforce_setcover_hybrid.pt",
+     lambda: HybridGNNPolicy(k=K, hidden=64, n_tree_iters=3), ("det",)),
 ]
 
 

@@ -275,6 +275,55 @@ def test_tree_gnn_trains_with_reinforce():
     assert all(stats.completed)
 
 
+def test_bipartite_attention_runs():
+    from src.agents.bipartite_attention_policy import BipartiteAttentionPolicy
+
+    torch.manual_seed(0)
+    policy = BipartiteAttentionPolicy(k=8, hidden=16, n_attn_layers=1, n_heads=4)
+    env = _knapsack_factory(n_items=10, seed=42)
+    env.reset(seed=42)
+    done, truncated = False, False
+    while not (done or truncated):
+        action, log_prob, entropy = policy.act(env, deterministic=False)
+        assert torch.isfinite(log_prob)
+        assert torch.isfinite(entropy)
+        _, _, done, truncated, info = env.step(action)
+    assert done
+
+
+def test_hybrid_policy_runs():
+    from src.agents.hybrid_policy import HybridGNNPolicy
+
+    torch.manual_seed(0)
+    policy = HybridGNNPolicy(k=8, hidden=16, n_tree_iters=2)
+    env = _knapsack_factory(n_items=10, seed=42)
+    env.reset(seed=42)
+    done, truncated = False, False
+    while not (done or truncated):
+        action, log_prob, entropy = policy.act(env, deterministic=False)
+        assert torch.isfinite(log_prob)
+        assert torch.isfinite(entropy)
+        _, _, done, truncated, info = env.step(action)
+    assert done
+
+
+def test_ensemble_policy():
+    from src.agents.ensemble_policy import EnsemblePolicy
+    from src.agents.policy import NodeSelectionPolicy
+
+    torch.manual_seed(0)
+    p1 = NodeSelectionPolicy(k=8, hidden=16)
+    p2 = NodeSelectionPolicy(k=8, hidden=16)
+    ens = EnsemblePolicy(members=[p1, p2], k=8, weights=[1.0, 1.0])
+    env = _knapsack_factory(n_items=10, seed=42)
+    env.reset(seed=42)
+    done, truncated = False, False
+    while not (done or truncated):
+        action, _, _ = ens.act(env, deterministic=True)
+        _, _, done, truncated, info = env.step(action)
+    assert done
+
+
 def test_imitation_warm_start():
     """Imitation learner should achieve >50% argmax accuracy on best_bound."""
     from src.agents.imitation import ImitationConfig, ImitationLearner
