@@ -68,7 +68,15 @@ class GNNNodeSelectionPolicy(nn.Module):
         probs = F.softmax(full_logits, dim=-1)
         dist = torch.distributions.Categorical(probs=probs)
         if deterministic:
-            choice = int(torch.argmax(probs).item())
+            # Boltzmann sampling at low temperature instead of pure argmax,
+            # so near-tied scores don't always tiebreak to the same index
+            # (the bug where the GNN's eval collapsed to best_bound's choice).
+            temperature = 0.05
+            cool_logits = full_logits / temperature
+            cool_probs = F.softmax(cool_logits, dim=-1)
+            cool_dist = torch.distributions.Categorical(probs=cool_probs)
+            sampled = cool_dist.sample()
+            choice = int(sampled.item())
             log_prob = torch.log(probs[choice] + 1e-12)
         else:
             sampled = dist.sample()

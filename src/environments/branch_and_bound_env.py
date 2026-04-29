@@ -281,6 +281,161 @@ class BranchAndBoundEnv(gym.Env):
 
         return Data(x=x, edge_index=edge_index), candidate_indices
 
+    # ----- Bipartite LP-graph observation (Gasse 2019 style) -----
+    #
+    # For each open candidate node, build the bipartite graph of its current
+    # LP relaxation: one node per variable, one node per constraint, an edge
+    # whenever a variable appears in a constraint with a nonzero coefficient.
+    # Per-variable features include the LP solution at this node (value,
+    # fractionality), so candidates with different LP states get different
+    # graph features even though the topology is shared.
+
+    BIPARTITE_VAR_DIM = 9      # per-variable feature width
+    BIPARTITE_CON_DIM = 5      # per-constraint feature width
+    BIPARTITE_EDGE_DIM = 1     # per-edge feature width (signed coefficient)
+
+    def bipartite_observation(self):
+        """Return ``(graphs, mask)`` where ``graphs`` is a list of
+        torch_geometric.data.Data objects -- one per top-K candidate node,
+        each holding the bipartite LP graph at that candidate. ``mask`` is a
+        torch.BoolTensor of length ``self.k_nodes``: True for real
+        candidates, False for padded slots.
+        """
+        import torch
+        from torch_geometric.data import Data
+
+        # Sort candidates by LP bound desc (consistent with action contract)
+        self.open_nodes.sort(key=lambda n: -n.value)
+        candidates = self.open_nodes[: self.k_nodes]
+
+        graphs = []
+        for cand in candidates:
+            graphs.append(self._candidate_bipartite_graph(cand))
+
+        # Pad with empty graphs so downstream batching has a consistent K
+        empty_data = Data(
+            x_var=torch.zeros((0, self.BIPARTITE_VAR_DIM), dtype=torch.float32),
+            x_con=torch.zeros((0, self.BIPARTITE_CON_DIM), dtype=torch.float32),
+            edge_index=torch.zeros((2, 0), dtype=torch.long),
+            edge_attr=torch.zeros((0, self.BIPARTITE_EDGE_DIM), dtype=torch.float32),
+            n_var=torch.tensor([0], dtype=torch.long),
+            n_con=torch.tensor([0], dtype=torch.long),
+        )
+        while len(graphs) < self.k_nodes:
+            graphs.append(empty_data)
+
+        mask = torch.tensor(
+            [i < len(candidates) for i in range(self.k_nodes)], dtype=torch.bool
+        )
+        return graphs, mask
+
+    def _candidate_bipartite_graph(self, node: Node):
+        """Construct one candidate's bipartite LP graph as a PyG Data object.
+
+        Variable side: one node per ILP variable, with features encoding
+        objective coefficient, the LP solution at this candidate, fractionality,
+        binary flags for is-fractional / is-at-bound, and a normalized
+        bound contribution.
+
+        Constraint side: one node per active constraint at this candidate,
+        with features encoding RHS, slack at the LP solution, and number of
+        active variables (degree).
+
+        Edges: var <-> constraint whenever the constraint coefficient is
+        nonzero. Edge feature is the signed coefficient (normalized).
+        """
+        import torch
+        from torch_geometric.data import Data
+
+        c = self.problem_c
+        A = node.A_ub
+        b = node.b_ub
+        x = node.relaxed_soln if node.relaxed_soln is not None else np.zeros(len(c))
+
+        n_var = len(c)
+        n_con = A.shape[0]
+
+        # Variable features (n_var, BIPARTITE_VAR_DIM=9)
+        c_norm_scale = max(1.0, float(np.max(np.abs(c))))
+        x_round = np.round(x)
+        frac_part = np.abs(x - x_round)                       # 0 if integer, else in (0, 0.5]
+        frac_signal = np.minimum(frac_part, 1.0 - frac_part)  # closeness to 0.5
+        is_frac = (frac_part > self.solver.tolerance).astype(np.float32)
+        is_int = 1.0 - is_frac
+        # Normalized objective coefficient (signed)
+        c_norm = c.astype(np.float32) / c_norm_scale
+        # Normalized current LP value (clipped to a reasonable range)
+        x_norm = np.clip(x.astype(np.float32), -10.0, 10.0)
+        # "How much this variable is contributing to the current bound"
+        contrib = c_norm * x_norm
+        # Has an explicit upper bound from a branching constraint?
+        # (rough heuristic: count single-variable constraints in A_ub on this var)
+        has_branch_bound = np.zeros(n_var, dtype=np.float32)
+        for i in range(n_con):
+            row_nz = np.nonzero(A[i])[0]
+            if len(row_nz) == 1:
+                has_branch_bound[row_nz[0]] = 1.0
+
+        var_features = np.stack([
+            c_norm,            # 0: objective coefficient
+            x_norm,            # 1: LP value at this candidate
+            frac_part,         # 2: distance from nearest integer
+            frac_signal,       # 3: closeness to 0.5
+            is_frac,           # 4: binary fractional flag
+            is_int,            # 5: binary integer flag
+            contrib,           # 6: per-var contribution to bound
+            has_branch_bound,  # 7: has a single-var bound constraint
+            np.clip(x_round.astype(np.float32), -10.0, 10.0),  # 8: nearest integer
+        ], axis=1)
+        x_var = torch.as_tensor(var_features, dtype=torch.float32)
+
+        # Constraint features (n_con, BIPARTITE_CON_DIM=5)
+        b_norm_scale = max(1.0, float(np.max(np.abs(b))))
+        Ax = A @ x
+        slack = b - Ax
+        # Normalize per-row to keep magnitudes similar across constraints
+        row_scales = np.maximum(1.0, np.max(np.abs(A), axis=1))
+        slack_norm = slack / row_scales
+        rhs_norm = b.astype(np.float32) / b_norm_scale
+        is_active = (np.abs(slack) < 1e-6).astype(np.float32)  # binding at LP soln
+        degrees = np.sum(np.abs(A) > 1e-12, axis=1).astype(np.float32) / max(1, n_var)
+        is_branch_constraint = np.array(
+            [1.0 if np.count_nonzero(A[i]) == 1 else 0.0 for i in range(n_con)],
+            dtype=np.float32,
+        )
+        con_features = np.stack([
+            rhs_norm.astype(np.float32),
+            slack_norm.astype(np.float32),
+            is_active,
+            degrees,
+            is_branch_constraint,
+        ], axis=1)
+        x_con = torch.as_tensor(con_features, dtype=torch.float32)
+
+        # Edges: row=constraint idx, col=variable idx, feature=normalized coefficient
+        rows, cols = np.nonzero(A)
+        coeffs = A[rows, cols]
+        # Normalize coefficients per row (so each constraint contributes comparable magnitudes)
+        scales = row_scales[rows]
+        edge_attr = (coeffs / np.maximum(scales, 1e-12)).astype(np.float32).reshape(-1, 1)
+
+        # PyG bipartite edges: store both directions explicitly so a single
+        # Data can carry both V->C and C->V messages without re-wiring.
+        # We use HeteroData-style indices: edge_index[0] = constraint, edge_index[1] = variable
+        edge_index = torch.tensor(np.stack([rows, cols], axis=0), dtype=torch.long)
+        edge_attr_t = torch.as_tensor(edge_attr, dtype=torch.float32)
+
+        return Data(
+            x_var=x_var,
+            x_con=x_con,
+            edge_index=edge_index,    # (2, E) where row 0 = constraint idx, row 1 = variable idx
+            edge_attr=edge_attr_t,    # (E, 1)
+            n_var=torch.tensor([n_var], dtype=torch.long),
+            n_con=torch.tensor([n_con], dtype=torch.long),
+            cand_value=torch.tensor([float(node.value)], dtype=torch.float32),
+            cand_depth=torch.tensor([float(node.depth)], dtype=torch.float32),
+        )
+
     # ----- Internals -----
 
     def _process_node(self, node: Node) -> str:

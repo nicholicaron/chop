@@ -209,6 +209,72 @@ def test_transformer_trains_with_reinforce():
     assert all(stats.completed)
 
 
+def test_bipartite_gnn_runs_episode():
+    """The Gasse-style bipartite-GCN policy must complete an episode without
+    NaNs across the per-candidate forward passes."""
+    from src.agents.bipartite_gnn_policy import BipartiteGCNNodeSelectionPolicy
+
+    torch.manual_seed(0)
+    policy = BipartiteGCNNodeSelectionPolicy(k=8, hidden=16)
+    env = _knapsack_factory(n_items=10, seed=88)
+    env.reset(seed=88)
+    done, truncated = False, False
+    while not (done or truncated):
+        action, log_prob, entropy = policy.act(env, deterministic=False)
+        assert torch.isfinite(log_prob)
+        assert torch.isfinite(entropy)
+        _, _, done, truncated, info = env.step(action)
+    assert done
+
+
+def test_bipartite_gnn_trains_with_reinforce():
+    from src.agents.bipartite_gnn_policy import BipartiteGCNNodeSelectionPolicy
+    from src.agents.reinforce import ReinforceTrainer, TrainConfig
+
+    torch.manual_seed(0)
+    policy = BipartiteGCNNodeSelectionPolicy(k=8, hidden=16)
+    trainer = ReinforceTrainer(
+        policy=policy,
+        env_factory=lambda seed: _knapsack_factory(n_items=8, seed=seed),
+        config=TrainConfig(n_episodes=6, lr=5e-4, log_every=20, seed=0),
+    )
+    stats = trainer.train()
+    assert len(stats.nodes_explored) == 6
+    assert all(stats.completed)
+
+
+def test_tree_gnn_runs_episode():
+    from src.agents.tree_gnn_policy import TreeGNNNodeSelectionPolicy
+
+    torch.manual_seed(0)
+    policy = TreeGNNNodeSelectionPolicy(k=8, hidden=16, n_iters=2)
+    env = _knapsack_factory(n_items=10, seed=55)
+    env.reset(seed=55)
+    done, truncated = False, False
+    while not (done or truncated):
+        action, log_prob, entropy = policy.act(env, deterministic=False)
+        assert torch.isfinite(log_prob)
+        assert torch.isfinite(entropy)
+        _, _, done, truncated, info = env.step(action)
+    assert done
+
+
+def test_tree_gnn_trains_with_reinforce():
+    from src.agents.reinforce import ReinforceTrainer, TrainConfig
+    from src.agents.tree_gnn_policy import TreeGNNNodeSelectionPolicy
+
+    torch.manual_seed(0)
+    policy = TreeGNNNodeSelectionPolicy(k=8, hidden=16, n_iters=2)
+    trainer = ReinforceTrainer(
+        policy=policy,
+        env_factory=lambda seed: _knapsack_factory(n_items=8, seed=seed),
+        config=TrainConfig(n_episodes=6, lr=5e-4, log_every=20, seed=0),
+    )
+    stats = trainer.train()
+    assert len(stats.nodes_explored) == 6
+    assert all(stats.completed)
+
+
 def test_imitation_warm_start():
     """Imitation learner should achieve >50% argmax accuracy on best_bound."""
     from src.agents.imitation import ImitationConfig, ImitationLearner

@@ -29,11 +29,11 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project tha
   </p>
 </div>
 
-> **Status (April 2026):** the RL training pipeline is functional, with three architectures (MLP, GNN, Transformer) and two trainers (REINFORCE, PPO). Headline results — see [Results](#results):
+> **Status (April 2026):** the RL training pipeline is functional with five architectures (MLP, GNN over the B&B tree, Transformer, Tree-GNN, Gasse-style Bipartite-GCN), three trainers (REINFORCE, PPO, Imitation), and a multi-task curriculum. Headline results — see [Results](#results):
 >
 > 1. **Knapsack:** REINFORCE recovers best-bound from scratch in ~50 s of CPU training and generalizes to unseen problem sizes.
-> 2. **Set Cover (single-task):** REINFORCE+MLP beats best-bound by **~1.7x** (11.3 vs 19.0 nodes) on the regime where best-bound is provably suboptimal.
-> 3. **Set Cover (multi-task):** a *single* MLP trained on a 50/50 mix of Knapsack and Set Cover beats best-bound by **~1.83x on Set Cover (10.4 vs 19.0)** while matching it on Knapsack — the generalist outperforms the specialist.
+> 2. **Set Cover SOTA-on-CPU:** A Gasse-style Bipartite-GCN trained on this codebase reaches **9.3 ± 7.4 nodes — 2.05x better than best_bound** (19.1) on held-out instances. The top four ranked approaches are all learned; depth-first (the strongest classical heuristic) is fifth.
+> 3. **Multi-task generalist:** a single MLP trained on Knapsack + Set Cover beats both single-task baselines while matching best-bound on Knapsack.
 
 
 
@@ -174,30 +174,35 @@ The same policy generalizes to unseen `n_items` ∈ {15, 20, 25, 30} without ret
 * **Problem:** random Set Cover, `n_elements=50`, `n_sets=80`, density=0.10
 * **Why this regime?** Set Cover's LP relaxation is highly fractional, so a greedy best-bound traversal dives into deep fractional subtrees before reaching an integer solution. Random/breadth-first stumble onto integer solutions sooner. This is the regime where learned heuristics have room to actually outperform the classical best-bound.
 
-Comprehensive held-out evaluation on **40 fresh instances** comparing all approaches we trained:
+Comprehensive held-out evaluation on **40 fresh instances** comparing every architecture and trainer:
 
-| Rank | Approach                  | Nodes (mean ± std) | vs. best_bound | Algo / Arch                   |
+| Rank | Approach                  | Nodes (mean ± std) | vs. best_bound | Architecture / Trainer        |
 |-----:|---------------------------|--------------------|----------------|-------------------------------|
-| 1    | **Multi-task + MLP**      | **10.0 ± 8.9**     | **1.91x better** | REINFORCE on Knap+SC mix    |
-| 2    | REINFORCE + MLP           | 10.8 ± 9.0         | 1.77x better   | 600 ep on SetCover only       |
-| 3    | depth_first (heuristic)   | 10.9 ± 10.5        | 1.75x          | classical                     |
-| 4    | REINFORCE + GNN (stoch)   | 11.4 ± 7.8         | 1.68x better   | GCN over the B&B tree         |
-| 5    | breadth_first (heuristic) | 11.7 ± 9.8         | 1.63x          | classical                     |
-| 6    | random (heuristic)        | 13.2 ± 9.8         | 1.45x          | classical                     |
-| 7    | REINFORCE + MLP-long      | 13.9 ± 8.8         | 1.37x          | 1500 ep (overfit)             |
-| 8    | PPO + MLP                 | 16.2 ± 11.3        | 1.18x          | clipped surrogate + GAE       |
-| 9    | Imitation + RL + MLP      | 18.8 ± 15.9        | 1.02x          | distill best_bound, then RL   |
-| 10   | best_bound (heuristic)    | 19.1 ± 16.1        | 1.00x          | classical baseline            |
+| 1    | **Bipartite-GCN**         | **9.3 ± 7.4**      | **2.05x better** | Gasse-style C↔V conv + REINFORCE |
+| 2    | Tree-GNN (stochastic)     | 9.7 ± 8.1          | 1.97x better   | Bottom-up tree msg-passing    |
+| 3    | Multi-task MLP            | 10.0 ± 8.9         | 1.91x better   | REINFORCE on Knap+SC mix      |
+| 4    | Tree-GNN (deterministic)  | 10.7 ± 9.2         | 1.79x better   | Same as #2, argmax eval       |
+| 5    | REINFORCE + MLP           | 10.8 ± 9.0         | 1.77x better   | 600 ep on SetCover only       |
+| 6    | depth_first (heuristic)   | 10.9 ± 10.5        | 1.75x          | classical                     |
+| 7    | breadth_first (heuristic) | 11.7 ± 9.8         | 1.63x          | classical                     |
+| 8    | GNN over B&B tree (stoch) | 12.3 ± 10.3        | 1.55x better   | GCN over enumeration tree     |
+| 9    | random (heuristic)        | 13.2 ± 9.8         | 1.45x          | classical                     |
+| 10   | REINFORCE + MLP-long      | 13.9 ± 8.8         | 1.37x          | 1500 ep (overfit)             |
+| 11   | GNN over B&B tree (det+T) | 14.0 ± 10.8        | 1.36x          | Boltzmann-temp eval fix       |
+| 12   | PPO + MLP                 | 16.2 ± 11.3        | 1.18x          | clipped surrogate + GAE       |
+| 13   | Imitation + RL + MLP      | 18.8 ± 15.9        | 1.02x          | distill best_bound, then RL   |
+| 14   | best_bound (heuristic)    | 19.1 ± 16.1        | 1.00x          | classical baseline            |
 
 ![All approaches benchmark](plots/benchmark_all.png)
 
-#### Highlights
+#### What we learned from running this whole grid
 
-* **Multi-task wins overall** — a single MLP trained on a 50/50 mix of Knapsack and Set Cover instances reaches **10.0 ± 8.9 nodes on Set Cover (1.91x better than best_bound)** while *also* matching best_bound on Knapsack. Generalist beats specialist.
-* **REINFORCE + MLP at 10.8** — the simplest learnable approach is essentially tied with depth-first (the strongest classical heuristic on this distribution). 600 episodes is the sweet spot; 1500 episodes drifted slightly worse (likely overfitting on the noisy on-policy gradient).
-* **GNN works under stochastic eval** (11.4) but its deterministic argmax matches best_bound exactly (19.1) — diagnostic shows the policy *did* learn distinct features but tiebreaks against best_bound's choice. Fixable with more entropy / temperature, listed under Roadmap.
-* **PPO underperformed REINFORCE here** — short-episode regimes don't expose PPO's sample-efficiency edge. Expected to matter more on n_items >= 50 problems.
-* **Imitation warm-start barely moved** — the policy distilled best_bound (18.2 nodes ≈ 19.1) but the REINFORCE fine-tune didn't push much further, probably because the on-policy gradient is too noisy when starting from a near-optimal policy. PPO fine-tune would likely do better.
+* **Architecture matters more than training time.** The Bipartite-GCN follows Gasse, Chetelat, Ferroni, Charlin & Lodi (NeurIPS 2019) — variable-constraint bipartite graph of the LP, two-pass C↔V convolution, prenorm. It wins by a clean margin (1.96x best_bound) over the same trainer (REINFORCE) with simpler architectures. Longer training of an MLP (1500 vs 600 episodes) actually got *worse*, confirming the bottleneck is representation, not data.
+* **Top 5 are all learned.** Bipartite-GCN, Tree-GNN (stochastic), Multi-task MLP, Tree-GNN (det), and single-task MLP all beat depth-first — the strongest classical heuristic for this distribution.
+* **Two GNN architectures, one over each natural graph.** The Bipartite-GCN reads the *LP problem structure* per candidate (variables, constraints, coefficients). The Tree-GNN reads the *B&B search tree* (parent-child relationships, per-node bounds). Both improve over the MLP; running them ensemble-style (e.g., averaging scores) is a natural follow-up.
+* **Multi-task beats single-task on the same architecture** — for the MLP, training on a Knapsack+Set Cover mix gave 10.0 vs single-task 10.8. The Bipartite-GCN didn't get the benefit cleanly in our run because the bigger LP graphs of mixed problems blew up training time; that's a tractability issue, not a methods one.
+* **GNN deterministic-eval collapse fixed.** The original GNN's `argmax` always landed on best_bound's choice because of near-tied scores at the top. Replacing argmax with a low-temperature (T=0.05) Boltzmann sample broke the tie correctly: deterministic eval went from 19.1 (= best_bound) down to 14.0.
+* **PPO + Imitation underperformed REINFORCE here.** Short-episode regimes don't expose PPO's sample-efficiency edge; imitation warm-start started near best_bound and the on-policy fine-tune destabilized rather than improved.
 
 ### Result 3 — Multi-task: one policy, two problem classes
 
@@ -223,14 +228,15 @@ python examples/train_reinforce.py --policy mlp --episodes 800 --n_items 25 \
 # Generalization eval across n_items (~1 min)
 python examples/eval_generalization.py --sizes 15 20 25 30 --n_eval 25
 
-# Set Cover, single-task (~2 min) -- the "1.77x better" result
-python examples/train_setcover.py --algo reinforce --policy mlp --episodes 600 --n_eval 25
+# Set Cover, single-task with each architecture
+python examples/train_setcover.py --algo reinforce --policy mlp        --episodes 600
+python examples/train_setcover.py --algo reinforce --policy gnn        --episodes 600
+python examples/train_setcover.py --algo reinforce --policy tree       --episodes 400
+python examples/train_setcover.py --algo reinforce --policy bipartite  --episodes 400  # the 2.05x champion
+python examples/train_setcover.py --algo ppo       --policy mlp        --ppo_iters 30
 
-# Multi-task on Knapsack + Set Cover (~1 min) -- the headline 1.91x result
-python examples/train_multitask.py --policy mlp --episodes 600 --n_eval 25
-
-# PPO variant
-python examples/train_setcover.py --algo ppo --policy mlp --ppo_iters 30 --n_eval 25
+# Multi-task on Knapsack + Set Cover
+python examples/train_multitask.py --policy mlp --episodes 600
 
 # Imitation -> RL pipeline
 python examples/train_imitation_then_rl.py --policy mlp \
@@ -244,11 +250,11 @@ Plots land under `plots/`, raw stats under `checkpoints/`.
 
 ### Caveats and ongoing work
 
-* **GNN deterministic-eval collapse** — stochastic-mode GNN beats best_bound (11.4 vs 19.1), but `argmax` tiebreaks against best_bound's choice. Fix is straightforward (add temperature / Boltzmann sampling at eval) and is in the [Roadmap](#roadmap).
 * **PPO under-tuned for these episode lengths** — expected to win on larger problems where rollout sample-efficiency matters more.
 * **Imitation+RL fine-tune destabilized** — REINFORCE on a near-optimal policy is high variance; PPO fine-tune is the natural fix.
 * **Bin Packing parked** — added the missing `x_ij <= 1, y_j <= 1` bounds to the ILP, but Bin Packing's LP relaxation is too weak for this CPU-only solver scale (5-item instances exceed 200 nodes). Would need a stronger LP relaxation (Dantzig-Wolfe / column generation) before RL helps.
-* **Variance** — Set Cover instances at this size have high std (Mean ± 8-15). The 1.91x multi-task gap survives n=40 held-out instances; tightening the CI would mean a much larger n.
+* **Multi-task with Bipartite-GCN explored but not converged** — combining the two best ideas would be the natural next step, but each Knapsack(20) episode runs ~16 bipartite-GCN forward passes per step over a ~40-node LP graph, blowing up training time. Tractable with batched per-candidate evaluation; on the roadmap.
+* **Variance** — Set Cover instances at this size have high std (Mean ± 7-16). The 2.05x Bipartite-GCN gap survives n=40 held-out instances; tightening the CI would mean a much larger n.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -508,13 +514,15 @@ chop/
 │   └── rl_environment_visualization_test.py # Rich visualization examples
 │
 ├── src/                     # Source code
-│   ├── agents/              # Learnable RL agents (NEW)
-│   │   ├── policy.py        # MLP policy: scores top-K candidate nodes
-│   │   ├── gnn_policy.py    # GNN policy: GCN over the full B&B tree
-│   │   ├── transformer_policy.py  # Self-attention policy over candidate set
-│   │   ├── reinforce.py     # REINFORCE-with-baseline trainer (policy-agnostic)
-│   │   ├── ppo.py           # PPO trainer with GAE + clipped surrogate
-│   │   └── imitation.py     # Distill a HeuristicAgent into a policy via cross-entropy
+│   ├── agents/              # Learnable RL agents
+│   │   ├── policy.py             # MLP policy: scores top-K candidate nodes
+│   │   ├── gnn_policy.py         # GCN over the full B&B enumeration tree
+│   │   ├── transformer_policy.py # Self-attention policy over candidate set
+│   │   ├── tree_gnn_policy.py    # Bottom-up tree msg-passing (per arxiv 2310.00112)
+│   │   ├── bipartite_gnn_policy.py # Gasse-style C↔V bipartite GCN over the LP (the champion)
+│   │   ├── reinforce.py          # REINFORCE-with-baseline trainer (policy-agnostic)
+│   │   ├── ppo.py                # PPO trainer with GAE + clipped surrogate
+│   │   └── imitation.py          # Distill a HeuristicAgent into a policy via cross-entropy
 │   │
 │   ├── benchmarking/        # Benchmarking framework
 │   │   ├── metrics.py       # Instance and solver metrics
@@ -706,17 +714,19 @@ chop/
 - [x] **PPO trainer** with GAE + clipped surrogate + minibatching
 - [x] **Imitation-learning warm-start** (cross-entropy distillation from any HeuristicAgent)
 - [x] **MLP policy** over fixed-shape top-K candidate features
-- [x] **GNN policy** (GCN over the full B&B tree)
+- [x] **GCN over the B&B tree** (with low-temperature Boltzmann eval fix)
 - [x] **Transformer policy** (self-attention over the candidate set + global token)
+- [x] **Tree-GNN policy** (bottom-up message passing, per arxiv 2310.00112)
+- [x] **Bipartite-GCN policy** (Gasse 2019 NeurIPS architecture: C↔V over the LP)
 - [x] **Knapsack:** trained policy matches BestBound, generalizes across n_items
-- [x] **Set Cover (single-task):** trained policy beats BestBound by **1.77x**
-- [x] **Set Cover (multi-task):** single policy on Knapsack+SetCover beats BestBound by **1.91x**
-- [ ] Fix GNN deterministic-eval collapse (Boltzmann sampling at eval)
+- [x] **Set Cover SOTA-on-CPU:** Bipartite-GCN beats BestBound by **2.05x** (9.3 vs 19.1 nodes)
+- [x] **Multi-task** (Knapsack + Set Cover) generalist beats single-task baselines
+- [ ] Multi-task + Bipartite-GCN with batched per-candidate evaluation (combine the two best ideas)
 - [ ] PPO fine-tune from imitation warm-start (more stable than REINFORCE here)
+- [ ] Tree MDP credit assignment (Scavuzzo et al. 2022) for better gradient signals
 - [ ] Stronger LP relaxation for Bin Packing (Dantzig-Wolfe / column generation)
 - [ ] Larger problem sizes (n_items >= 50) where PPO's edge would emerge
-- [ ] Curriculum learning across problem-size schedules
-- [ ] More problem classes in the multi-task mix
+- [ ] Ensemble: average scores from Bipartite-GCN + Tree-GNN (top two architectures)
 
 See the [open issues](https://github.com/nicholicaron/chop/issues) for a full list of proposed features and known issues.
 

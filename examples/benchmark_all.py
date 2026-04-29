@@ -23,9 +23,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+from src.agents.bipartite_gnn_policy import BipartiteGCNNodeSelectionPolicy
 from src.agents.gnn_policy import GNNNodeSelectionPolicy
 from src.agents.policy import NodeSelectionPolicy
 from src.agents.transformer_policy import TransformerNodeSelectionPolicy
+from src.agents.tree_gnn_policy import TreeGNNNodeSelectionPolicy
 from src.environments.branch_and_bound_env import DEFAULT_K
 from src.problems.set_cover import SetCover
 from src.utils.eval import evaluate_heuristic, evaluate_policy, make_env_factory
@@ -58,10 +60,16 @@ CHECKPOINTS = [
      lambda: NodeSelectionPolicy(k=K, hidden=64), ("det",)),
     ("Imitation+RL+MLP",    "checkpoints/imitation_setcover_mlp.pt",
      lambda: NodeSelectionPolicy(k=K, hidden=64), ("det",)),
-    ("Imitation+RL+Trans",  "checkpoints/imitation_setcover_transformer.pt",
-     lambda: TransformerNodeSelectionPolicy(k=K, hidden=64, n_layers=2, n_heads=4), ("det",)),
     ("Multitask+MLP",       "checkpoints/multitask_mlp.pt",
      lambda: NodeSelectionPolicy(k=K, hidden=64), ("det",)),
+    ("Bipartite-GCN",       "checkpoints/reinforce_setcover_bipartite.pt",
+     lambda: BipartiteGCNNodeSelectionPolicy(k=K, hidden=64), ("det",)),
+    ("Multitask+Bipartite", "checkpoints/multitask_bipartite.pt",
+     lambda: BipartiteGCNNodeSelectionPolicy(k=K, hidden=64), ("det",)),
+    ("Tree-GNN",            "checkpoints/reinforce_setcover_tree.pt",
+     lambda: TreeGNNNodeSelectionPolicy(k=K, hidden=64, n_iters=3), ("det",)),
+    ("Tree-GNN (stoch)",    "checkpoints/reinforce_setcover_tree.pt",
+     lambda: TreeGNNNodeSelectionPolicy(k=K, hidden=64, n_iters=3), ("stoch",)),
 ]
 
 

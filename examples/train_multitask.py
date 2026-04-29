@@ -76,12 +76,15 @@ def build_policy(name: str):
         return NodeSelectionPolicy(k=K, hidden=64)
     if name == "transformer":
         return TransformerNodeSelectionPolicy(k=K, hidden=64, n_layers=2, n_heads=4)
+    if name == "bipartite":
+        from src.agents.bipartite_gnn_policy import BipartiteGCNNodeSelectionPolicy
+        return BipartiteGCNNodeSelectionPolicy(k=K, hidden=64)
     raise ValueError(name)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--policy", default="mlp", choices=["mlp", "transformer"])
+    parser.add_argument("--policy", default="mlp", choices=["mlp", "transformer", "bipartite"])
     parser.add_argument("--episodes", type=int, default=800)
     parser.add_argument("--lr", type=float, default=5e-4)
     parser.add_argument("--max_steps", type=int, default=1500)
