@@ -177,6 +177,57 @@ def test_gnn_trains_with_reinforce():
     assert max(stats.pg_loss) != min(stats.pg_loss)
 
 
+def test_transformer_policy_runs():
+    from src.agents.transformer_policy import TransformerNodeSelectionPolicy
+
+    torch.manual_seed(0)
+    policy = TransformerNodeSelectionPolicy(k=8, hidden=32, n_layers=1, n_heads=4)
+    env = _knapsack_factory(n_items=10, seed=77)
+    env.reset(seed=77)
+    done, truncated = False, False
+    while not (done or truncated):
+        action, log_prob, entropy = policy.act(env, deterministic=False)
+        assert torch.isfinite(log_prob)
+        assert torch.isfinite(entropy)
+        _, _, done, truncated, info = env.step(action)
+    assert done
+
+
+def test_transformer_trains_with_reinforce():
+    from src.agents.reinforce import ReinforceTrainer, TrainConfig
+    from src.agents.transformer_policy import TransformerNodeSelectionPolicy
+
+    torch.manual_seed(0)
+    policy = TransformerNodeSelectionPolicy(k=8, hidden=32, n_layers=1, n_heads=4)
+    trainer = ReinforceTrainer(
+        policy=policy,
+        env_factory=lambda seed: _knapsack_factory(n_items=8, seed=seed),
+        config=TrainConfig(n_episodes=8, lr=1e-3, log_every=20, seed=0),
+    )
+    stats = trainer.train()
+    assert len(stats.nodes_explored) == 8
+    assert all(stats.completed)
+
+
+def test_imitation_warm_start():
+    """Imitation learner should achieve >50% argmax accuracy on best_bound."""
+    from src.agents.imitation import ImitationConfig, ImitationLearner
+    from src.agents.policy import NodeSelectionPolicy
+
+    torch.manual_seed(0)
+    policy = NodeSelectionPolicy(k=8, hidden=16)
+    learner = ImitationLearner(
+        policy=policy,
+        env_factory=lambda seed: _knapsack_factory(n_items=8, seed=seed),
+        config=ImitationConfig(n_rollout_episodes=20, epochs=10, log_every=20),
+        expert_mode="best_bound",
+    )
+    stats = learner.train()
+    # Final-epoch accuracy should be high (best_bound's choice is "always idx 0",
+    # which the policy can learn very quickly)
+    assert stats.accuracy[-1] > 0.5
+
+
 def test_ppo_trains_mlp_policy():
     """PPO trainer collects rollouts, computes GAE, and updates without erroring."""
     from src.agents.policy import NodeSelectionPolicy

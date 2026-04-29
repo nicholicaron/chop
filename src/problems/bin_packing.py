@@ -186,7 +186,14 @@ class BinPacking(OptimizationProblem):
                 # Coefficient for y_j in the link constraint
                 A_ub[idx, n_items * max_bins + j] = -1
                 idx += 1
-        
+
+        # Binary upper bounds (x_ij <= 1, y_j <= 1) so the LP relaxation is
+        # well-bounded and validate_solution doesn't reject fractional > 1 values.
+        binary_upper = np.eye(num_vars)
+        upper_rhs = np.ones(num_vars)
+        A_ub = np.vstack([A_ub, binary_upper])
+        b_ub = np.concatenate([b_ub, upper_rhs])
+
         return c, A_eq, b_eq, A_ub, b_ub
     
     def validate_solution(self, solution: np.ndarray) -> Tuple[bool, float]:

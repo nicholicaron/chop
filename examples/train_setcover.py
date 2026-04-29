@@ -37,7 +37,8 @@ from src.utils.eval import evaluate_heuristic, evaluate_policy, make_env_factory
 K = DEFAULT_K
 
 
-def setcover_factory(n_elements: int, n_sets: int, density: float, max_steps: int):
+def setcover_factory(n_elements: int, n_sets: int, density: float, max_steps: int,
+                     time_limit: float = 30.0):
     def make_problem(rng):
         return SetCover.generate_random_instance(
             n_elements=n_elements,
@@ -47,7 +48,7 @@ def setcover_factory(n_elements: int, n_sets: int, density: float, max_steps: in
             difficulty="medium",
         )
 
-    return make_env_factory(make_problem, k_nodes=K, max_steps=max_steps, time_limit=30.0)
+    return make_env_factory(make_problem, k_nodes=K, max_steps=max_steps, time_limit=time_limit)
 
 
 def build_policy(name: str):
@@ -72,6 +73,7 @@ def main():
     parser.add_argument("--ppo_eps_per_iter", type=int, default=10,
                         help="PPO only: episodes per rollout")
     parser.add_argument("--max_steps", type=int, default=2000)
+    parser.add_argument("--time_limit", type=float, default=30.0)
     parser.add_argument("--lr", type=float, default=5e-4)
     parser.add_argument("--entropy", type=float, default=0.02)
     parser.add_argument("--seed", type=int, default=0)
@@ -85,7 +87,10 @@ def main():
     cfg_str = f"SetCover({args.n_elements}e x {args.n_sets}s d={args.density})"
     print(f"\n=== Training {args.policy.upper()} via {args.algo.upper()} on {cfg_str} ===\n")
 
-    factory = setcover_factory(args.n_elements, args.n_sets, args.density, args.max_steps)
+    factory = setcover_factory(
+        args.n_elements, args.n_sets, args.density,
+        max_steps=args.max_steps, time_limit=args.time_limit,
+    )
 
     policy = build_policy(args.policy)
     if args.algo == "reinforce":

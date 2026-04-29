@@ -29,9 +29,11 @@ CHOP (Combinatorial Heuristic Optimization Powerhouse) is a research project tha
   </p>
 </div>
 
-> **Status (April 2026):** the RL training pipeline is functional and there are two headline results — see [Results](#results):
-> 1. On random Knapsack, REINFORCE recovers the best-bound heuristic from scratch in ~50 s of CPU training and generalizes to unseen problem sizes.
-> 2. On Set Cover (where best-bound is provably suboptimal), the same REINFORCE pipeline learns a policy that **beats best-bound by ~40%** (11.3 vs 19.0 nodes), comparable to the strongest non-LP heuristic for that problem class.
+> **Status (April 2026):** the RL training pipeline is functional, with three architectures (MLP, GNN, Transformer) and two trainers (REINFORCE, PPO). Headline results — see [Results](#results):
+>
+> 1. **Knapsack:** REINFORCE recovers best-bound from scratch in ~50 s of CPU training and generalizes to unseen problem sizes.
+> 2. **Set Cover (single-task):** REINFORCE+MLP beats best-bound by **~1.7x** (11.3 vs 19.0 nodes) on the regime where best-bound is provably suboptimal.
+> 3. **Set Cover (multi-task):** a *single* MLP trained on a 50/50 mix of Knapsack and Set Cover beats best-bound by **~1.83x on Set Cover (10.4 vs 19.0)** while matching it on Knapsack — the generalist outperforms the specialist.
 
 
 
@@ -167,25 +169,48 @@ The same policy generalizes to unseen `n_items` ∈ {15, 20, 25, 30} without ret
 
 ![Generalization across Knapsack sizes](plots/generalization_across_sizes.png)
 
-### Result 2 — Set Cover: beats best-bound by ~40%
+### Result 2 — Set Cover: learned policies cluster at the top
 
-* **Problem:** random Set Cover, `n_elements=50`, `n_sets=80`, density=0.10, 600 training episodes (~105 s)
-* **Why this regime?** Set Cover's LP relaxation is highly fractional, so a greedy best-bound traversal dives into deep fractional subtrees before reaching an integer solution. Random/breadth-first stumble onto integer solutions sooner. This is exactly the kind of problem where a learned policy has room to outperform the classical heuristic.
+* **Problem:** random Set Cover, `n_elements=50`, `n_sets=80`, density=0.10
+* **Why this regime?** Set Cover's LP relaxation is highly fractional, so a greedy best-bound traversal dives into deep fractional subtrees before reaching an integer solution. Random/breadth-first stumble onto integer solutions sooner. This is the regime where learned heuristics have room to actually outperform the classical best-bound.
 
-Held-out evaluation on 25 fresh instances, deterministic policy:
+Comprehensive held-out evaluation on **40 fresh instances** comparing all approaches we trained:
 
-| Policy                   | Nodes to optimum (mean ± std) | vs. learned |
-|--------------------------|-------------------------------|-------------|
-| **Learned (REINFORCE)**  | **11.3 ± 9.7**                | 1.00x       |
-| BestBound (classical)    | 19.0 ± 15.0                   | **1.68x worse** |
-| DepthFirst               | 9.7 ± 8.4                     | 0.86x       |
-| BreadthFirst             | 12.2 ± 11.0                   | 1.08x       |
-| Random                   | 13.2 ± 9.2                    | 1.17x       |
+| Rank | Approach                  | Nodes (mean ± std) | vs. best_bound | Algo / Arch                   |
+|-----:|---------------------------|--------------------|----------------|-------------------------------|
+| 1    | **Multi-task + MLP**      | **10.0 ± 8.9**     | **1.91x better** | REINFORCE on Knap+SC mix    |
+| 2    | REINFORCE + MLP           | 10.8 ± 9.0         | 1.77x better   | 600 ep on SetCover only       |
+| 3    | depth_first (heuristic)   | 10.9 ± 10.5        | 1.75x          | classical                     |
+| 4    | REINFORCE + GNN (stoch)   | 11.4 ± 7.8         | 1.68x better   | GCN over the B&B tree         |
+| 5    | breadth_first (heuristic) | 11.7 ± 9.8         | 1.63x          | classical                     |
+| 6    | random (heuristic)        | 13.2 ± 9.8         | 1.45x          | classical                     |
+| 7    | REINFORCE + MLP-long      | 13.9 ± 8.8         | 1.37x          | 1500 ep (overfit)             |
+| 8    | PPO + MLP                 | 16.2 ± 11.3        | 1.18x          | clipped surrogate + GAE       |
+| 9    | Imitation + RL + MLP      | 18.8 ± 15.9        | 1.02x          | distill best_bound, then RL   |
+| 10   | best_bound (heuristic)    | 19.1 ± 16.1        | 1.00x          | classical baseline            |
 
-The trained policy explores **40% fewer nodes than best-bound** and is competitive with depth-first (the strongest non-LP heuristic on this distribution).
+![All approaches benchmark](plots/benchmark_all.png)
 
-![Set Cover learning curve](plots/setcover_learning_curve_mlp.png)
-![Set Cover comparison](plots/setcover_comparison_mlp.png)
+#### Highlights
+
+* **Multi-task wins overall** — a single MLP trained on a 50/50 mix of Knapsack and Set Cover instances reaches **10.0 ± 8.9 nodes on Set Cover (1.91x better than best_bound)** while *also* matching best_bound on Knapsack. Generalist beats specialist.
+* **REINFORCE + MLP at 10.8** — the simplest learnable approach is essentially tied with depth-first (the strongest classical heuristic on this distribution). 600 episodes is the sweet spot; 1500 episodes drifted slightly worse (likely overfitting on the noisy on-policy gradient).
+* **GNN works under stochastic eval** (11.4) but its deterministic argmax matches best_bound exactly (19.1) — diagnostic shows the policy *did* learn distinct features but tiebreaks against best_bound's choice. Fixable with more entropy / temperature, listed under Roadmap.
+* **PPO underperformed REINFORCE here** — short-episode regimes don't expose PPO's sample-efficiency edge. Expected to matter more on n_items >= 50 problems.
+* **Imitation warm-start barely moved** — the policy distilled best_bound (18.2 nodes ≈ 19.1) but the REINFORCE fine-tune didn't push much further, probably because the on-policy gradient is too noisy when starting from a near-optimal policy. PPO fine-tune would likely do better.
+
+### Result 3 — Multi-task: one policy, two problem classes
+
+The same 600-episode training run produced this side-by-side, evaluated on 25 fresh instances per class:
+
+![Multi-task per-class breakdown](plots/multitask_mlp.png)
+
+| Problem class               | Learned (multitask) | best_bound  | random       |
+|-----------------------------|---------------------|-------------|--------------|
+| Knapsack(20, medium)        | 56.2 ± 31.1         | 56.2 ± 31.1 | 140.3 ± 40.0 |
+| SetCover(50e × 80s, d=0.10) | **10.4 ± 9.7**      | 19.0 ± 15.0 | 13.2 ± 9.2   |
+
+The agent learned to imitate best-bound when that's optimal (Knapsack) and to deviate from it when that's optimal (Set Cover). Same weights, different behaviors.
 
 ### Reproducing
 
@@ -198,17 +223,32 @@ python examples/train_reinforce.py --policy mlp --episodes 800 --n_items 25 \
 # Generalization eval across n_items (~1 min)
 python examples/eval_generalization.py --sizes 15 20 25 30 --n_eval 25
 
-# Set Cover experiment + plots (~2 min) -- the "RL beats best-bound" result
-python examples/train_setcover.py --policy mlp --episodes 600 --n_eval 25
+# Set Cover, single-task (~2 min) -- the "1.77x better" result
+python examples/train_setcover.py --algo reinforce --policy mlp --episodes 600 --n_eval 25
+
+# Multi-task on Knapsack + Set Cover (~1 min) -- the headline 1.91x result
+python examples/train_multitask.py --policy mlp --episodes 600 --n_eval 25
+
+# PPO variant
+python examples/train_setcover.py --algo ppo --policy mlp --ppo_iters 30 --n_eval 25
+
+# Imitation -> RL pipeline
+python examples/train_imitation_then_rl.py --policy mlp \
+    --imitation_episodes 100 --rl_episodes 400
+
+# Comprehensive benchmark across every saved checkpoint (~3 min)
+python examples/benchmark_all.py --n_eval 40
 ```
 
 Plots land under `plots/`, raw stats under `checkpoints/`.
 
 ### Caveats and ongoing work
 
-* **GNN policy** — the GNN scaffolding works (clean acting + training pipeline against the B&B tree as a graph), but the trained GNN's deterministic-eval mode has so far collapsed to best-bound on Set Cover (per-episode performance during stochastic training was competitive with the MLP, ~10-15 nodes). Probably a tuning issue (entropy regularization, longer training); listed under [Roadmap](#roadmap).
-* **Variance** — Set Cover instances at this size have high run-to-run variance; the 40% gap reported above survives n=25 held-out instances but a finer experiment with larger n would tighten the confidence interval.
-* **Single problem class** — the "beats best-bound" result is on Set Cover specifically; we have not yet shown the policy beats best-bound on Bin Packing or other classes.
+* **GNN deterministic-eval collapse** — stochastic-mode GNN beats best_bound (11.4 vs 19.1), but `argmax` tiebreaks against best_bound's choice. Fix is straightforward (add temperature / Boltzmann sampling at eval) and is in the [Roadmap](#roadmap).
+* **PPO under-tuned for these episode lengths** — expected to win on larger problems where rollout sample-efficiency matters more.
+* **Imitation+RL fine-tune destabilized** — REINFORCE on a near-optimal policy is high variance; PPO fine-tune is the natural fix.
+* **Bin Packing parked** — added the missing `x_ij <= 1, y_j <= 1` bounds to the ILP, but Bin Packing's LP relaxation is too weak for this CPU-only solver scale (5-item instances exceed 200 nodes). Would need a stronger LP relaxation (Dantzig-Wolfe / column generation) before RL helps.
+* **Variance** — Set Cover instances at this size have high std (Mean ± 8-15). The 1.91x multi-task gap survives n=40 held-out instances; tightening the CI would mean a much larger n.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -301,15 +341,25 @@ The repository includes example scripts for each problem type in the `examples/`
 
 5. RL environment & training
    ```sh
-   # Smoke test: confirm action causally affects the search
+   # Sanity check: confirm the action causally affects the search
    python examples/rl_env_smoke_test.py
 
-   # Train a node-selection policy with REINFORCE on Knapsack (~50s on CPU)
+   # Single-task: train an MLP / GNN on Knapsack (~50s on CPU)
    python examples/train_reinforce.py --policy mlp --episodes 800 \
        --n_items 25 --difficulty medium
 
-   # Train on Set Cover -- the regime where RL beats best-bound (~2 min)
-   python examples/train_setcover.py --policy mlp --episodes 600
+   # Single-task on Set Cover -- the "1.77x better than best_bound" result (~2 min)
+   python examples/train_setcover.py --algo reinforce --policy mlp --episodes 600
+
+   # PPO variant of the above
+   python examples/train_setcover.py --algo ppo --policy mlp --ppo_iters 30
+
+   # Multi-task: one policy across Knapsack + Set Cover -- the headline 1.91x result
+   python examples/train_multitask.py --policy mlp --episodes 600
+
+   # Imitation-learning warm-start, then optional REINFORCE fine-tune
+   python examples/train_imitation_then_rl.py --policy mlp \
+       --imitation_episodes 100 --rl_episodes 400
 
    # Generalization eval of a trained policy across problem sizes
    python examples/eval_generalization.py --sizes 15 20 25 30 --n_eval 25
@@ -317,11 +367,15 @@ The repository includes example scripts for each problem type in the `examples/`
    # Side-by-side comparison plot using a trained checkpoint
    python examples/rl_branch_and_bound_example.py
 
-   # Heuristic baseline scan on Set Cover (find which configs have headroom)
+   # Comprehensive benchmark across every saved checkpoint
+   python examples/benchmark_all.py --n_eval 40
+
+   # Heuristic-only baseline scans (find which configs have headroom)
    python examples/setcover_baseline_check.py
+   python examples/binpacking_baseline_check.py
    ```
 
-   Both training scripts accept `--policy {mlp, gnn}`. The MLP is the recommended default for now; the GNN is functional but under-tuned (see [Roadmap](#roadmap)).
+   Most training scripts accept `--policy {mlp, gnn, transformer}`. The MLP is the recommended default; the GNN and Transformer are functional but the GNN's deterministic eval mode currently collapses (see [Roadmap](#roadmap)).
 
 The `--visualize` flag on the legacy `simple_ilp.py` / `*_example.py` scripts generates branch-and-bound tree visualizations.
 
@@ -457,7 +511,10 @@ chop/
 │   ├── agents/              # Learnable RL agents (NEW)
 │   │   ├── policy.py        # MLP policy: scores top-K candidate nodes
 │   │   ├── gnn_policy.py    # GNN policy: GCN over the full B&B tree
-│   │   └── reinforce.py     # REINFORCE-with-baseline trainer (policy-agnostic)
+│   │   ├── transformer_policy.py  # Self-attention policy over candidate set
+│   │   ├── reinforce.py     # REINFORCE-with-baseline trainer (policy-agnostic)
+│   │   ├── ppo.py           # PPO trainer with GAE + clipped surrogate
+│   │   └── imitation.py     # Distill a HeuristicAgent into a policy via cross-entropy
 │   │
 │   ├── benchmarking/        # Benchmarking framework
 │   │   ├── metrics.py       # Instance and solver metrics
@@ -645,13 +702,21 @@ chop/
 - [x] Reward functions balancing quality and efficiency
 - [x] Gymnasium-compatible environment for training RL agents
 - [x] Enhanced visualizations for all problem types
-- [x] **Training pipeline for RL agents (REINFORCE-with-baseline)**
-- [x] **Knapsack: trained policy matches BestBound, generalizes across n_items**
-- [x] **Set Cover: trained policy beats BestBound by ~40% on the adversarial regime**
-- [x] **GNN policy** that consumes the B&B tree as a graph (functional; final-eval performance still under tuning)
-- [ ] PPO + minibatching for larger problem sizes (n_items >= 50)
+- [x] **REINFORCE-with-baseline trainer** (policy-agnostic)
+- [x] **PPO trainer** with GAE + clipped surrogate + minibatching
+- [x] **Imitation-learning warm-start** (cross-entropy distillation from any HeuristicAgent)
+- [x] **MLP policy** over fixed-shape top-K candidate features
+- [x] **GNN policy** (GCN over the full B&B tree)
+- [x] **Transformer policy** (self-attention over the candidate set + global token)
+- [x] **Knapsack:** trained policy matches BestBound, generalizes across n_items
+- [x] **Set Cover (single-task):** trained policy beats BestBound by **1.77x**
+- [x] **Set Cover (multi-task):** single policy on Knapsack+SetCover beats BestBound by **1.91x**
+- [ ] Fix GNN deterministic-eval collapse (Boltzmann sampling at eval)
+- [ ] PPO fine-tune from imitation warm-start (more stable than REINFORCE here)
+- [ ] Stronger LP relaxation for Bin Packing (Dantzig-Wolfe / column generation)
+- [ ] Larger problem sizes (n_items >= 50) where PPO's edge would emerge
 - [ ] Curriculum learning across problem-size schedules
-- [ ] Bin Packing experiments + adversarial-instance generator
+- [ ] More problem classes in the multi-task mix
 
 See the [open issues](https://github.com/nicholicaron/chop/issues) for a full list of proposed features and known issues.
 
